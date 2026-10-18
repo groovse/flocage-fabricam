@@ -22,6 +22,13 @@ window.DATA = {
     bas_jambe_g: { label: "Bas de la jambe gauche", formats: [], texteSeul: true }
   },
 
+  // Filtres du catalogue (tags « genre » et « style » de chaque produit ou pack). « sport » (tennis, basket...)
+  // n'est qu'une étiquette d'affichage. Un vêtement mixte porte les deux genres.
+  filtres: {
+    genre: { label: "Pour", valeurs: [{ id: "homme", label: "Homme" }, { id: "femme", label: "Femme" }] },
+    style: { label: "Style", valeurs: [{ id: "sport", label: "Sport" }, { id: "casual", label: "Casual" }] }
+  },
+
   // Polices proposées pour les prénoms et numéros (Google Fonts, chargées en ligne)
   polices: [
     "Bebas Neue", "Anton", "Big Shoulders Display", "Oswald", "Teko", "Staatliches", "Russo One",
@@ -37,6 +44,7 @@ window.DATA = {
       marque: "Kuikma, Decathlon",
       modele: "polo",
       demonstratif: "ce polo",
+      tags: { genre: ["homme"], style: "sport", sport: "Tennis" },
       prixAchat: 7.99,
       matiere: "100 % polyester",
       polyesterPct: 100,
@@ -68,6 +76,7 @@ window.DATA = {
       marque: "Domyos, Decathlon",
       modele: "sweat",
       demonstratif: "ce sweat",
+      tags: { genre: ["homme"], style: "casual" },
       prixAchat: 14.99,
       matiere: "59 % polyester, 41 % coton",
       polyesterPct: 59,
@@ -101,6 +110,7 @@ window.DATA = {
       marque: "Kipsta, Decathlon",
       modele: "maillot",
       demonstratif: "ce maillot",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Basket" },
       prixAchat: 6.99,
       matiere: "100 % polyester",
       polyesterPct: 100,
@@ -133,6 +143,7 @@ window.DATA = {
       marque: "Kipsta, Decathlon",
       modele: "short-basket",
       demonstratif: "ce short",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Basket" },
       prixAchat: 6.99,
       matiere: "100 % polyester",
       polyesterPct: 100,
@@ -167,6 +178,7 @@ window.DATA = {
       marque: "Kuikma, Decathlon",
       modele: "short-tennis",
       demonstratif: "ce short",
+      tags: { genre: ["homme"], style: "sport", sport: "Tennis" },
       prixAchat: 5.99,
       matiere: "100 % polyester",
       polyesterPct: 100,
@@ -196,6 +208,7 @@ window.DATA = {
       marque: "Domyos, Decathlon",
       modele: "debardeur",
       demonstratif: "ce débardeur",
+      tags: { genre: ["homme"], style: "sport", sport: "Fitness" },
       prixAchat: 9.99,
       matiere: "100 % coton",
       polyesterPct: 0,
@@ -228,6 +241,7 @@ window.DATA = {
       nom: "Pack basket : maillot et short",
       nomCourt: "Pack basket",
       demonstratif: "ce pack",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Basket" },
       produits: ["maillot-basket", "short-basket"],
       vitrine: ["poitrine", "cuisse_g"],
       texteVitrine: "sur la poitrine du maillot et une cuisse du short"

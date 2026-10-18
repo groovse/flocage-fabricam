@@ -26,6 +26,8 @@ Ouvre `index.html#/atelier` (lien « Espace atelier » en bas de page) et charge
 
 Polo de tennis Essential, sweat chaud en molleton, maillot de basket TANK 100, short de basket SHORT 100, short de tennis Essential, débardeur fitness 500, et un pack basket (maillot + short).
 
+Le catalogue se filtre par genre (Homme, Femme) et par style (Sport, Casual) ; un vêtement mixte apparaît dans les deux genres. Un bandeau tout en haut du site invite à demander un vêtement qui n'est pas au catalogue : il ouvre un mail pré-rempli vers Fabr'Icam.
+
 Emplacements : poitrine, dos et manches pour les hauts ; cuisse gauche, cuisse droite (visuel A6 ou A5, avec prénom ou numéro possible) et bas de la jambe gauche (petit texte seul) pour les shorts. Les maillots et débardeurs n'ont ni manches.
 
 ## Règle de prix
@@ -58,10 +60,12 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 | changer un prix de planche, la TVA, la livraison, la marge (20 %), l'arrondi | `js/prix.js` |
 | ajouter un vêtement, une couleur, une taille | `js/data.js` (copie un bloc de `produits`) |
 | ajouter un pack | `js/data.js` (`packs`) |
+| changer les filtres du catalogue (Homme, Femme, Sport, Casual) ou les étiquettes d'un vêtement | `js/data.js` (`filtres`, et `tags` du produit) |
+| changer le bandeau du haut (vêtement hors catalogue) | `index.html` (`#top-note`) et le mail pré-rempli dans `js/app.js` (`autreVetementHref`) |
 | changer la liste des polices | `js/data.js` (`polices`) |
 | changer les couleurs, les polices du site | `css/style.css` (variables en haut) |
 
-Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (le dessin : `polo`, `sweat`, `debardeur`, `maillot`, `short-basket` ou `short-tennis`), `prixAchat` (TTC), `polyesterPct`, `tailles`, `couleurs` (avec `clair: true` pour les couleurs claires), `vitrine` (emplacements du prix affiché) et les `zones` (position en cm sur le dessin). Un nouveau modèle de dessin se code dans `js/preview.js`. Chaque produit a ses photos Decathlon (4 à 8), chargées depuis leur site : la première est celle du catalogue, les autres apparaissent en vignettes. Si une photo ne s'affiche pas (hors ligne, lien périmé), le catalogue montre le dessin du vêtement. Pour changer ou ajouter une photo : champ `photos` du produit, avec l'adresse de l'image sans paramètres (la taille est ajoutée par le site).
+Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (le dessin : `polo`, `sweat`, `debardeur`, `maillot`, `short-basket` ou `short-tennis`), `tags` (genre, style, et le sport en étiquette), `prixAchat` (TTC), `polyesterPct`, `tailles`, `couleurs` (avec `clair: true` pour les couleurs claires), `vitrine` (emplacements du prix affiché) et les `zones` (position en cm sur le dessin). Un nouveau modèle de dessin se code dans `js/preview.js`. Chaque produit a ses photos Decathlon (4 à 8), chargées depuis leur site : la première est celle du catalogue, les autres apparaissent en vignettes. Si une photo ne s'affiche pas (hors ligne, lien périmé), le catalogue montre le dessin du vêtement. Pour changer ou ajouter une photo : champ `photos` du produit, avec l'adresse de l'image sans paramètres (la taille est ajoutée par le site).
 
 ## Versions et modifications
 

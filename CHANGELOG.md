@@ -5,6 +5,15 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 2.1.0 — 18/10/2026
+
+Filtres du catalogue et demandes hors catalogue.
+
+- Étiquettes sur chaque vêtement : genre (Homme, Femme), style (Sport, Casual) et sport (Tennis, Basket, Fitness).
+- Filtres au-dessus du catalogue : Pour (Tous, Homme, Femme) et Style (Tous, Sport, Casual), avec le nombre de résultats. Le filtre est gardé quand on revient du configurateur. Les articles mixtes (maillot, short de basket, pack) sont dans Homme et dans Femme ; les autres sont en Homme.
+- Bandeau tout en haut du site : on peut aussi demander à Fabr'Icam de floquer un vêtement qui n'est pas au catalogue. Le lien ouvre un mail pré-rempli (vêtement souhaité, quantité, tailles, marquages). Il est masqué sur l'espace atelier.
+- Si aucun vêtement ne correspond aux filtres, le message propose la même demande.
+
 ## 2.0.0 — 18/10/2026
 
 Nouvelle règle de prix : marge de 20 %, sans palier. Le prix de vente change pour tous les produits, d'où le saut de version.

@@ -45,6 +45,12 @@ h3 { font-size: 2.1rem; }
 h4 { font-size: 1.25rem; font-weight: 700; }
 p { margin: 0 0 1rem; }
 
+/* ---------- bandeau du haut ---------- */
+.top-note { background: var(--ink); color: #fff; padding: .6rem clamp(1rem, 4vw, 3rem); text-align: center; font-size: .95rem; }
+.top-note p { margin: 0; }
+.top-note a { color: #fff; font-weight: 700; white-space: nowrap; }
+.top-note a:hover { color: #ffd2c5; }
+
 /* ---------- en-tête / pied ---------- */
 .site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem clamp(1rem, 4vw, 3rem); border-bottom: 1px solid var(--line); background: var(--paper); }
 .brand { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--ink); font: 800 1.7rem/1 var(--display); letter-spacing: .01em; }
@@ -98,6 +104,16 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 
 .catalogue { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1rem, 2vw, 1.6rem); }
 .produit { display: flex; flex-direction: column; gap: 1.1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: clamp(1rem, 2vw, 1.5rem); }
+/* filtres du catalogue */
+.filtres { display: flex; flex-wrap: wrap; gap: .6rem 2rem; margin: 0 0 .6rem; }
+.f-group { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.f-label { font-weight: 700; margin-right: .2rem; }
+.chip { font: 600 .95rem/1 var(--body); padding: .5rem .85rem; border: 1px solid var(--ink); border-radius: var(--r); background: var(--paper); color: var(--ink); cursor: pointer; }
+.chip:hover { background: var(--film); }
+.chip[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.f-count { color: var(--muted); margin: 0 0 1.2rem; min-height: 1.55em; }
+.tags { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; margin: 0 0 .6rem; padding: 0; }
+.tags li { font-size: .82rem; line-height: 1; padding: .3rem .5rem; border: 1px solid var(--line); border-radius: 2px; color: var(--muted); background: var(--film); }
 .p-photo { background: #f7f9f8; border: 1px solid var(--line); border-radius: var(--r); display: grid; place-items: center; min-height: 230px; overflow: hidden; }
 .p-photo.duo { grid-template-columns: 1fr 1fr; align-items: center; }
 .p-photo .cell { display: grid; place-items: center; min-width: 0; }
@@ -264,7 +280,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
   * { scroll-behavior: auto !important; transition: none !important; }
 }
 @media print {
-  .site-header, .site-footer, .loader, .cfg-head, .toast, .skip { display: none !important; }
+  .top-note, .filtres, .f-count, .site-header, .site-footer, .loader, .cfg-head, .toast, .skip { display: none !important; }
   body { background: #fff; }
   .a-block { break-inside: avoid; border-color: #999; }
   .sheetscroll { max-height: none; overflow: visible; }
