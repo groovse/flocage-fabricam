@@ -51,6 +51,13 @@ Prix de la vitrine = un polo avec un visuel A6 à la poitrine, pour 1, 5, 10, 20
 
 Pour un nouveau produit, il faut : `id`, `nom`, `marque`, `prixAchat` (TTC), `polyesterPct`, `tailles`, `couleurs` (avec `clair: true` pour les couleurs claires) et les `zones` (position en cm sur le dessin du polo). Les photos Decathlon sont chargées directement depuis leur site ; si elles ne s'affichent pas, une silhouette est utilisée.
 
+## Versions et modifications
+
+- La branche `main` est la version en ligne : on n'y met que du travail terminé et testé.
+- Chaque grosse modification se fait sur sa propre branche (`ajout/<produit>`, `fonction/<nom>`, `correctif/<nom>`), puis est fusionnée dans `main` par une pull request.
+- Chaque version publiée reçoit un numéro (`v1.1.0`) sous forme de tag Git, une entrée dans `CHANGELOG.md` et une release GitHub.
+- Les messages de commit disent ce qui change, en une ligne.
+
 ## Tests
 
 ```
