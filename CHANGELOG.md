@@ -5,6 +5,19 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 3.3.0 — 19/10/2026
+
+Nouvelle page atelier : `atelier.html`.
+
+- **Une page à part, protégée par un mot de passe** (`2024`, modifiable dans `js/atelier.js`). C'est une simple porte : le site est statique, le mot de passe se lit dans le code. L'ancien « espace atelier » du site client est remplacé par un lien vers cette page ; les anciens liens `#/atelier` y redirigent.
+- **Import du fichier de commande** par bouton ou glisser-déposer. La commande reste dans le navigateur jusqu'à sa fermeture.
+- **Commande** : chiffres clés, trois étapes (acheter, commander les planches, presser), liste à acheter avec le lien de la fiche de chaque couleur et « Copier la liste », planches à commander, coûts et marge, points à vérifier.
+- **Pièces** : diaporama d'une pièce à la fois, avec le dessin de face et de dos, le prénom et le numéro en grand, les motifs à poser par emplacement avec leur planche et leur case, le réglage de presse et l'article à acheter.
+- **Fiche de fabrication** à imprimer en A4 : quantités à réunir, planches et leur plan, récapitulatif des motifs, pièces à presser avec cases à cocher, réglages de presse, signatures.
+- **Planches à envoyer** : une image PNG par planche aux dimensions exactes du format DTF Print (300 dpi écrits dans le fichier, fond transparent, à l'endroit), un plan de coupe annoté pour la découpe, et une archive .zip de tout. Contrôle des visuels reçus : définition en dpi, JPEG ou fond opaque signalés, remplacement d'un visuel depuis la page.
+- **Base d'achats** : les fournisseurs (DTF Print, Decathlon, vendeurs de la place de marché) et les 45 articles avec leurs liens par couleur, recherche, filtre par catégorie et export CSV.
+- Nouveau `js/fichiers.js` (PNG à 300 dpi, zip, CSV) avec 8 tests dans `tests/fichiers.test.js`. Le fichier de commande et les règles de prix ne changent pas. Tests : 45 en tout.
+
 ## 3.2.1 — 19/10/2026
 
 Gourdes : technique confirmée.

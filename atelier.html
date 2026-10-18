@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atelier – Fabr'Icam Flocage</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Espace atelier de Fabr'Icam : fiche de fabrication, planches prêtes à envoyer, base d'achats.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Bebas+Neue&family=Anton&family=Oswald:wght@400;600&family=Teko:wght@500&family=Staatliches&family=Russo+One&family=Black+Ops+One&family=Archivo+Black&family=Alfa+Slab+One&family=Bungee&family=Righteous&family=Montserrat:wght@700&family=Permanent+Marker&family=Pacifico&family=Lobster&family=Press+Start+2P&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/atelier.css">
+</head>
+<body class="at">
+  <a class="skip" href="#app">Aller au contenu</a>
+
+  <header class="site-header at-header">
+    <a class="brand" href="atelier.html"><span class="mark" aria-hidden="true"></span><span id="brand-name">Fabr'Icam Flocage</span><span class="at-badge">Atelier</span></a>
+    <div class="at-tools" id="at-tools" hidden>
+      <a class="btn btn-quiet" href="index.html">Site client</a>
+      <button type="button" class="btn btn-quiet" id="at-lock">Verrouiller</button>
+    </div>
+  </header>
+  <nav class="at-rail" id="at-nav" aria-label="Sections de l'atelier" hidden></nav>
+
+  <main id="app" tabindex="-1"></main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript><p style="padding:2rem">Cette page a besoin de JavaScript pour fonctionner.</p></noscript>
+
+  <script>window.ATELIER_PAGE = true;</script>
+  <script src="js/prix.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/preview.js"></script>
+  <script src="js/fichiers.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/atelier.js"></script>
+  <script src="js/atelier-impression.js"></script>
+</body>
+</html>

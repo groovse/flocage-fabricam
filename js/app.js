@@ -1,6 +1,7 @@
 /*
  * APPLICATION : vitrine, configurateur, devis par mail.
- * L'espace atelier (récap interne) est dans atelier.js.
+ * L'atelier (page interne atelier.html) réutilise ces fonctions : il charge ce fichier avec window.ATELIER_PAGE = true,
+ * et la vitrine ne démarre alors pas.
  */
 (function () {
   "use strict";
@@ -1007,14 +1008,11 @@
   function route() {
     var h = location.hash || "#/";
     if (h.indexOf("#catalogue") === 0) return;
-    if (h.indexOf("#/atelier") === 0) { if (App.viewAtelier) App.viewAtelier(); }
-    else {
-      var m = h.match(/^#\/configurer(?:\/(.+))?$/);
-      if (m) viewConfigurator(m[1]); else viewVitrine();
-    }
+    if (h.indexOf("#/atelier") === 0) { location.replace("atelier.html"); return; }   // anciens liens vers l'atelier
+    var m = h.match(/^#\/configurer(?:\/(.+))?$/);
+    if (m) viewConfigurator(m[1]); else viewVitrine();
     window.scrollTo(0, 0);
-    $("#top-note").hidden = h.indexOf("#/atelier") === 0;
-    $$(".nav a").forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === (h.indexOf("#/atelier") === 0 ? "#/atelier" : h.indexOf("#/configurer") === 0 ? "#/configurer" : "#/")); });
+    $$(".nav a").forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === (h.indexOf("#/configurer") === 0 ? "#/configurer" : "#/")); });
   }
 
   function start() {
@@ -1037,5 +1035,5 @@
     orderOf: orderOf, start: start, colorOf: colorOf, pieceLine: pieceLine,
     vendeurInfo: vendeurInfo, mailHref: mailHref, gmailHref: gmailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
   };
-  window.addEventListener("load", start);
+  if (!window.ATELIER_PAGE) window.addEventListener("load", start);
 })();
