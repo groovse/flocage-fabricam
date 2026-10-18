@@ -5,6 +5,17 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 2.0.0 — 18/10/2026
+
+Nouvelle règle de prix : marge de 20 %, sans palier. Le prix de vente change pour tous les produits, d'où le saut de version.
+
+- Prix d'un produit = coût moyen de ses pièces + 20 %, arrondi au centime supérieur. Fin de l'arrondi à 2,50 € et de la marge minimale de 2 € (avec son « +1 € par pièce ») : le prix suit le coût au lieu de monter par paliers. Exemple : le short de basket avec 2 A6 passe de 6 à 7 pièces sans hausse de prix.
+- Pack basket : maillot et short sont vendus comme un seul article, avec une seule marge (20 % du coût d'une pièce, soit 10 % du coût du pack). La remise fixe de 2,50 € disparaît.
+- Polaire MH100 retirée du catalogue (le duvet retient mal le DTF), avec son dessin et son avertissement.
+- Le sweat reste : mélange polyester et coton, DTF uniquement.
+- Espace atelier : le détail des coûts montre le taux de marge par produit et la marge finale en pourcentage du coût de revient.
+- Réglages dans `js/prix.js` : `regles.marge` et `regles.pas`. Le fichier de commande reste en version 2, les anciens fichiers se lisent toujours (les prix sont recalculés avec les tarifs actuels).
+
 ## 1.1.1 — 18/10/2026
 
 Photos des produits.

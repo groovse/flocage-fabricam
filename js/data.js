@@ -1,6 +1,6 @@
 /*
  * CATALOGUE — pour ajouter un vêtement, copie un bloc de « produits » et change :
- * id, nom, prixAchat (TTC), tailles, couleurs, modele (le dessin : polo, sweat, polaire, debardeur,
+ * id, nom, prixAchat (TTC), tailles, couleurs, modele (le dessin : polo, sweat, debardeur,
  * maillot, short-basket, short-tennis), vitrine (emplacements du prix affiché) et zones.
  * Les zones sont en cm sur le dessin du vêtement (90 cm de large) : cx = centre horizontal,
  * top = haut de la zone (ou cy = centre), w/h = taille max de la zone.
@@ -89,32 +89,6 @@ window.DATA = {
       texteVitrine: "à la poitrine",
       zones: {
         poitrine: { vue: "face", cx: 58, top: 21, w: 16, h: 21, label: "Poitrine, côté cœur" },
-        dos:      { vue: "dos",  cx: 45, top: 15, w: 32, h: 52, label: "Dos" },
-        manche_g: { vue: "cote", cx: 76.5, cy: 40, w: 10, h: 14, rot: -9, label: "Manche gauche" },
-        manche_d: { vue: "cote", cx: 13.5, cy: 40, w: 10, h: 14, rot: 9,  label: "Manche droite" }
-      }
-    },
-    {
-      id: "polaire-mh100",
-      nomCourt: "Polaire",
-      nom: "Polaire de randonnée MH100 demi-zip",
-      marque: "Quechua, Decathlon",
-      modele: "polaire",
-      demonstratif: "cette polaire",
-      prixAchat: 8.99,
-      matiere: "100 % polyester",
-      polyesterPct: 100,
-      tailles: ["S", "M", "L", "XL", "2XL", "3XL", "4XL"],
-      couleurs: [
-        { id: "noir", nom: "Noir", hex: "#1f2124", clair: false, ref: "966425" }
-      ],
-      lien: "https://www.decathlon.fr/p/polaire-de-randonnee-montagne-homme-mh100-demi-zip-noir/312360/c1m966425",
-      photos: [],
-      avertissement: "Polaire : le duvet retient mal le transfert DTF. Fais un essai de pressage avant de lancer toute la commande.",
-      vitrine: ["poitrine"],
-      texteVitrine: "à la poitrine",
-      zones: {
-        poitrine: { vue: "face", cx: 58, top: 23, w: 15, h: 20, label: "Poitrine, côté cœur" },
         dos:      { vue: "dos",  cx: 45, top: 15, w: 32, h: 52, label: "Dos" },
         manche_g: { vue: "cote", cx: 76.5, cy: 40, w: 10, h: 14, rot: -9, label: "Manche gauche" },
         manche_d: { vue: "cote", cx: 13.5, cy: 40, w: 10, h: 14, rot: 9,  label: "Manche droite" }
@@ -247,11 +221,12 @@ window.DATA = {
     }
   ],
 
-  // Packs : plusieurs produits vendus ensemble, avec la remise définie dans prix.js (packs.remise)
+  // Packs : plusieurs produits vendus ensemble comme un seul article (une seule marge, voir prix.js)
   packs: [
     {
       id: "pack-basket",
       nom: "Pack basket : maillot et short",
+      nomCourt: "Pack basket",
       demonstratif: "ce pack",
       produits: ["maillot-basket", "short-basket"],
       vitrine: ["poitrine", "cuisse_g"],

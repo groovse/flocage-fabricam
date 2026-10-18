@@ -43,6 +43,11 @@
     contact: { asso: "", nom: "", email: "", tel: "", date: "", message: "" }, result: null,
     entryId: null, addModel: null, nextPack: 1 };
   function itemOf(id) { return byId[id] || PACKS[id]; }
+  // Nom d'une ligne de prix : un produit, ou un pack
+  function groupName(g) {
+    if (g.pack) { var d = g.packType && PACKS[g.packType]; return d ? (d.nomCourt || d.nom) : "Pack"; }
+    return byId[g.produitId].nomCourt;
+  }
 
   function darkColor(prod) { return P.lum(prod.couleurs[0].hex) < 0.5; }
 
@@ -213,7 +218,7 @@
       ? prods.map(function (pr) { return '<li><b>' + esc(pr.nomCourt) + '</b> ' + pr.couleurs.map(function (c) { return '<span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom); }).join(" ") + '</li>'; }).join("")
       : item.couleurs.map(function (c) { return '<li><span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom) + '</li>'; }).join("");
     var tailles = prods.map(function (pr) { return (isPack ? esc(pr.nomCourt) + " " : "") + esc(pr.tailles[0]) + " à " + esc(pr.tailles[pr.tailles.length - 1]); }).join(", ");
-    var meta = isPack ? "Deux pièces Kipsta, Decathlon. Remise de " + fmtEUR(PRIX.packs.remise) + " par pack." : esc(item.marque) + ". " + esc(item.matiere) + ".";
+    var meta = isPack ? "Deux pièces Kipsta, Decathlon. Le pack coûte moins cher que le maillot et le short pris séparément." : esc(item.marque) + ". " + esc(item.matiere) + ".";
     return '<article class="produit">' + cardPhoto(item) +
       '<div class="p-info"><h3>' + esc(item.nom) + '</h3>' +
       '<p class="p-meta">' + meta + '</p>' +
@@ -529,8 +534,8 @@
       marquages: JSON.parse(JSON.stringify(S.marquages, function (k, v) { return k === "url" ? undefined : v; })),
       prixAffiche: r && r.prix ? {
         unitaire: r.prix.unitaire, total: r.prix.total, pieces: r.N,
-        parProduit: r.prix.groupes.map(function (g) { return { produitId: g.produitId, n: g.n, unitaire: g.unitaire }; }),
-        packs: r.prix.packs.n, remisePacks: r.prix.packs.remise
+        parProduit: r.prix.groupes.map(function (g) { return { produitId: g.produitId, packType: g.packType, n: g.n, unitaire: g.unitaire }; }),
+        packs: r.prix.packs.n
       } : null
     };
   }
@@ -550,8 +555,7 @@
     var pv = r.prix;
     if (pv.unitaire != null) return ["Prix affiché : " + fmtEUR(pv.unitaire) + " par pièce, soit " + fmtEUR(pv.total) + " TTC."];
     var out = ["Prix affiché :"];
-    pv.groupes.forEach(function (g) { out.push("- " + g.n + " × " + byId[g.produitId].nomCourt + " : " + fmtEUR(g.unitaire) + " l'unité"); });
-    if (pv.packs.n) out.push("- remise pack : " + pv.packs.n + " × -" + fmtEUR(pv.packs.remiseUnitaire));
+    pv.groupes.forEach(function (g) { out.push("- " + g.n + " × " + groupName(g) + " : " + fmtEUR(g.unitaire) + " l'unité"); });
     out.push("Total : " + fmtEUR(pv.total) + " TTC.");
     return out;
   }
@@ -641,8 +645,7 @@
     } else {
       var pv = r.prix;
       html = '<div class="t-main"><span class="t-big">' + fmtEUR(pv.total) + '</span><span class="t-unit">au total, TTC, pour ' + r.N + (r.N > 1 ? " pièces" : " pièce") + '</span></div>' +
-        '<ul class="t-lines">' + pv.groupes.map(function (g) { return '<li><span>' + g.n + ' × ' + esc(byId[g.produitId].nomCourt) + '</span><b>' + fmtEUR(g.unitaire) + '</b></li>'; }).join("") +
-        (pv.packs.n ? '<li class="rem"><span>Remise pack, ' + pv.packs.n + (pv.packs.n > 1 ? " packs" : " pack") + '</span><b>-' + fmtEUR(pv.packs.remise) + '</b></li>' : "") + '</ul>' +
+        '<ul class="t-lines">' + pv.groupes.map(function (g) { return '<li><span>' + g.n + ' × ' + esc(groupName(g)) + '</span><b>' + fmtEUR(g.unitaire) + '</b></li>'; }).join("") + '</ul>' +
         '<p class="t-note">Prix à l\'unité, vêtements, planches de transfert et livraison compris. Fabr\'Icam confirme le devis avant toute commande.</p>';
     }
     if (r.warnings.length) html += '<ul class="warn">' + r.warnings.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>";
@@ -798,7 +801,7 @@
     CTX: CTX, S: S, DATA: DATA, PRIX: PRIX, esc: esc, fmtEUR: fmtEUR, fmtN: fmtN, $: $, $$: $$, byId: byId,
     EMP_ORDER: EMP_ORDER, toast: toast, download: download, slug: slug, measure: measure, ensureFont: ensureFont,
     orderOf: orderOf, start: start, colorOf: colorOf, pieceLine: pieceLine,
-    mailHref: mailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf
+    mailHref: mailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
   };
   window.addEventListener("load", start);
 })();
