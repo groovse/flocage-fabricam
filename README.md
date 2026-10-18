@@ -1,6 +1,6 @@
 # Fabr'Icam Flocage
 
-Site de flocage pour les associations de l'Icam : vitrine avec prix par quantité, configurateur de vêtements avec aperçu à la taille réelle, calcul des planches de transfert DTF Print, demande de devis par mail, et un espace atelier pour toi.
+Site de flocage pour les associations de l'Icam : vitrine avec prix par quantité, configurateur de vêtements avec aperçu à la taille réelle, calcul des planches de transfert DTF Print, demande de devis par mail, et une page atelier pour toi (`atelier.html`).
 
 ## Ouvrir le site
 
@@ -14,13 +14,13 @@ Double-clique sur `index.html`. Aucun serveur, aucune installation. Il faut just
 
 ## Utiliser côté atelier
 
-Ouvre `index.html#/atelier` (lien « Espace atelier » en bas de page) et charge le fichier de commande reçu. Tu obtiens :
+Ouvre `atelier.html` (lien « Espace atelier » en bas du site client). Mot de passe : `2024`. Charge le fichier de commande reçu par mail (bouton, ou glisse-le sur la page) : l'atelier le garde dans ton navigateur jusqu'à ce que tu le fermes. Cinq onglets :
 
-- le coût de revient, le prix de chaque produit (coût moyen + marge de 20 %) et la marge finale ;
-- la liste à acheter chez Decathlon en magasin, et la liste des articles à commander en ligne (place de marché, avec le vendeur et ses frais de port) ;
-- les lignes à commander chez DTF Print (DTF et sublimation séparés), avec les règles du fichier à envoyer ;
-- le plan de chaque planche (quel motif de quelle pièce, où) ;
-- les réglages de presse, les visuels à télécharger, les points à vérifier.
+- **Commande** : l'association, le contact, la date, le message ; les chiffres clés ; ce qu'il faut acheter chez Decathlon (en magasin, puis les articles de la place de marché avec leur vendeur et ses frais de port), avec le lien de la fiche de chaque couleur et un bouton « Copier la liste » ; les planches à commander chez DTF Print ; le coût de revient, le prix de chaque produit (coût moyen + marge de 20 %) et la marge finale ; les points à vérifier.
+- **Pièces** : un diaporama, une pièce à la fois (flèches du clavier, boutons, balayage au doigt, ou la rangée de pastilles en bas). Pour chaque pièce : le dessin de face et de dos avec les visuels du client posés dessus, la couleur et la taille, le prénom et le numéro en grand, ce qu'il faut poser à chaque emplacement (visuel, prénom, numéro, taille en cm) avec la planche et la case où le trouver, le réglage de presse, et l'article à acheter avec son lien.
+- **Fiche de fabrication** : un document A4 à imprimer (bouton « Imprimer la fiche »). Les vêtements à réunir avec les quantités, les planches du fournisseur avec leur plan, le récapitulatif des motifs, la liste des pièces à presser avec cases « pressée » et « contrôlée », les réglages de presse, et trois lignes de signature.
+- **Planches à envoyer** : une image PNG par planche, prête à déposer sur le site du fournisseur : dimensions exactes du format choisi (par exemple 2480 × 3307 px pour une A4 de 21 × 28 cm, 6614 × 11811 px pour le mètre), 300 dpi inscrits dans le fichier, fond transparent, à l'endroit. Chaque planche a aussi un « plan de coupe » (PNG annoté avec les repères de chaque motif) qui n'est pas à envoyer. « Tout télécharger » donne un seul fichier .zip avec les deux, et un `lisez-moi.txt`. En dessous, les visuels reçus : leur définition en dpi, un avertissement s'ils n'ont pas de fond transparent, et un bouton pour en remplacer un.
+- **Base d'achats** : les fournisseurs (DTF Print avec ses tarifs et la règle du fichier, Decathlon, chaque vendeur de la place de marché avec ses frais) et la liste de tous les articles du catalogue, avec le prix d'achat, les tailles, la matière et le lien de chaque couleur. Recherche par nom, couleur ou référence, filtre par catégorie, export CSV pour Excel.
 
 ## Catalogue
 
@@ -75,7 +75,7 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 - **Gourdes** : floquées en transfert DTF sur la face (confirmé le 19/10/2026). Surface ronde : petit visuel seulement (Mini ou A7), avec un avertissement et un essai avant la série.
 - **Casquettes, bonnets, bandeau, ceinture, tour de cou** : tissus bombés ou très élastiques, avertissement et essai avant la série. Le bonnet Rider 500 est en acrylique tricoté : le DTF y tient mal.
 - **Prix par couleur** : certains coloris coûtent un peu plus (bonnet Rider 500 à 4,99 € ou 8,99 € selon la couleur, sac tube 5,99 ou 6,00 €) : le site garde le prix le plus haut et ne propose que les coloris à ce prix.
-- **Articles délicats** : chaussettes, sous-vêtements thermiques, micropolaire et doudoune portent un avertissement (essai de pressage avant la série) dans le configurateur et dans l'espace atelier.
+- **Articles délicats** : chaussettes, sous-vêtements thermiques, micropolaire et doudoune portent un avertissement (essai de pressage avant la série) dans le configurateur et dans l'atelier.
 - **Couleurs** : seules les couleurs dont la référence est connue sont dans le catalogue. Les fiches indiquent d'autres coloris (par exemple 5 couleurs pour les articles Kipsta) : ajoute-les dans `couleurs` quand tu as leur référence.
 - **Teintes d'aperçu** : les codes couleur du dessin sont estimés, ils n'ont aucun effet sur les prix.
 - **Sweat** : le molleton est en mélange polyester et coton (59 % de polyester), il part donc toujours en DTF. Fais un essai de pressage avant de lancer toute la commande.
@@ -98,6 +98,8 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 | ajouter l'aperçu sur photo à un vêtement, ou corriger la position du visuel sur une photo | `js/data.js` (`apercuPhoto` du produit : `couleur`, puis `face` et `dos` avec `photo` = rang dans `photos`, `u0`, `v0`, `kx`, `ky`) |
 | changer le bandeau du haut (vêtement hors catalogue) | `index.html` (`#top-note`) et le mail pré-rempli dans `js/app.js` (`autreVetementHref`) |
 | changer la liste des polices | `js/data.js` (`polices`) |
+| changer le mot de passe de l'atelier | `js/atelier.js` (`MDP`) |
+| changer la mise en page de l'atelier ou de la fiche imprimée | `css/atelier.css` |
 | changer les couleurs, les polices du site | `css/style.css` (variables en haut) |
 
 Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (le dessin : `polo`, `sweat`, `debardeur`, `maillot`, `short-basket`, `short-tennis`, `short-slim`, `tshirt`, `manches-longues`, `veste`, `sweat-zip`, `gilet`, `gilet-matelasse`, `robe`, `pantalon`, `chaussette`, ou pour un accessoire `gourde`, `casquette`, `bonnet`, `tour-de-cou`, `bandeau`, `sac-tube`, `sac-sport`, `sac-a-dos` ou `ceinture`), `tags` (genre, style, type : haut, bas, robe, ensemble ou accessoire, et le sport en étiquette), `prixAchat` (TTC), `polyesterPct`, `tailles`, `couleurs` (avec `clair: true` pour les couleurs claires), `vitrine` (emplacements du prix affiché) et les `zones` (position en cm sur le dessin). Un nouveau modèle de dessin se code dans `js/preview.js` ; les accessoires y sont dessinés à l'échelle réelle sur un fond plus petit (`w` et `h` du modèle). Un article qui ne se sublime pas (forme ronde, enduit, élastique) porte `sublimation: false`. Chaque couleur peut garder sa référence Decathlon (`ref`) et le lien de sa page (`lien`). Chaque produit a ses photos Decathlon (4 à 8), chargées depuis leur site : la première est celle du catalogue, les autres apparaissent en vignettes. Si une photo ne s'affiche pas (hors ligne, lien périmé), le catalogue montre le dessin du vêtement. Pour changer ou ajouter une photo : champ `photos` du produit, avec l'adresse de l'image sans paramètres (la taille est ajoutée par le site).
@@ -113,9 +115,10 @@ Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (
 
 ```
 node tests/engine.test.js
+node tests/fichiers.test.js
 ```
 
-37 tests : 22 sur le moteur, marge de 20 % plafonnée à 2 €, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité ; 3 sur les réglages de l'aperçu sur photo (couleur et rang de photo valides, emplacements dans la photo) ; 12 sur le catalogue étendu (données cohérentes, dessins de face et de dos, frais de port par vendeur, chaussettes, composition et marge des packs, nouveaux vêtements, formats et zones des accessoires, sublimation).
+45 tests : 37 sur le moteur et le catalogue (`engine.test.js`) et 8 sur les outils de fichiers de l'atelier (`fichiers.test.js` : dimensions en pixels, résolution 300 dpi écrite dans le PNG, archive zip, CSV). Les 37 premiers : 22 sur le moteur, marge de 20 % plafonnée à 2 €, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité ; 3 sur les réglages de l'aperçu sur photo (couleur et rang de photo valides, emplacements dans la photo) ; 12 sur le catalogue étendu (données cohérentes, dessins de face et de dos, frais de port par vendeur, chaussettes, composition et marge des packs, nouveaux vêtements, formats et zones des accessoires, sublimation).
 
 ## Publier sur GitHub Pages
 
@@ -125,5 +128,5 @@ node tests/engine.test.js
 
 Points d'attention :
 - Les photos Decathlon sont liées, pas copiées. Sur un site public, mieux vaut les remplacer par tes propres photos (dossier `img/`, champ `photos` dans `data.js`).
-- L'espace atelier n'est pas protégé : il ne contient aucune donnée, il lit seulement un fichier de commande que tu charges toi-même.
+- Le mot de passe de l'atelier (`MDP` en haut de `js/atelier.js`, `2024` pour l'instant) n'est qu'une porte pour les curieux. Le site est statique : tout le code, et donc le mot de passe, se lit dans le navigateur. Il ne protège rien de confidentiel ; l'atelier ne contient d'ailleurs aucune donnée, il lit seulement le fichier de commande que tu charges toi-même (gardé dans ton navigateur, jamais envoyé nulle part).
 - Les commandes passent uniquement par mail (Gmail, pas l'application de mail de l'ordinateur) et fichier joint, rien n'est stocké sur le site. Les liens de mail sont construits par `gmailHref` dans `js/app.js` ; sans Gmail, le bouton « Copier le texte du mail » reste disponible.
