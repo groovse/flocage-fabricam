@@ -43,6 +43,22 @@
     contact: { asso: "", nom: "", email: "", tel: "", date: "", message: "" }, result: null,
     entryId: null, addModel: null, nextPack: 1 };
   function itemOf(id) { return byId[id] || PACKS[id]; }
+  // Mail pré-rempli pour demander un vêtement qui n'est pas au catalogue
+  function autreVetementHref() {
+    var body = ["Bonjour,", "", "Je voudrais faire floquer un vêtement qui n'est pas dans le catalogue.", "",
+      "Association :", "Vêtement souhaité (lien du produit, marque, couleur) :", "Nombre de pièces et tailles :",
+      "Marquages souhaités (visuel, prénoms, numéros, emplacements) :", "Date souhaitée :", "", "Merci,"].join("\n");
+    return "mailto:" + DATA.service.email + "?subject=" + encodeURIComponent("Demande de flocage, vêtement hors catalogue") + "&body=" + encodeURIComponent(body);
+  }
+  // Filtres du catalogue : une valeur par groupe, "" = tous
+  var FILTRE = { genre: "", style: "" };
+  function tagsOf(item) { return item.tags || {}; }
+  function matchFiltre(item) {
+    var t = tagsOf(item);
+    if (FILTRE.genre && (t.genre || []).indexOf(FILTRE.genre) < 0) return false;
+    if (FILTRE.style && t.style !== FILTRE.style) return false;
+    return true;
+  }
   // Nom d'une ligne de prix : un produit, ou un pack
   function groupName(g) {
     if (g.pack) { var d = g.packType && PACKS[g.packType]; return d ? (d.nomCourt || d.nom) : "Pack"; }
@@ -212,6 +228,36 @@
     return '<div class="p-media" data-prod="' + item.id + '"><div class="p-photo" data-prod="' + item.id + '">' + photoImg(item, ph[0], 800) + '</div>' + thumbs + '</div>';
   }
 
+  function valeurLabel(groupe, id) {
+    var g = DATA.filtres && DATA.filtres[groupe], v = g && g.valeurs.filter(function (x) { return x.id === id; })[0];
+    return v ? v.label : id;
+  }
+
+  function filtresHTML() {
+    var f = DATA.filtres; if (!f) return "";
+    var groupes = Object.keys(f).map(function (k) {
+      var g = f[k];
+      return '<div class="f-group" role="group" aria-label="' + esc(g.label) + '"><span class="f-label">' + esc(g.label) + '</span>' +
+        [{ id: "", label: "Tous" }].concat(g.valeurs).map(function (v) {
+          return '<button type="button" class="chip" data-filtre="' + k + '" data-valeur="' + esc(v.id) + '" aria-pressed="' + (FILTRE[k] === v.id ? "true" : "false") + '">' + esc(v.label) + '</button>';
+        }).join("") + '</div>';
+    }).join("");
+    return '<div class="filtres">' + groupes + '</div><p class="f-count" id="f-count" aria-live="polite"></p>';
+  }
+
+  function majFiltres() {
+    var all = DATA.produits.concat(DATA.packs || []), cards = $$(".catalogue .produit"), nV = 0, nP = 0;
+    cards.forEach(function (c, i) {
+      var ok = matchFiltre(all[i]);
+      c.hidden = !ok;
+      if (ok) { if (c.dataset.pack) nP++; else nV++; }
+    });
+    $$("[data-filtre]").forEach(function (b) { b.setAttribute("aria-pressed", FILTRE[b.dataset.filtre] === b.dataset.valeur ? "true" : "false"); });
+    var out = $("#f-count"); if (!out) return;
+    if (!nV && !nP) out.innerHTML = "Aucun vêtement ne correspond à ces filtres. Tu peux nous <a href=\"" + autreVetementHref() + "\">demander le vêtement que tu cherches</a>.";
+    else out.textContent = nV + (nV > 1 ? " vêtements" : " vêtement") + (nP ? " et " + nP + (nP > 1 ? " packs" : " pack") : "");
+  }
+
   function cardHTML(item) {
     var isPack = !!item.produits, prods = isPack ? item.produits.map(function (id) { return byId[id]; }) : [item];
     var sw = isPack
@@ -219,8 +265,13 @@
       : item.couleurs.map(function (c) { return '<li><span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom) + '</li>'; }).join("");
     var tailles = prods.map(function (pr) { return (isPack ? esc(pr.nomCourt) + " " : "") + esc(pr.tailles[0]) + " à " + esc(pr.tailles[pr.tailles.length - 1]); }).join(", ");
     var meta = isPack ? "Deux pièces Kipsta, Decathlon. Le pack coûte moins cher que le maillot et le short pris séparément." : esc(item.marque) + ". " + esc(item.matiere) + ".";
-    return '<article class="produit">' + cardPhoto(item) +
-      '<div class="p-info"><h3>' + esc(item.nom) + '</h3>' +
+    var t = tagsOf(item), labels = [];
+    (t.genre || []).forEach(function (g) { labels.push(valeurLabel("genre", g)); });
+    if (t.style) labels.push(valeurLabel("style", t.style));
+    if (t.sport) labels.push(t.sport);
+    var chips = labels.length ? '<ul class="tags" aria-label="Étiquettes">' + labels.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") + "</ul>" : "";
+    return '<article class="produit" data-pack="' + (isPack ? "1" : "") + '"' + (matchFiltre(item) ? "" : " hidden") + '>' + cardPhoto(item) +
+      '<div class="p-info">' + chips + '<h3>' + esc(item.nom) + '</h3>' +
       '<p class="p-meta">' + meta + '</p>' +
       '<ul class="swatches" aria-label="Couleurs">' + sw + '</ul>' +
       '<p class="p-meta">Tailles : ' + tailles + '.</p>' +
@@ -240,7 +291,7 @@
       '<p class="lead">Tu choisis le vêtement, tu importes ton logo, tu ajoutes les prénoms et les numéros. On presse à l\'atelier de Fabr\'Icam, et tu vois le prix à chaque changement.</p>' +
       '<p><a class="btn btn-primary" href="#catalogue" data-scroll="catalogue">Choisir un vêtement</a></p>' +
       '</div>' + heroArt() + '</section>' +
-      '<section class="block" id="catalogue"><h2>Catalogue</h2><div class="catalogue">' + cards + '</div></section>' +
+      '<section class="block" id="catalogue"><h2>Catalogue</h2>' + filtresHTML() + '<div class="catalogue">' + cards + '</div></section>' +
       '<section class="block steps"><h2>Comment ça marche</h2><ol class="seq">' +
       '<li><b>Tu configures.</b> Couleurs, tailles, visuels, prénoms et numéros, avec un aperçu à la taille réelle.</li>' +
       '<li><b>Tu vois le prix.</b> Il se met à jour à chaque changement, vêtements et marquage compris.</li>' +
@@ -252,6 +303,10 @@
       '<div><dt>Des vêtements Decathlon</dt><dd>Fabr\'Icam les retire en magasin, il n\'y a donc pas de frais de livraison sur les vêtements.</dd></div>' +
       '</dl></section>';
 
+    majFiltres();
+    $$("[data-filtre]").forEach(function (b) {
+      b.addEventListener("click", function () { FILTRE[b.dataset.filtre] = b.dataset.valeur; majFiltres(); });
+    });
     // Photo introuvable (hors ligne, lien périmé) : on affiche le dessin du vêtement à la place
     $$(".p-photo > img, .p-photo .cell > img").forEach(function (img) {
       img.addEventListener("error", function () {
@@ -781,6 +836,7 @@
       if (m) viewConfigurator(m[1]); else viewVitrine();
     }
     window.scrollTo(0, 0);
+    $("#top-note").hidden = h.indexOf("#/atelier") === 0;
     $$(".nav a").forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === (h.indexOf("#/atelier") === 0 ? "#/atelier" : h.indexOf("#/configurer") === 0 ? "#/configurer" : "#/")); });
   }
 
@@ -793,6 +849,7 @@
     $("#brand-name").textContent = DATA.service.nom;
     var cfgLink = $(".nav a[data-cfg]"); if (cfgLink) cfgLink.href = "#/configurer";
     $("#foot-mail").href = "mailto:" + DATA.service.email;
+    $("#top-note-mail").href = autreVetementHref();
     $("#foot-mail").textContent = DATA.service.email;
     route();
   }
