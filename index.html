@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fabr'Icam Flocage</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Service de flocage de polos pour les associations de l'Icam : configure, vois le prix, envoie ta demande.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;700;800&family=Hanken+Grotesk:wght@400;500;600;700&family=Bebas+Neue&family=Anton&family=Oswald:wght@400;600&family=Teko:wght@500&family=Staatliches&family=Russo+One&family=Black+Ops+One&family=Archivo+Black&family=Alfa+Slab+One&family=Bungee&family=Righteous&family=Montserrat:wght@700&family=Permanent+Marker&family=Pacifico&family=Lobster&family=Press+Start+2P&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <a class="skip" href="#app">Aller au contenu</a>
+
+  <header class="site-header">
+    <a class="brand" href="#/"><span class="mark" aria-hidden="true"></span><span id="brand-name">Fabr'Icam Flocage</span></a>
+    <nav class="nav" aria-label="Navigation principale">
+      <a href="#/">Catalogue</a>
+      <a href="#/configurer/polo-essential" data-cfg>Personnaliser</a>
+    </nav>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <footer class="site-footer">
+    <p>Le service de flocage de Fabr'Icam pour les associations de l'Icam Toulouse. Une question : <a id="foot-mail" href="mailto:fabricam.toulouse@icam.fr">fabricam.toulouse@icam.fr</a></p>
+    <p><a href="#/atelier">Espace atelier</a></p>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript><p style="padding:2rem">Ce site a besoin de JavaScript pour fonctionner.</p></noscript>
+
+  <script src="js/prix.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/preview.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/atelier.js"></script>
+</body>
+</html>

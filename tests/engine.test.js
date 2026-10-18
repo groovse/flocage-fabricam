@@ -1,0 +1,111 @@
+// Tests du moteur : node tests/engine.test.js
+const assert = require("assert");
+const path = require("path");
+global.window = {};
+require(path.join("..", "js", "prix.js"));
+require(path.join("..", "js", "data.js"));
+const E = require(path.join("..", "js", "engine.js"));
+
+const PRIX = window.PRIX, DATA = window.DATA;
+const produits = {}; DATA.produits.forEach(p => produits[p.id] = p);
+const ctx = { prix: PRIX, produits, emplacements: DATA.emplacements, measure: E.approxMeasure };
+let ok = 0;
+function test(nom, fn) { try { fn(); ok++; console.log("  ok  " + nom); } catch (e) { console.log("  ECHEC " + nom + "\n   " + e.message); process.exitCode = 1; } }
+
+function pieces(n, couleur, extra) {
+  return Array.from({ length: n }, (_, i) => Object.assign({ id: "p" + i, produitId: "polo-essential", couleurId: couleur || "marine", taille: "M", prenom: "", numero: "" }, extra ? extra(i) : {}));
+}
+const A6poitrine = { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" } };
+
+console.log("Prix de vente");
+test("règle d'arrondi et marge, 1 pièce A6 poitrine", () => {
+  const r = E.computeOrder({ pieces: pieces(1), marquages: A6poitrine, technique: "dtf" }, ctx);
+  assert.strictEqual(r.couts.achats, 7.99);
+  assert.strictEqual(r.couts.planchesHT, 2.40);
+  assert.strictEqual(r.couts.planchesTTC, 2.88);
+  assert.strictEqual(r.couts.livraison, 4.90);
+  assert.strictEqual(r.couts.total, 15.77);
+  assert.strictEqual(r.prix.arrondi, 17.5);
+  assert.strictEqual(r.prix.unitaire, 18.5);   // marge 1,73 <= 2 donc +1
+  assert.ok(r.prix.marge > 2);
+});
+test("calcPrix : multiple exact conservé", () => {
+  const p = E.calcPrix(70, 10, PRIX.regles);        // 7,00 -> 7,50, marge 5
+  assert.strictEqual(p.arrondi, 7.5); assert.strictEqual(p.unitaire, 7.5); assert.strictEqual(p.marge, 5);
+  const q = E.calcPrix(75, 10, PRIX.regles);        // 7,50 pile, marge 0 -> +1
+  assert.strictEqual(q.arrondi, 7.5); assert.strictEqual(q.unitaire, 8.5);
+});
+test("calcPrix : revérifie la marge après l'ajout", () => {
+  const p = E.calcPrix(10, 1, PRIX.regles);        // 10 -> 10, marge 0 -> 11 (1) -> 12 (2) -> 13 (3)
+  assert.strictEqual(p.unitaire, 13); assert.ok(p.marge > 2);
+});
+test("calcPrix : marge exactement 2 n'est pas suffisante", () => {
+  const p = E.calcPrix(8, 1, PRIX.regles);          // arrondi 10, marge 2 -> +1
+  assert.strictEqual(p.arrondi, 10); assert.strictEqual(p.unitaire, 11);
+});
+
+console.log("Placement des planches");
+function overlap(a, b) { return a.x < b.x + b.w - 1e-9 && b.x < a.x + a.w - 1e-9 && a.y < b.y + b.h - 1e-9 && b.y < a.y + a.h - 1e-9; }
+function checkPlan(sheets, gap) {
+  sheets.forEach(s => {
+    s.placed.forEach(p => { assert.ok(p.x >= -1e-9 && p.y >= -1e-9 && p.x + p.w <= s.format.w + 1e-9 && p.y + p.h <= s.format.h + 1e-9, "hors planche"); });
+    for (let i = 0; i < s.placed.length; i++) for (let j = i + 1; j < s.placed.length; j++) {
+      const a = s.placed[i], b = s.placed[j];
+      const ia = { x: a.x, y: a.y, w: a.w + gap, h: a.h + gap }, ib = { x: b.x, y: b.y, w: b.w + gap, h: b.h + gap };
+      assert.ok(!overlap(ia, ib), "chevauchement ou écart insuffisant");
+    }
+  });
+}
+test("4 motifs A6 tiennent sur une A4 (ecart 0)", () => {
+  const r = E.computeOrder({ pieces: pieces(4), marquages: A6poitrine, technique: "dtf" }, ctx);
+  assert.strictEqual(r.plans.dtf.sheets.length, 1);
+  assert.strictEqual(r.plans.dtf.sheets[0].format.id, "A4");
+});
+test("10 pièces A6 poitrine : aucun chevauchement, tout est placé", () => {
+  const r = E.computeOrder({ pieces: pieces(10), marquages: A6poitrine, technique: "dtf" }, ctx);
+  const placed = r.plans.dtf.sheets.reduce((s, x) => s + x.placed.length, 0);
+  assert.strictEqual(placed, 10);
+  checkPlan(r.plans.dtf.sheets, PRIX.placement.ecart);
+  console.log("     10 pièces :", r.plans.dtf.sheets.map(s => s.format.id + "×" + s.placed.length).join(" + "), "| planches HT", r.couts.planchesHT, "| coût", r.couts.total, "| prix unitaire", r.prix.unitaire);
+});
+test("50 pièces A6 poitrine : planche unique moins chère que 50 A6", () => {
+  const r = E.computeOrder({ pieces: pieces(50), marquages: A6poitrine, technique: "dtf" }, ctx);
+  checkPlan(r.plans.dtf.sheets, PRIX.placement.ecart);
+  assert.ok(r.couts.planchesHT < 50 * 2.40);
+  console.log("     50 pièces :", r.lignesPlanches.map(l => l.formatId + "×" + l.qty).join(" + "), "| HT", r.couts.planchesHT, "| prix unitaire", r.prix.unitaire);
+});
+test("commande mixte : dos A4 + prénoms + numéros + poitrine A6 + manches", () => {
+  const marq = {
+    poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" },
+    dos: { actif: true, avecImage: true, format: "A4", orient: "portrait", prenom: { actif: true, hauteur: 4, police: "Bebas Neue", couleur: "#fff" }, numero: { actif: true, hauteur: 12, police: "Bebas Neue", couleur: "#fff" }, textePos: "dessous" },
+    manche_g: { actif: true, avecImage: true, format: "A6", orient: "portrait" },
+    manche_d: { actif: true, avecImage: true, format: "A6", orient: "portrait" }
+  };
+  const noms = ["Léo", "Maximilien", "Sam", "Inès", "Alexandre-Louis", "Zoé", "Tom", "Lou", "Chloé", "Hugo", "Emma", "Nils"];
+  const r = E.computeOrder({ pieces: pieces(12, "marine", i => ({ prenom: noms[i], numero: String(i + 1) })), marquages: marq, technique: "dtf" }, ctx);
+  checkPlan(r.plans.dtf.sheets, PRIX.placement.ecart);
+  assert.strictEqual(r.motifs.length, 12 * (1 + 3 + 1 + 1));
+  const placed = r.plans.dtf.sheets.reduce((s, x) => s + x.placed.length, 0);
+  assert.strictEqual(placed, r.motifs.length);
+  console.log("     12 pièces complètes :", r.lignesPlanches.map(l => l.formatId + "×" + l.qty).join(" + "), "| HT", r.couts.planchesHT, "| livraison", r.couts.livraison, "| coût", r.couts.total, "| prix unitaire", r.prix.unitaire, "| marge", r.prix.marge);
+  r.warnings.forEach(w => console.log("     avertissement :", w));
+});
+test("sublimation seulement sur polyester clair, le reste en DTF", () => {
+  const ps = pieces(3, "blanc").concat(pieces(2, "marine").map((p, i) => Object.assign(p, { id: "m" + i })));
+  const r = E.computeOrder({ pieces: ps, marquages: A6poitrine, technique: "sublimation" }, ctx);
+  assert.strictEqual(r.motifs.filter(m => m.techno === "sublimation").length, 3);
+  assert.strictEqual(r.motifs.filter(m => m.techno === "dtf").length, 2);
+  assert.ok(r.plans.sublimation && r.plans.dtf);
+  console.log("     sublimation :", r.plans.sublimation.sheets.map(s => s.format.id).join("+"), "| DTF :", r.plans.dtf.sheets.map(s => s.format.id).join("+"));
+});
+test("tableau vitrine", () => {
+  const t = E.priceTable(DATA.produits[0], [1, 5, 10, 20, 50], ctx);
+  console.log("     ", t.map(x => x.q + " → " + x.unitaire.toFixed(2) + " €").join(" | "));
+  t.forEach(x => assert.ok(x.unitaire > 0));
+});
+test("livraison offerte à partir de 100 € HT de planches", () => {
+  const r = E.computeOrder({ pieces: pieces(400), marquages: A6poitrine, technique: "dtf" }, ctx);
+  assert.ok(r.couts.planchesHT >= 100 ? r.couts.livraison === 0 : true);
+});
+
+console.log("\n" + ok + " tests passés");
