@@ -376,7 +376,23 @@
     }, 0));
     var baseSeuil = prix.sprintPrixHT ? planchesHT : planchesTTC;
     var livraison = planchesHT > 0 && baseSeuil < prix.livraison.seuilGratuit ? prix.livraison.colissimo : 0;
-    var cout = round2(achats + planchesTTC + livraison);
+
+    // Articles d'un vendeur de la place de marché Decathlon : le vendeur livre et facture des frais de port,
+    // une seule fois par vendeur et par commande (prix.livraisonVendeur). Ils sont répartis sur les pièces de ce vendeur.
+    var lv = prix.livraisonVendeur || {}, vendeurs = {};
+    order.pieces.forEach(function (p) {
+      var prod = ctx.produits[p.produitId];
+      if (!prod || !prod.vendeur) return;
+      var v = vendeurs[prod.vendeur];
+      if (!v) {
+        var def = (lv.vendeurs && lv.vendeurs[prod.vendeur]) || {};
+        v = vendeurs[prod.vendeur] = { id: prod.vendeur, nom: def.nom || prod.vendeur, frais: def.frais != null ? def.frais : (lv.defaut || 0), delai: def.delai || "", pieces: 0 };
+      }
+      v.pieces++;
+    });
+    var listeVendeurs = Object.keys(vendeurs).map(function (k) { return vendeurs[k]; });
+    var livraisonVendeurs = round2(listeVendeurs.reduce(function (s, v) { return s + v.frais; }, 0));
+    var cout = round2(achats + planchesTTC + livraison + livraisonVendeurs);
 
     // les planches et la livraison sont imputées aux pièces (la somme reste égale au coût réel)
     var sommeBrute = 0;
@@ -387,7 +403,8 @@
       var prod = ctx.produits[p.produitId]; if (!prod) return;
       var pl = (plancheParPiece[p.id] || 0) * k;
       var li = planchesTTC > 0 ? livraison * pl / planchesTTC : 0;
-      coutPieces[p.id] = { achat: prod.prixAchat, planches: pl, livraison: li, total: prod.prixAchat + pl + li };
+      var lvp = prod.vendeur ? vendeurs[prod.vendeur].frais / vendeurs[prod.vendeur].pieces : 0;
+      coutPieces[p.id] = { achat: prod.prixAchat, planches: pl, livraison: li, livraisonVendeur: lvp, total: prod.prixAchat + pl + li + lvp };
     });
 
     // Un pack complet (au moins deux pièces avec le même identifiant de pack) est un seul article, avec un seul prix
@@ -431,7 +448,8 @@
 
     return {
       N: N, motifs: motifs, warnings: warnings, plans: plans, lignesPlanches: allLines,
-      couts: { achats: achats, planchesHT: planchesHT, planchesTTC: planchesTTC, livraison: livraison, total: cout },
+      couts: { achats: achats, planchesHT: planchesHT, planchesTTC: planchesTTC, livraison: livraison, livraisonVendeurs: livraisonVendeurs, total: cout },
+      vendeurs: listeVendeurs,
       coutPieces: coutPieces,
       prix: vente
     };
@@ -440,14 +458,19 @@
   // Prix affichés sur la vitrine, pour un produit (ou un pack) : un visuel A6 aux emplacements
   // de référence (item.vitrine). Pour un pack, le prix est celui d'un pack complet.
   function priceTable(item, quantites, ctx) {
-    var marq = {};
-    (item.vitrine || ["poitrine"]).forEach(function (e) { marq[e] = { actif: true, avecImage: true, image: null, format: "A6", orient: "portrait" }; });
+    var marq = {}, avecTexte = false;
+    (item.vitrine || ["poitrine"]).forEach(function (e) {
+      var emp = ctx.emplacements[e], txt = !!(emp && emp.texteSeul);
+      marq[e] = { actif: true, avecImage: !txt, image: null, format: "A6", orient: "portrait" };
+      // emplacement réservé aux prénoms (chaussettes...) : le prix affiché compte un prénom de 3 cm
+      if (txt) { avecTexte = true; marq[e].maj = true; marq[e].prenom = { actif: true, police: "Bebas Neue", hauteur: 3, couleur: "#ffffff" }; }
+    });
     var ids = item.produits || [item.id];
     return quantites.map(function (q) {
       var pieces = [];
       for (var i = 0; i < q; i++) ids.forEach(function (pid, j) {
         var prod = ctx.produits[pid];
-        pieces.push({ id: "v" + i + "_" + j, produitId: pid, couleurId: prod.couleurs[0].id, taille: prod.tailles[1] || prod.tailles[0], prenom: "", numero: "",
+        pieces.push({ id: "v" + i + "_" + j, produitId: pid, couleurId: prod.couleurs[0].id, taille: prod.tailles[1] || prod.tailles[0], prenom: avecTexte ? "Prénom" : "", numero: "",
           pack: item.produits ? "pk" + i : undefined, packType: item.produits ? item.id : undefined });
       });
       var r = computeOrder({ pieces: pieces, marquages: marq, technique: "dtf" }, ctx);

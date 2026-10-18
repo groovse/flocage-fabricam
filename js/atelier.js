@@ -10,7 +10,7 @@
   var loaded = null;
   function fmtPct(x) { return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(x * 100) + " %"; }
 
-  var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD", cuisse_g: "CG", cuisse_d: "CD", bas_jambe_g: "BJ" };
+  var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD", cuisse_g: "CG", cuisse_d: "CD", bas_jambe_g: "BJ", chaussette_g: "SG", chaussette_d: "SD" };
   var KIND = { image: "v", prenom: "p", numero: "n" };
 
   function fontsFor(order) {
@@ -112,13 +112,22 @@
       (c.message ? '<blockquote>' + esc(c.message) + "</blockquote>" : "") + "</section>";
 
     // calcul
-    var rows = [
-      ["Vêtements Decathlon (retrait en magasin)", r.N + (r.N > 1 ? " pièces" : " pièce"), fmtEUR(r.couts.achats)],
+    var nMag = 0, nMp = 0, eurMag = 0, eurMp = 0;
+    order.pieces.forEach(function (p) {
+      var pr = A.byId[p.produitId];
+      if (pr.vendeur) { nMp++; eurMp += pr.prixAchat; } else { nMag++; eurMag += pr.prixAchat; }
+    });
+    var plur = function (n) { return n + (n > 1 ? " pièces" : " pièce"); };
+    var rows = [];
+    if (nMag) rows.push(["Vêtements Decathlon (retrait en magasin)", plur(nMag), fmtEUR(eurMag)]);
+    if (nMp) rows.push(["Vêtements de la place de marché Decathlon (livrés par le vendeur)", plur(nMp), fmtEUR(eurMp)]);
+    if (r.couts.livraisonVendeurs) rows.push(["Frais de port des vendeurs (estimation)", r.vendeurs.map(function (v) { return v.nom + " " + fmtEUR(v.frais); }).join(", "), fmtEUR(r.couts.livraisonVendeurs)]);
+    rows = rows.concat([
       ["Planches Sprint, hors taxes", "", fmtEUR(r.couts.planchesHT)],
       ["Planches Sprint, TTC", "TVA " + Math.round(A.PRIX.tva * 100) + " %", fmtEUR(r.couts.planchesTTC)],
       ["Livraison Sprint", r.couts.livraison ? "Colissimo" : "offerte", fmtEUR(r.couts.livraison)],
       ["<b>Coût de revient</b>", "", "<b>" + fmtEUR(r.couts.total) + "</b>"]
-    ];
+    ]);
     pv.groupes.forEach(function (g) {
       var detail = "coût moyen " + fmtEUR(g.coutMoyen) + ", marge " + fmtPct(g.taux) + (g.pack ? " (une seule pièce du pack)" : "") + ", soit " + fmtEUR(g.unitaire) + " l'unité";
       rows.push([esc(A.groupName(g)) + " × " + g.n, detail, fmtEUR(g.total)]);
@@ -133,11 +142,23 @@
     }
     html += "</section>";
 
-    // Decathlon
-    var ach = achats(order);
-    html += '<section class="a-block"><h2>À acheter chez Decathlon</h2>' + table(["Modèle", "Couleur", "Taille", { t: "Quantité", num: true }, { t: "Prix", num: true }],
-      ach.map(function (a) { return [esc(a.prod.nom) + (a.col.ref ? ' <span class="muted">réf. ' + esc(a.col.ref) + "</span>" : ""), esc(a.col.nom), esc(a.taille), a.qty, fmtEUR(a.qty * a.prod.prixAchat)]; })) +
-      '<p class="hint">Prix d\'achat enregistré : ' + ach.map(function (a) { return a.prod.nom + " " + fmtEUR(a.prod.prixAchat); }).filter(function (v, i, arr) { return arr.indexOf(v) === i; }).map(esc).join(", ") + ". Vérifie-le en magasin.</p></section>";
+    // Decathlon : en magasin, puis en ligne pour les articles de la place de marché
+    var ach = achats(order), magasin = ach.filter(function (a) { return !a.prod.vendeur; }), enligne = ach.filter(function (a) { return a.prod.vendeur; });
+    var fiche = function (a) { return a.prod.lien ? ' <a href="' + esc(a.prod.lien) + '" target="_blank" rel="noopener">fiche</a>' : ""; };
+    var prixConnus = function (list) { return list.map(function (a) { return a.prod.nom + " " + fmtEUR(a.prod.prixAchat); }).filter(function (v, i, arr) { return arr.indexOf(v) === i; }).map(esc).join(", "); };
+    if (magasin.length) {
+      html += '<section class="a-block"><h2>À acheter chez Decathlon, en magasin</h2>' + table(["Modèle", "Couleur", "Taille", { t: "Quantité", num: true }, { t: "Prix", num: true }],
+        magasin.map(function (a) { return [esc(a.prod.nom) + (a.col.ref ? ' <span class="muted">réf. ' + esc(a.col.ref) + "</span>" : "") + fiche(a), esc(a.col.nom), esc(a.taille), a.qty, fmtEUR(a.qty * a.prod.prixAchat)]; })) +
+        '<p class="hint">Prix d\'achat enregistré : ' + prixConnus(magasin) + ". Vérifie-le en magasin.</p></section>";
+    }
+    if (enligne.length) {
+      html += '<section class="a-block"><h2>À commander en ligne sur Decathlon (place de marché)</h2>' + table(["Modèle", "Vendeur", "Couleur", "Taille", { t: "Quantité", num: true }, { t: "Prix", num: true }],
+        enligne.map(function (a) { var v = A.vendeurInfo(a.prod); return [esc(a.prod.nom) + fiche(a), esc(v.nom), esc(a.col.nom), esc(a.taille), a.qty, fmtEUR(a.qty * a.prod.prixAchat)]; })) +
+        '<ul class="notes">' + r.vendeurs.map(function (v) {
+          return "<li>" + esc(v.nom) + " : frais de port estimés à " + fmtEUR(v.frais) + " pour tout ce que tu commandes chez ce vendeur" + (v.delai ? ", livraison en " + v.delai : "") + ". Le montant réel s'affiche seulement au moment de la commande : s'il est différent, corrige-le dans prix.js (livraisonVendeur).</li>";
+        }).join("") + "<li>Pas de retrait en magasin. Vérifie le stock de la taille avant de commander : il est souvent très limité. Une fois floqué, l'article n'est ni repris ni échangé.</li></ul>" +
+        '<p class="hint">Prix d\'achat enregistré : ' + prixConnus(enligne) + ".</p></section>";
+    }
 
     // Sprint
     var lines = r.lignesPlanches;
@@ -161,7 +182,7 @@
       });
       html += "</section>";
     });
-    if (lines.length) html += '<p class="hint key">Lecture des étiquettes : numéro de pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de la jambe gauche, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Les motifs tournés de 90° sont déjà dessinés tournés.</p>';
+    if (lines.length) html += '<p class="hint key">Lecture des étiquettes : numéro de pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de la jambe gauche, SG chaussette gauche, SD chaussette droite, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Les motifs tournés de 90° sont déjà dessinés tournés.</p>';
 
     // pièces
     html += '<section class="a-block"><h2>Pièces à presser</h2>' + table(["N°", "Modèle", "Prénom", "Numéro", "Motifs"],
