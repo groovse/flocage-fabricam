@@ -5,6 +5,16 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 3.1.0 — 18/10/2026
+
+Chaussettes dans les packs, pack entraîneur et deux nouveaux vêtements.
+
+- **Chaussettes dans les packs** : les packs basket, fitness femme et jogging femme passent à trois pièces avec les chaussettes de football blanches. Le pack football passe aussi à trois pièces (sweat T100, short Essentiel et chaussettes). Le prix affiché compte un visuel A6 sur chaque vêtement et un prénom de 3 cm sur une chaussette.
+- **Pack entraîneur** (homme) : veste micropolaire Kariban, haut thermique BL100 homme, jogging molleton homme et chaussettes, quatre pièces vendues comme un seul article (une seule marge, plafonnée à 2 €). La veste vient d'un vendeur partenaire : ses frais de port s'ajoutent une fois par commande.
+- **Deux nouveaux vêtements** : jogging molleton homme Domyos (9,99 €, 100 % polyester, noir ou bleu acier, S à 4XL) et short de football adulte Essentiel Kipsta (4,99 €, 100 % polyester, 8 coloris, XS à 4XL). Ils se commandent aussi seuls.
+- Les packs de plus de deux pièces s'affichent correctement dans le catalogue (« Trois pièces : … ») et une commande qui ne contient qu'un pack non personnalisé reste remplaçable.
+- Aucun changement de règle de prix ni de format du fichier de commande. Tests : 34 en tout (composition des packs, marge plafonnée par pack, nouveaux vêtements).
+
 ## 3.0.0 — 18/10/2026
 
 Nouveau fournisseur de planches (DTF Print) et marge plafonnée à 2 € par article. **Règle de prix modifiée : les prix du site changent.**

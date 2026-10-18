@@ -893,6 +893,78 @@ window.DATA = {
         manche_g: { vue: "cote", cx: 77, cy: 24, w: 10, h: 14, rot: -45, label: "Manche gauche" },
         manche_d: { vue: "cote", cx: 13, cy: 24, w: 10, h: 14, rot: 45,  label: "Manche droite" }
       }
+    },
+    {
+      id: "jogging-homme",
+      nomCourt: "Pantalon jogging homme",
+      nom: "Jogging molleton homme",
+      marque: "Domyos, Decathlon",
+      modele: "pantalon",
+      demonstratif: "ce pantalon",
+      tags: { genre: ["homme"], style: "casual", type: "bas" },
+      prixAchat: 9.99,
+      matiere: "100 % polyester",
+      polyesterPct: 100,
+      tailles: ["S", "M", "L", "XL", "2XL", "3XL", "4XL"],
+      couleurs: [
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8974121" },
+        { id: "bleu-acier", nom: "Bleu acier", hex: "#55708f", clair: false, ref: "9001530" }
+      ],
+      lien: "https://www.decathlon.fr/p/jogging-molleton-homme-noir/375529/c1m8974121",
+      photos: [
+        "https://contents.mediadecathlon.com/p3147366/k$ff47eba57df5db4a9d042fb7e7ac988b/picture.jpg",
+        "https://contents.mediadecathlon.com/p3147369/k$f849b0068f35bb66ee619a6a3d0f4905/picture.jpg",
+        "https://contents.mediadecathlon.com/p3147378/k$afbfb4967b1b60c44067fbaaf3cc1423/picture.jpg",
+        "https://contents.mediadecathlon.com/p3147365/k$e15ba2006da748e5c8decef9e9d53d2d/picture.jpg",
+        "https://contents.mediadecathlon.com/p3147376/k$82230e5733bf34796cdb8e42cf891e52/picture.jpg",
+        "https://contents.mediadecathlon.com/p3147374/k$dc551a04cea129af28d64fcd83e62bbf/picture.jpg"
+      ],
+      vitrine: ["cuisse_g"],
+      texteVitrine: "sur une cuisse",
+      zones: {
+        cuisse_g:    { vue: "face", cx: 59,   top: 22, w: 14, h: 21, label: "Cuisse gauche" },
+        cuisse_d:    { vue: "face", cx: 31,   top: 22, w: 14, h: 21, label: "Cuisse droite" },
+        bas_jambe_g: { vue: "face", cx: 59.2, top: 86, w: 12, h: 6,  label: "Bas de la jambe gauche" }
+      }
+    },
+    {
+      id: "short-football-essentiel",
+      nomCourt: "Short football",
+      nom: "Short de football adulte Essentiel",
+      marque: "Kipsta, Decathlon",
+      modele: "short-tennis",
+      demonstratif: "ce short",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Football", type: "bas" },
+      prixAchat: 4.99,
+      matiere: "100 % polyester",
+      polyesterPct: 100,
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
+      couleurs: [
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8327267" },
+        { id: "blanc", nom: "Blanc", hex: "#f3f3f0", clair: true, ref: "8327265" },
+        { id: "bleu-acier", nom: "Bleu acier", hex: "#55708f", clair: false, ref: "8525866" },
+        { id: "bleu-indigo", nom: "Bleu indigo", hex: "#2b3f7a", clair: false, ref: "8525867" },
+        { id: "rouge-piment", nom: "Rouge piment", hex: "#c4252b", clair: false, ref: "8407483" },
+        { id: "vert-emeraude", nom: "Vert émeraude", hex: "#1b7a50", clair: false, ref: "8407485" },
+        { id: "jaune-citron", nom: "Jaune citron", hex: "#e6dc3c", clair: false, ref: "8407484" },
+        { id: "orange-flamme", nom: "Orange fluo", hex: "#ff6a13", clair: false, ref: "8383071" }
+      ],
+      lien: "https://www.decathlon.fr/p/short-de-football-adulte-essentiel-noir/108306/c382m8327267",
+      photos: [
+        "https://contents.mediadecathlon.com/p2959930/k$eed773dcfeb281a10fa2ae0218ee9cec/picture.jpg",
+        "https://contents.mediadecathlon.com/p2960173/k$f7ff63a6e4e9b195f7e1aa98d0dfce75/picture.jpg",
+        "https://contents.mediadecathlon.com/p2960119/k$1c907df64987565a70c02958c137e859/picture.jpg",
+        "https://contents.mediadecathlon.com/p2960023/k$afacdafafa28a252d82e9328d809bc54/picture.jpg",
+        "https://contents.mediadecathlon.com/p2960229/k$557c924fd20ec025b94886d61f5002f8/picture.jpg",
+        "https://contents.mediadecathlon.com/p2959962/k$d62d0d095e64299b2f76a11665a924b8/picture.jpg",
+        "https://contents.mediadecathlon.com/p2960080/k$5fc38d40976400dceb3cc5111ca57266/picture.jpg"
+      ],
+      vitrine: ["cuisse_g"],
+      texteVitrine: "sur une cuisse",
+      zones: {
+        cuisse_g: { vue: "face", cx: 57.5, top: 20, w: 14, h: 21, label: "Cuisse gauche" },
+        cuisse_d: { vue: "face", cx: 32.5, top: 20, w: 14, h: 21, label: "Cuisse droite" }
+      }
     }
   ],
 
@@ -900,44 +972,58 @@ window.DATA = {
   packs: [
     {
       id: "pack-basket",
-      nom: "Pack basket : maillot et short",
+      nom: "Pack basket : maillot, short et chaussettes",
       nomCourt: "Pack basket",
       demonstratif: "ce pack",
       tags: { genre: ["homme", "femme"], style: "sport", sport: "Basket", type: "ensemble" },
-      produits: ["maillot-basket", "short-basket"],
-      vitrine: ["poitrine", "cuisse_g"],
-      texteVitrine: "sur la poitrine du maillot et une cuisse du short"
+      produits: ["maillot-basket", "short-basket", "chaussettes-football"],
+      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
+      texteVitrine: "sur la poitrine du maillot et une cuisse du short",
+      noteVitrine: "Avec un visuel A6 sur le maillot et sur le short, et un prénom de 3 cm sur une chaussette."
     },
     {
       id: "pack-fitness-femme",
-      nom: "Pack fitness femme : t-shirt et short",
+      nom: "Pack fitness femme : t-shirt, short et chaussettes",
       nomCourt: "Pack fitness femme",
       demonstratif: "ce pack",
       tags: { genre: ["femme"], style: "sport", sport: "Fitness", type: "ensemble" },
-      produits: ["tshirt-fitness-femme", "short-slim-fitness"],
-      vitrine: ["poitrine", "cuisse_g"],
-      texteVitrine: "sur la poitrine du t-shirt et une cuisse du short"
+      produits: ["tshirt-fitness-femme", "short-slim-fitness", "chaussettes-football"],
+      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
+      texteVitrine: "sur la poitrine du t-shirt et une cuisse du short",
+      noteVitrine: "Avec un visuel A6 sur le t-shirt et sur le short, et un prénom de 3 cm sur une chaussette."
     },
     {
       id: "pack-jogging-femme",
-      nom: "Pack jogging femme : pantalon et t-shirt",
+      nom: "Pack jogging femme : pantalon, t-shirt et chaussettes",
       nomCourt: "Pack jogging femme",
       demonstratif: "ce pack",
       tags: { genre: ["femme"], style: "casual", type: "ensemble" },
-      produits: ["jogging-femme", "tshirt-coton-femme"],
-      vitrine: ["poitrine", "cuisse_g"],
-      texteVitrine: "sur la poitrine du t-shirt et une cuisse du pantalon"
+      produits: ["jogging-femme", "tshirt-coton-femme", "chaussettes-football"],
+      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
+      texteVitrine: "sur la poitrine du t-shirt et une cuisse du pantalon",
+      noteVitrine: "Avec un visuel A6 sur le t-shirt et sur le pantalon, et un prénom de 3 cm sur une chaussette."
     },
     {
       id: "pack-football",
-      nom: "Pack football : sweat et chaussettes",
+      nom: "Pack football : sweat, short et chaussettes",
       nomCourt: "Pack football",
       demonstratif: "ce pack",
       tags: { genre: ["homme", "femme"], style: "sport", sport: "Football", type: "ensemble" },
-      produits: ["sweat-football-t100", "chaussettes-football"],
-      vitrine: ["poitrine", "chaussette_g"],
-      texteVitrine: "sur la poitrine du sweat",
-      noteVitrine: "Avec un visuel A6 sur la poitrine du sweat et un prénom de 3 cm sur une chaussette."
+      produits: ["sweat-football-t100", "short-football-essentiel", "chaussettes-football"],
+      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
+      texteVitrine: "sur la poitrine du sweat et une cuisse du short",
+      noteVitrine: "Avec un visuel A6 sur le sweat et sur le short, et un prénom de 3 cm sur une chaussette."
+    },
+    {
+      id: "pack-entraineur",
+      nom: "Pack entraîneur : veste, haut thermique, jogging et chaussettes",
+      nomCourt: "Pack entraîneur",
+      demonstratif: "ce pack",
+      tags: { genre: ["homme"], style: "sport", type: "ensemble" },
+      produits: ["veste-micropolaire", "thermique-homme", "jogging-homme", "chaussettes-football"],
+      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
+      texteVitrine: "sur la poitrine de la veste et du haut thermique et une cuisse du pantalon",
+      noteVitrine: "Avec un visuel A6 sur la veste, sur le haut thermique et sur le pantalon, et un prénom de 3 cm sur une chaussette."
     }
   ]
 };

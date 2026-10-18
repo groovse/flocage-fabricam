@@ -24,12 +24,12 @@ Ouvre `index.html#/atelier` (lien « Espace atelier » en bas de page) et charge
 
 ## Catalogue
 
-25 vêtements et 4 packs.
+27 vêtements et 5 packs.
 
 - **Hauts** : polo de tennis Essential, sweat chaud en molleton, maillot de basket TANK 100, débardeur fitness 500, polo de golf MW500, t-shirts (coton femme Essentiel, manches courtes femme, fitness femme 100, coton homme, tee-shirt homme gris), sweats de football (T100 et 1/2 zip Viralto Axton), hauts thermiques BL100 (femme et homme), veste micropolaire Kariban, veste sans manches Regatta, doudoune sans manche Result Core.
-- **Bas** : short de basket SHORT 100, short de tennis Essential, short 2 en 1 fitness femme, short slim fitness femme 500, pantalon de jogging droit femme.
+- **Bas** : short de basket SHORT 100, short de tennis Essential, short 2 en 1 fitness femme, short slim fitness femme 500, pantalon de jogging droit femme, jogging molleton homme Domyos, short de football Essentiel Kipsta.
 - **Robe** : robe Hummel à manches courtes. **Accessoire** : chaussettes de football (prénom ou numéro seulement).
-- **Ensembles** : survêtement Joma Eco Championship (vendu en un seul article, flocage sur la veste), pack basket (maillot + short), pack fitness femme (t-shirt + short slim), pack jogging femme (pantalon + t-shirt coton), pack football (sweat T100 + chaussettes). Un pack est fait de pièces achetées séparément et vendu comme un seul article.
+- **Ensembles** : survêtement Joma Eco Championship (vendu en un seul article, flocage sur la veste), pack basket (maillot + short + chaussettes), pack fitness femme (t-shirt + short slim + chaussettes), pack jogging femme (pantalon + t-shirt coton + chaussettes), pack football (sweat T100 + short Essentiel + chaussettes), pack entraîneur (veste micropolaire + haut thermique homme + jogging homme + chaussettes). Un pack est fait de pièces achetées séparément et vendu comme un seul article.
 
 Le catalogue se filtre par genre (Homme, Femme), par style (Sport, Casual) et par type (Hauts, Bas, Robes, Ensembles, Accessoires) ; un vêtement mixte apparaît dans les deux genres. Un bandeau tout en haut du site invite à demander un vêtement qui n'est pas au catalogue : il ouvre un message Gmail pré-rempli vers Fabr'Icam.
 
@@ -56,11 +56,11 @@ Le dessin à la taille réelle reste la référence pour vérifier les dimension
 
 Les planches DTF Print et la livraison sont réparties sur les pièces au prorata de la surface de leurs motifs. Chaque produit a son propre prix unitaire : coût moyen de ses pièces (vêtement + part des planches et de la livraison) + 20 %, **avec une marge qui ne dépasse jamais 2 € par article**, arrondi au centime supérieur. Une pièce qui coûte 10 € est vendue 12 €, une pièce qui coûte 30 € est vendue 32 € (et non 36 €). Le plafond est `regles.margeMax` dans `js/prix.js` (mets `null` pour le supprimer). Le prix suit le coût, sans palier.
 
-Pack basket : le maillot et le short sont vendus comme un seul article, avec une seule marge. Elle vaut 20 % du coût moyen d'une pièce, soit 10 % du coût du pack, et reste plafonnée à 2 € pour tout le pack. Le pack coûte donc moins cher que les deux pièces séparées. Le taux est dans `js/prix.js` (`regles.marge`).
+Un pack (basket, fitness, jogging, football, entraîneur) est vendu comme un seul article, avec une seule marge. Elle vaut 20 % du coût moyen d'une pièce, soit 20 % divisé par le nombre de pièces du coût du pack (6,7 % pour trois pièces, 5 % pour quatre), et reste plafonnée à 2 € pour tout le pack. Le pack coûte donc moins cher que les pièces séparées. Le taux est dans `js/prix.js` (`regles.marge`).
 
 Frais de port d'un vendeur de la place de marché : un montant par vendeur et par commande (`livraisonVendeur` dans `js/prix.js`), ajouté au coût de revient et réparti sur les pièces de ce vendeur, avant la marge (20 %, plafonnée à 2 €). Plus la commande est grosse, plus la part par pièce baisse.
 
-Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référence (poitrine, ou une cuisse pour les shorts), pour 1, 5, 10, 20 et 50 pièces. Pour un pack : le visuel A6 sur chaque pièce de référence, prix par pack. Pour les chaussettes (prénom seul), le prix affiché compte un prénom de 3 cm de haut.
+Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référence (poitrine, ou une cuisse pour les shorts), pour 1, 5, 10, 20 et 50 pièces. Pour un pack : le visuel A6 sur chaque pièce de référence, prix par pack. Pour les chaussettes (prénom seul), le prix affiché compte un prénom de 3 cm de haut : tous les packs en contiennent une paire.
 
 ## Choses à vérifier
 
@@ -111,7 +111,7 @@ Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (
 node tests/engine.test.js
 ```
 
-32 tests : 22 sur le moteur, marge de 20 % plafonnée à 2 €, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité ; 3 sur les réglages de l'aperçu sur photo (couleur et rang de photo valides, emplacements dans la photo) ; 7 sur le catalogue étendu (données cohérentes, dessins de face et de dos, frais de port par vendeur, chaussettes, packs, sublimation).
+34 tests : 22 sur le moteur, marge de 20 % plafonnée à 2 €, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité ; 3 sur les réglages de l'aperçu sur photo (couleur et rang de photo valides, emplacements dans la photo) ; 9 sur le catalogue étendu (données cohérentes, dessins de face et de dos, frais de port par vendeur, chaussettes, composition et marge des packs, nouveaux vêtements, sublimation).
 
 ## Publier sur GitHub Pages
 
