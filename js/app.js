@@ -11,7 +11,8 @@
   DATA.produits.forEach(function (p) { byId[p.id] = p; });
   var PACKS = {};
   (DATA.packs || []).forEach(function (p) { PACKS[p.id] = p; });
-  var EMP_ORDER = ["poitrine", "dos", "manche_g", "manche_d", "cuisse_g", "cuisse_d", "bas_jambe_g", "chaussette_g", "chaussette_d"];
+  var EMP_ORDER = ["poitrine", "dos", "manche_g", "manche_d", "cuisse_g", "cuisse_d", "bas_jambe_g", "chaussette_g", "chaussette_d",
+    "sac", "gourde", "casquette", "bonnet", "tour_de_cou", "bandeau", "ceinture"];
   var QUANTITES_VITRINE = [1, 5, 10, 20, 50];
 
   var nfEUR = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -90,7 +91,7 @@
   // « 2XL seulement », « XS, S et 2XL » ou « XS à 3XL »
   function taillesTxt(pr) {
     var a = pr.tailles;
-    if (a.length === 1) return a[0] + " seulement";
+    if (a.length === 1) return /unique/i.test(a[0]) ? "taille unique" : a[0] + " seulement";
     return a.length <= 4 ? a.slice(0, -1).join(", ") + " et " + a[a.length - 1] : a[0] + " à " + a[a.length - 1];
   }
 
@@ -99,12 +100,13 @@
   function newMarquage(empId, prod) {
     var emp = DATA.emplacements[empId], f = emp.formats;
     var big = empId === "dos", tiny = empId === "bas_jambe_g" || /^chaussette/.test(empId), small = /^(manche|cuisse)/.test(empId);
+    var mini = /^(gourde|casquette|bonnet|tour_de_cou|bandeau|ceinture)$/.test(empId);   // accessoires : très petite surface
     var txt = darkColor(prod) ? "#ffffff" : "#14213d";
     return {
       actif: false, avecImage: !emp.texteSeul, image: null,
       format: f.length ? (big ? f[f.length - 1] : f[0]) : "A6", orient: "portrait",
-      prenom: { actif: false, hauteur: big ? 4 : tiny ? 2.5 : small ? 1.5 : 2, police: "Bebas Neue", couleur: txt },
-      numero: { actif: false, hauteur: big ? 14 : tiny ? 3.5 : small ? 4 : 5, police: "Bebas Neue", couleur: txt },
+      prenom: { actif: false, hauteur: big ? 4 : tiny ? 2.5 : small ? 1.5 : mini ? 1.2 : 2, police: "Bebas Neue", couleur: txt },
+      numero: { actif: false, hauteur: big ? 14 : tiny ? 3.5 : small ? 4 : mini ? 2.5 : 5, police: "Bebas Neue", couleur: txt },
       maj: true, textePos: "dessous"
     };
   }
@@ -250,7 +252,7 @@
 
   function cardPhoto(item) {
     if (item.produits) {
-      return '<div class="p-photo duo">' + item.produits.map(function (id) {
+      return '<div class="p-photo duo" data-n="' + item.produits.length + '">' + item.produits.map(function (id) {
         var pr = byId[id], ok = pr.photos && pr.photos[0];
         return '<div class="cell" data-prod="' + pr.id + '">' + (ok ? photoImg(pr, pr.photos[0], 600) + zoomBtn(pr) : silhouette(pr)) + '</div>';
       }).join("") + '</div>';
@@ -292,13 +294,20 @@
     });
     $$("[data-filtre]").forEach(function (b) { b.setAttribute("aria-pressed", FILTRE[b.dataset.filtre] === b.dataset.valeur ? "true" : "false"); });
     var out = $("#f-count"); if (!out) return;
-    if (!nV && !nP) out.innerHTML = "Aucun vêtement ne correspond à ces filtres. Tu peux nous <a href=\"" + autreVetementHref() + "\">demander le vêtement que tu cherches</a>.";
-    else out.textContent = nV + (nV > 1 ? " vêtements" : " vêtement") + (nP ? " et " + nP + (nP > 1 ? " packs" : " pack") : "");
+    if (!nV && !nP) out.innerHTML = "Aucun article ne correspond à ces filtres. Tu peux nous <a href=\"" + autreVetementHref() + "\">demander le vêtement que tu cherches</a>.";
+    else out.textContent = nV + (nV > 1 ? " articles" : " article") + (nP ? " et " + nP + (nP > 1 ? " packs" : " pack") : "");
   }
 
   function nombreEnLettres(n) { return ["Zéro", "Une", "Deux", "Trois", "Quatre", "Cinq", "Six"][n] || String(n); }
   // Plus grand nombre de pièces d'un pack : une commande qui ne contient qu'un pack non personnalisé reste « vierge »
   function taillePackMax() { return Math.max(2, ...(DATA.packs || []).map(function (pk) { return pk.produits.length; })); }
+
+  // Format du visuel compté dans le prix de la vitrine : A6, ou le plus petit format de l'emplacement pour un accessoire (Mini 5 × 5 cm)
+  function formatVitrine(item) {
+    var emp = DATA.emplacements[(item.vitrine || ["poitrine"])[0]], f = emp && emp.formats || [];
+    var id = f.indexOf("A6") >= 0 || !f.length ? "A6" : f[0], d = PRIX.formatsMotif[id];
+    return id === "A6" ? "A6" : id + " (" + d.w + " × " + d.h + " cm)";
+  }
 
   function cardHTML(item) {
     var isPack = !!item.produits, prods = isPack ? item.produits.map(function (id) { return byId[id]; }) : [item];
@@ -323,7 +332,7 @@
       '<ul class="swatches" aria-label="Couleurs">' + sw + '</ul>' +
       '<p class="p-meta">' + (pointures ? "Pointures" : "Tailles") + ' : ' + tailles + '.</p>' +
       '<h4>Prix par ' + (isPack ? "pack" : "pièce") + '</h4>' + priceStrip(item) +
-      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel A6 " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : "vêtement") + ', planche de transfert et livraison compris. Le prix baisse avec la quantité.</p>' +
+      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : "article") + ', planche de transfert et livraison compris. Le prix baisse avec la quantité.</p>' +
       prods.filter(function (pr) { return pr.vendeur; }).map(function (pr) { return '<p class="note note-vendeur">' + esc(vendeurTexte(pr)) + '</p>'; }).join("") +
       '<a class="btn btn-primary" href="#/configurer/' + item.id + '">Personnaliser ' + esc(item.demonstratif || "ce produit") + '</a>' +
       '</div></article>';

@@ -282,14 +282,14 @@ test("catalogue : identifiants uniques, emplacements, modèles de dessin et tags
 });
 test("dessins : chaque vêtement se dessine de face et de dos, et ses zones tiennent dans le dessin", () => {
   DATA.produits.forEach(p => {
-    const m = window.Preview.models[p.modele], H = m.h || 82, dy = m.dy || 0;
+    const m = window.Preview.models[p.modele], W = m.w || 90, H = m.h || 82, dy = m.dy || 0;
     ["face", "dos"].forEach(vue => {
       const svg = window.Preview.render({ prod: p, hex: p.couleurs[0].hex, vue, marquages: {}, ctx });
       assert.ok(svg.indexOf("<svg") === 0 && svg.indexOf("NaN") < 0 && svg.indexOf("undefined") < 0, p.id + " " + vue);
     });
     Object.keys(p.zones).forEach(e => {
       const z = p.zones[e]; if (z.cy != null) return;          // les manches sont tournées : on ne les contrôle pas ici
-      assert.ok(z.cx - z.w / 2 >= 0 && z.cx + z.w / 2 <= 90, p.id + " " + e + " : zone hors du dessin en largeur");
+      assert.ok(z.cx - z.w / 2 >= 0 && z.cx + z.w / 2 <= W, p.id + " " + e + " : zone hors du dessin en largeur");
       assert.ok(z.top >= 0 && z.top + z.h + dy <= H, p.id + " " + e + " : zone hors du dessin en hauteur");
     });
   });
@@ -357,6 +357,39 @@ test("catalogue : jogging homme et short de football 4,99 € ajoutés (version 
   assert.strictEqual(produits["jogging-homme"].prixAchat, 9.99);
   assert.strictEqual(produits["short-football-essentiel"].prixAchat, 4.99);
   assert.deepStrictEqual(produits["jogging-homme"].tags.genre, ["homme"]);
+});
+test("accessoires : formats, zones, vitrine et prix valides pour chaque article (version 3.2.0)", () => {
+  const acc = DATA.produits.filter(p => p.tags.type === "accessoire");
+  assert.ok(acc.length >= 19, "accessoires : " + acc.length);
+  acc.forEach(p => {
+    Object.keys(p.zones).forEach(e => {
+      const emp = DATA.emplacements[e], z = p.zones[e];
+      emp.formats.forEach(f => {
+        const m = PRIX.formatsMotif[f]; assert.ok(m, p.id + " : format inconnu " + f);
+        const ok = (m.w <= z.w && m.h <= z.h) || (m.h <= z.w && m.w <= z.h);
+        assert.ok(ok, p.id + " : " + f + " ne tient pas dans la zone " + e + " (" + z.w + " x " + z.h + ")");
+      });
+    });
+    const t = E.priceTable(p, [1, 10], ctx);
+    assert.ok(t[0].unitaire > t[1].unitaire && t[1].unitaire > p.prixAchat, p.id + " : prix " + t.map(x => x.unitaire));
+    p.couleurs.forEach(c => assert.ok(/^https:\/\/www\.decathlon\.fr\/p\//.test(c.lien || p.lien), p.id + " : lien de la couleur " + c.id));
+  });
+  // le prix de la vitrine d'un petit accessoire compte un visuel Mini (5 x 5 cm), pas un A6
+  const marq = { casquette: { actif: true, avecImage: true, format: "Mini", orient: "portrait" } };
+  const r = E.computeOrder({ pieces: [piece2("c", "casquette-tennis-tc100")], marquages: marq, technique: "dtf" }, ctx);
+  assert.deepStrictEqual(r.motifs.map(m => [m.w, m.h]), [[5, 5]]);
+  assert.strictEqual(r.couts.planchesTTC, 5.50);
+});
+test("accessoires : pas de sublimation sur une casquette ou un sac blancs, mais oui sur un tour de cou blanc en polyester", () => {
+  const ps = [piece2("a", "casquette-tennis-tc100", { couleurId: "blanc" }), piece2("b", "tour-de-cou-morf", { couleurId: "blanc" }), piece2("c", "bandeau-running-v2", { couleurId: "blanc" })];
+  const order = { pieces: ps, marquages: {}, technique: "sublimation" };
+  assert.deepStrictEqual(ps.map(p => E.pieceTechno(order, p, ctx)), ["dtf", "sublimation", "dtf"]);
+});
+test("accessoires : le tour de cou du vendeur Atelier Katanga ajoute un seul frais de port, même avec la veste d'un autre vendeur", () => {
+  const ps = [piece2("a", "tour-de-cou-morf"), piece2("b", "tour-de-cou-morf"), piece2("c", "veste-micropolaire")];
+  const r = E.computeOrder({ pieces: ps, marquages: {}, technique: "dtf" }, ctx);
+  assert.strictEqual(r.vendeurs.length, 2);
+  assert.strictEqual(r.couts.livraisonVendeurs, 9.98);
 });
 test("sublimation : chaussettes et robe blanches en polyester oui, t-shirt coton non", () => {
   const ps = [piece2("a", "chaussettes-football"), piece2("b", "robe-hummel"), piece2("c", "tshirt-fitness-femme"), piece2("d", "thermique-femme")];

@@ -10,7 +10,7 @@
   var loaded = null;
   function fmtPct(x) { return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(x * 100) + " %"; }
 
-  var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD", cuisse_g: "CG", cuisse_d: "CD", bas_jambe_g: "BJ", chaussette_g: "SG", chaussette_d: "SD" };
+  var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD", cuisse_g: "CG", cuisse_d: "CD", bas_jambe_g: "BJ", chaussette_g: "SG", chaussette_d: "SD", sac: "SA", gourde: "GO", casquette: "CA", bonnet: "BO", tour_de_cou: "TC", bandeau: "BA", ceinture: "CE" };
   var KIND = { image: "v", prenom: "p", numero: "n" };
 
   function fontsFor(order) {
@@ -184,7 +184,7 @@
       });
       html += "</section>";
     });
-    if (lines.length) html += '<p class="hint key">Lecture des étiquettes : numéro de pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de la jambe gauche, SG chaussette gauche, SD chaussette droite, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Les motifs tournés de 90° sont déjà dessinés tournés.</p>';
+    if (lines.length) html += '<p class="hint key">Lecture des étiquettes : numéro de pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de la jambe gauche, SG chaussette gauche, SD chaussette droite, SA face du sac, GO gourde, CA casquette, BO bonnet, TC tour de cou, BA bandeau, CE ceinture, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Les motifs tournés de 90° sont déjà dessinés tournés.</p>';
 
     // pièces
     html += '<section class="a-block"><h2>Pièces à presser</h2>' + table(["N°", "Modèle", "Prénom", "Numéro", "Motifs"],

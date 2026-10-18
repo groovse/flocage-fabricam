@@ -120,6 +120,9 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .p-photo.duo { grid-template-columns: 1fr 1fr; align-items: center; }
 .p-photo .cell { position: relative; display: grid; place-items: center; min-width: 0; }
 .p-photo.duo .cell + .cell { border-left: 1px solid var(--line); }
+.p-photo.duo[data-n="3"] { grid-template-columns: repeat(3, 1fr); }
+.p-photo.duo[data-n="4"] .cell:nth-child(n+3) { border-top: 1px solid var(--line); }
+.p-photo.duo[data-n="4"] .cell:nth-child(3) { border-left: 0; }
 .p-media { min-width: 0; }
 .p-thumbs { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .5rem; }
 .p-thumbs button { width: 46px; height: 46px; padding: 0; border: 1px solid var(--line); border-radius: var(--r); background: #f7f9f8; cursor: pointer; overflow: hidden; }

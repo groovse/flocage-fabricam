@@ -24,11 +24,11 @@ Ouvre `index.html#/atelier` (lien « Espace atelier » en bas de page) et charge
 
 ## Catalogue
 
-27 vêtements et 5 packs.
+27 vêtements, 18 accessoires et 5 packs.
 
 - **Hauts** : polo de tennis Essential, sweat chaud en molleton, maillot de basket TANK 100, débardeur fitness 500, polo de golf MW500, t-shirts (coton femme Essentiel, manches courtes femme, fitness femme 100, coton homme, tee-shirt homme gris), sweats de football (T100 et 1/2 zip Viralto Axton), hauts thermiques BL100 (femme et homme), veste micropolaire Kariban, veste sans manches Regatta, doudoune sans manche Result Core.
 - **Bas** : short de basket SHORT 100, short de tennis Essential, short 2 en 1 fitness femme, short slim fitness femme 500, pantalon de jogging droit femme, jogging molleton homme Domyos, short de football Essentiel Kipsta.
-- **Robe** : robe Hummel à manches courtes. **Accessoire** : chaussettes de football (prénom ou numéro seulement).
+- **Robe** : robe Hummel à manches courtes. **Accessoires** : chaussettes de football (prénom ou numéro seulement), gourdes (alu 1 L Quechua, fitness 750 mL Domyos, verre Phoenix), casquettes (randonnée Forclaz, chasse orange Solognac, tennis Artengo), bonnets (Rider 500 à revers Wedze, running seamless Kiprun), tour de cou Morf (vendeur partenaire Atelier Katanga), sacs (tube 30 L Move 100, sport 20 L Club 100), sacs à dos (Arpenaz 50, Travel 100 pliable, Arpenaz 100, Arpenaz 500, MH100), bandeau et ceinture de running Kiprun.
 - **Ensembles** : survêtement Joma Eco Championship (vendu en un seul article, flocage sur la veste), pack basket (maillot + short + chaussettes), pack fitness femme (t-shirt + short slim + chaussettes), pack jogging femme (pantalon + t-shirt coton + chaussettes), pack football (sweat T100 + short Essentiel + chaussettes), pack entraîneur (veste micropolaire + haut thermique homme + jogging homme + chaussettes). Un pack est fait de pièces achetées séparément et vendu comme un seul article.
 
 Le catalogue se filtre par genre (Homme, Femme), par style (Sport, Casual) et par type (Hauts, Bas, Robes, Ensembles, Accessoires) ; un vêtement mixte apparaît dans les deux genres. Un bandeau tout en haut du site invite à demander un vêtement qui n'est pas au catalogue : il ouvre un message Gmail pré-rempli vers Fabr'Icam.
@@ -71,6 +71,10 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 - **Prix d'achat** : relevés sur les fiches Decathlon le 18/10/2026 (polo 7,99 €, sweat 14,99 €, maillot 6,99 €, short de basket 6,99 €, short de tennis 5,99 €, débardeur 9,99 €, et ceux des 19 articles ajoutés en 2.3.0). Le polo blanc est supposé au même prix que le marine. Vérifie en magasin et corrige `prixAchat` dans `js/data.js`.
 - **Stock** : les articles de la place de marché ont un stock très limité (le survêtement Joma n'a que les tailles XS, S et 2XL, le sweat Viralto Axton que la 2XL). Les tailles du catalogue sont celles des fiches du 18/10/2026 ; vérifie avant de promettre une commande.
 - **Aperçu sur photo** : il n'existe que pour les 6 premiers vêtements. Les 19 articles ajoutés en 2.3.0 s'affichent en dessin (le bouton Photo est grisé avec une explication).
+- **Accessoires et formats** : les petits articles utilisent deux formats de visuel en plus de l'A6 : Mini (5 × 5 cm, casquette, bonnet, bandeau, gourde) et A7 (7 × 10 cm). Le prix affiché compte un Mini sur ces articles, un A6 sur un sac. Les emplacements sont dans `emplacements` de `js/data.js`, les formats dans `formatsMotif` de `js/prix.js`.
+- **Gourdes** : surface ronde et dure (métal, verre), elles ne se pressent pas à plat. Le site affiche un avertissement et le prix d'un transfert DTF ; la vraie technique de pose est à confirmer.
+- **Casquettes, bonnets, bandeau, ceinture, tour de cou** : tissus bombés ou très élastiques, avertissement et essai avant la série. Le bonnet Rider 500 est en acrylique tricoté : le DTF y tient mal.
+- **Prix par couleur** : certains coloris coûtent un peu plus (bonnet Rider 500 à 4,99 € ou 8,99 € selon la couleur, sac tube 5,99 ou 6,00 €) : le site garde le prix le plus haut et ne propose que les coloris à ce prix.
 - **Articles délicats** : chaussettes, sous-vêtements thermiques, micropolaire et doudoune portent un avertissement (essai de pressage avant la série) dans le configurateur et dans l'espace atelier.
 - **Couleurs** : seules les couleurs dont la référence est connue sont dans le catalogue. Les fiches indiquent d'autres coloris (par exemple 5 couleurs pour les articles Kipsta) : ajoute-les dans `couleurs` quand tu as leur référence.
 - **Teintes d'aperçu** : les codes couleur du dessin sont estimés, ils n'ont aucun effet sur les prix.
@@ -87,7 +91,7 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 | Je veux… | Je modifie |
 |---|---|
 | changer un prix de planche, le fournisseur, la TVA, la livraison, la marge (20 %, plafond 2 €), l'arrondi | `js/prix.js` |
-| ajouter un vêtement, une couleur, une taille | `js/data.js` (copie un bloc de `produits`) |
+| ajouter un vêtement ou un accessoire, une couleur, une taille | `js/data.js` (copie un bloc de `produits`) |
 | ajouter un pack ou un ensemble | `js/data.js` (`packs`, avec `type: "ensemble"` dans les `tags`) |
 | marquer un article de la place de marché, ou changer les frais de port d'un vendeur | `js/data.js` (`vendeur` du produit) et `js/prix.js` (`livraisonVendeur`) |
 | changer les filtres du catalogue (Homme, Femme, Sport, Casual, Hauts, Bas…) ou les étiquettes d'un vêtement | `js/data.js` (`filtres`, et `tags` du produit) |
@@ -96,7 +100,7 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 | changer la liste des polices | `js/data.js` (`polices`) |
 | changer les couleurs, les polices du site | `css/style.css` (variables en haut) |
 
-Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (le dessin : `polo`, `sweat`, `debardeur`, `maillot`, `short-basket`, `short-tennis`, `short-slim`, `tshirt`, `manches-longues`, `veste`, `sweat-zip`, `gilet`, `gilet-matelasse`, `robe`, `pantalon` ou `chaussette`), `tags` (genre, style, type : haut, bas, robe, ensemble ou accessoire, et le sport en étiquette), `prixAchat` (TTC), `polyesterPct`, `tailles`, `couleurs` (avec `clair: true` pour les couleurs claires), `vitrine` (emplacements du prix affiché) et les `zones` (position en cm sur le dessin). Un nouveau modèle de dessin se code dans `js/preview.js`. Chaque produit a ses photos Decathlon (4 à 8), chargées depuis leur site : la première est celle du catalogue, les autres apparaissent en vignettes. Si une photo ne s'affiche pas (hors ligne, lien périmé), le catalogue montre le dessin du vêtement. Pour changer ou ajouter une photo : champ `photos` du produit, avec l'adresse de l'image sans paramètres (la taille est ajoutée par le site).
+Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (le dessin : `polo`, `sweat`, `debardeur`, `maillot`, `short-basket`, `short-tennis`, `short-slim`, `tshirt`, `manches-longues`, `veste`, `sweat-zip`, `gilet`, `gilet-matelasse`, `robe`, `pantalon`, `chaussette`, ou pour un accessoire `gourde`, `casquette`, `bonnet`, `tour-de-cou`, `bandeau`, `sac-tube`, `sac-sport`, `sac-a-dos` ou `ceinture`), `tags` (genre, style, type : haut, bas, robe, ensemble ou accessoire, et le sport en étiquette), `prixAchat` (TTC), `polyesterPct`, `tailles`, `couleurs` (avec `clair: true` pour les couleurs claires), `vitrine` (emplacements du prix affiché) et les `zones` (position en cm sur le dessin). Un nouveau modèle de dessin se code dans `js/preview.js` ; les accessoires y sont dessinés à l'échelle réelle sur un fond plus petit (`w` et `h` du modèle). Un article qui ne se sublime pas (forme ronde, enduit, élastique) porte `sublimation: false`. Chaque couleur peut garder sa référence Decathlon (`ref`) et le lien de sa page (`lien`). Chaque produit a ses photos Decathlon (4 à 8), chargées depuis leur site : la première est celle du catalogue, les autres apparaissent en vignettes. Si une photo ne s'affiche pas (hors ligne, lien périmé), le catalogue montre le dessin du vêtement. Pour changer ou ajouter une photo : champ `photos` du produit, avec l'adresse de l'image sans paramètres (la taille est ajoutée par le site).
 
 ## Versions et modifications
 
@@ -111,7 +115,7 @@ Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (
 node tests/engine.test.js
 ```
 
-34 tests : 22 sur le moteur, marge de 20 % plafonnée à 2 €, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité ; 3 sur les réglages de l'aperçu sur photo (couleur et rang de photo valides, emplacements dans la photo) ; 9 sur le catalogue étendu (données cohérentes, dessins de face et de dos, frais de port par vendeur, chaussettes, composition et marge des packs, nouveaux vêtements, sublimation).
+37 tests : 22 sur le moteur, marge de 20 % plafonnée à 2 €, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité ; 3 sur les réglages de l'aperçu sur photo (couleur et rang de photo valides, emplacements dans la photo) ; 12 sur le catalogue étendu (données cohérentes, dessins de face et de dos, frais de port par vendeur, chaussettes, composition et marge des packs, nouveaux vêtements, formats et zones des accessoires, sublimation).
 
 ## Publier sur GitHub Pages
 

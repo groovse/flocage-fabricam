@@ -275,7 +275,7 @@
 
   function pieceTechno(order, piece, ctx) {
     var prod = ctx.produits[piece.produitId];
-    if (order.technique === "sublimation" && prod) {
+    if (order.technique === "sublimation" && prod && prod.sublimation !== false) {
       var col = prod.couleurs.filter(function (c) { return c.id === piece.couleurId; })[0];
       if (col && col.clair && (prod.polyesterPct || 0) >= 90) return "sublimation";
     }
@@ -459,13 +459,14 @@
     };
   }
 
-  // Prix affichés sur la vitrine, pour un produit (ou un pack) : un visuel A6 aux emplacements
+  // Prix affichés sur la vitrine, pour un produit (ou un pack) : un visuel A6 (ou Mini sur un accessoire) aux emplacements
   // de référence (item.vitrine). Pour un pack, le prix est celui d'un pack complet.
   function priceTable(item, quantites, ctx) {
     var marq = {}, avecTexte = false;
     (item.vitrine || ["poitrine"]).forEach(function (e) {
       var emp = ctx.emplacements[e], txt = !!(emp && emp.texteSeul);
-      marq[e] = { actif: true, avecImage: !txt, image: null, format: "A6", orient: "portrait" };
+      var fmts = emp && emp.formats || [];
+      marq[e] = { actif: true, avecImage: !txt, image: null, format: fmts.indexOf("A6") >= 0 || !fmts.length ? "A6" : fmts[0], orient: "portrait" };   // A6, ou le plus petit format de l'emplacement (accessoires)
       // emplacement réservé aux prénoms (chaussettes...) : le prix affiché compte un prénom de 3 cm
       if (txt) { avecTexte = true; marq[e].maj = true; marq[e].prenom = { actif: true, police: "Bebas Neue", hauteur: 3, couleur: "#ffffff" }; }
     });
