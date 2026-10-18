@@ -16,6 +16,18 @@ window.PRIX = {
   // Livraison Sprint : Colissimo 4,90 € ; offerte dès 100 € de commande.
   livraison: { seuilGratuit: 100, colissimo: 4.90 },
 
+  // Articles vendus par un vendeur partenaire de la place de marché Decathlon (pas de retrait en magasin) :
+  // le vendeur livre à Fabr'Icam et fait payer des frais de port, une seule fois par vendeur et par commande.
+  // Decathlon n'affiche ces frais qu'au moment de la commande : 4,99 € est une ESTIMATION (livraison à Toulouse, 31300).
+  // Quand tu connais le montant réel (panier Decathlon), corrige-le ici : « defaut » sert aux vendeurs non listés.
+  livraisonVendeur: {
+    defaut: 4.99,
+    vendeurs: {
+      "sport-et-go-eu": { nom: "Sport & Go EU", frais: 4.99, delai: "2 à 6 jours" },
+      "pertemba-fr": { nom: "Pertemba FR", frais: 4.99, delai: "" }
+    }
+  },
+
   // Règle de prix de vente : chaque produit a son propre prix unitaire, égal au coût moyen de ses pièces
   // (vêtement + part des planches + part de la livraison) augmenté de la marge, arrondi au supérieur de `pas`.
   //   marge : 0.20 = 20 % du coût de la pièce (une pièce qui coûte 10 € est vendue 12 €)

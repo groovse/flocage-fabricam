@@ -61,7 +61,121 @@
   function maillotSegs(back) {
     return { start: [45, back ? 10 : 17], segs: [["Q", 54, back ? 10 : 17, 55, 4], ["L", 61.5, 4.5], ["C", 61, 16, 71, 21, 71.5, 34], ["L", 70.5, 74], ["Q", 58, 76, 45, 76]] };
   }
+  function tshirtSegs(back) {
+    return { start: [45, back ? 8.5 : 12], segs: [["Q", 51, back ? 8.5 : 12, 54, 6.5], ["L", 71, 11.5], ["L", 87, 24.5], ["L", 77, 36], ["L", 69, 28], ["L", 69, 75], ["Q", 58, 77, 45, 77]] };
+  }
+  // robe : haut de t-shirt, puis jupe évasée (le dessin est plus haut que les autres : h = 100)
+  function robeSegs(back) {
+    return { start: [45, back ? 8.5 : 12], segs: [["Q", 51, back ? 8.5 : 12, 54, 6.5], ["L", 71, 11.5], ["L", 87, 24.5], ["L", 77, 36], ["L", 69, 28], ["L", 67, 50], ["L", 76, 94], ["Q", 60, 96.5, 45, 96.5]] };
+  }
+  // haut ajusté à manches longues (sous-vêtement thermique)
+  function longSegs(back) {
+    var y = back ? 8.5 : 11.5;
+    return { start: [45, y], segs: [["Q", 50.5, y, 52.5, 5.5], ["L", 66, 9.5], ["Q", 77.5, 30, 79, 68], ["L", 72.5, 68.5], ["Q", 70.5, 52, 65.5, 33], ["L", 65, 74], ["Q", 57, 75.5, 45, 75.5]] };
+  }
+  // gilet sans manches, col montant
+  function giletSegs(back) {
+    var y = back ? 9 : 10;
+    return { start: [45, y], segs: [["Q", 50, y, 51.5, 3.5], ["L", 59, 4], ["C", 58.5, 15, 66.5, 19, 67, 30], ["L", 68, 74], ["Q", 58, 76, 45, 76]] };
+  }
+  // bande du col (moitié droite, recopiée en miroir)
+  function neckband(y, stroke, collar, top) {
+    var t = top == null ? 5 : top;
+    return both('<path d="M45 ' + y + ' Q51 ' + y + ' 53.5 ' + t + ' L53.5 ' + (t + 2.4) + ' Q51 ' + (y + 2.4) + ' 45 ' + (y + 2.4) + ' Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>');
+  }
+  // fermeture éclair devant, de y0 à y1, avec sa tirette
+  function zip(y0, y1, stroke) {
+    return line("M45 " + y0 + " L45 " + y1, stroke, 0.55, 'stroke-dasharray=".4 .4" opacity=".75"') +
+      '<rect x="44.3" y="' + (y0 + 0.4) + '" width="1.4" height="2.6" rx=".4" fill="' + stroke + '"/>';
+  }
+  // dessin des deux chaussettes (pied vers le centre) ; mx transforme les abscisses
+  function sockPath(mx) {
+    var p = function (x, y) { return mx(x) + " " + y; };
+    return "M" + p(12, 4) + " L" + p(28, 4) + " L" + p(27.5, 40) + " Q" + p(27.5, 46) + " " + p(34, 48.5) + " Q" + p(42, 51) + " " + p(42, 55) +
+      " Q" + p(42, 59) + " " + p(37, 59) + " L" + p(17, 59) + " Q" + p(10.5, 59) + " " + p(10.5, 52) + " Z";
+  }
+  function zipSweat(len, stroke, vue) {
+    return vue === "dos" ? "" : zip(12, len, stroke);
+  }
   var MODELS = {
+    tshirt: {
+      path: function (vue) { var g = tshirtSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var y = vue === "dos" ? 8.5 : 12;
+        return neckband(y, stroke, collar, 6.5) + line("M21 72 Q45 74.4 69 72", stroke, 0.3, 'opacity=".8"') + both(line("M85.2 22.7 L75.2 34.2", stroke, 0.3, 'opacity=".8"'));
+      }
+    },
+    robe: {
+      h: 100,
+      path: function (vue) { var g = robeSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var y = vue === "dos" ? 8.5 : 12;
+        return neckband(y, stroke, collar, 6.5) + both(line("M85.2 22.7 L75.2 34.2", stroke, 0.3, 'opacity=".8"')) +
+          line("M23.5 48 Q45 50 66.5 48", stroke, 0.3, 'opacity=".7"') + line("M14.6 91 Q45 94.2 75.4 91", stroke, 0.3, 'opacity=".8"');
+      }
+    },
+    "manches-longues": {
+      path: function (vue) { var g = longSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var y = vue === "dos" ? 8.5 : 11.5;
+        return neckband(y, stroke, collar, 5.5) + line("M25.6 71 Q45 73 64.4 71", stroke, 0.3, 'opacity=".8"') + both(line("M73.6 63.3 L78.6 63"  , stroke, 0.3, 'opacity=".8"'));
+      }
+    },
+    veste: {
+      path: function (vue) { var g = sweatSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var back = vue === "dos", y = back ? 8.5 : 12;
+        return neckband(y, stroke, collar) + line("M21 69.8 Q45 72.3 69 69.8", stroke, 0.3, 'opacity=".8"') + both(line("M72.4 61.4 L81.9 61", stroke, 0.3, 'opacity=".8"')) +
+          zipSweat(76, stroke, vue) + (back ? "" : both(line("M55 52 L56.5 68", stroke, 0.35, 'opacity=".8"')));
+      }
+    },
+    "sweat-zip": {
+      path: function (vue) { var g = sweatSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var back = vue === "dos", y = back ? 8.5 : 12;
+        return neckband(y, stroke, collar) + line("M21 69.8 Q45 72.3 69 69.8", stroke, 0.3, 'opacity=".8"') + both(line("M72.4 61.4 L81.9 61", stroke, 0.3, 'opacity=".8"')) +
+          zipSweat(28, stroke, vue);
+      }
+    },
+    gilet: {
+      path: function (vue) { var g = giletSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var back = vue === "dos", y = back ? 9 : 10;
+        return neckband(y, stroke, collar, 3.5) + (back ? "" : zip(y + 2.4, 76, stroke) + both(line("M51.5 56 L60 53.5", stroke, 0.35, 'opacity=".8"')));
+      }
+    },
+    "gilet-matelasse": {
+      path: function (vue) { var g = giletSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var back = vue === "dos", y = back ? 9 : 10, quilt = "";
+        [24, 33, 42, 51, 60, 69].forEach(function (yy) { quilt += line("M" + (yy < 30 ? 28 : 22.5) + " " + yy + " Q45 " + (yy + 1.6) + " " + (yy < 30 ? 62 : 67.5) + " " + yy, stroke, 0.3, 'opacity=".55"'); });
+        return neckband(y, stroke, collar, 3.5) + quilt + (back ? "" : zip(y + 2.4, 76, stroke));
+      }
+    },
+    pantalon: {
+      h: 106,
+      path: function () { return symPath([45, 4], [["L", 68, 4], ["L", 71, 24], ["L", 67.5, 102], ["L", 51.5, 102], ["L", 45, 35]]); },
+      details: function (vue, stroke, collar) {
+        var out = both('<path d="M45 4 L68 4 L68.2 10 L45 10 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>') + both(line("M51.7 97 L67.7 97", stroke, 0.3, 'opacity=".8"'));
+        if (vue !== "dos") out += both(line("M43.6 10.8 Q44.6 15 44 19", stroke, 0.35)) + both(line("M68.3 11.5 Q63.5 14 62 25", stroke, 0.3, 'opacity=".75"'));
+        return out;
+      }
+    },
+    "short-slim": {
+      dy: 12,
+      path: function () { return symPath([45, 13], [["L", 66, 13], ["L", 67, 44], ["L", 49, 45.5], ["L", 45, 31]]); },
+      details: function (vue, stroke, collar) {
+        return both('<path d="M45 13 L66 13 L66.2 18.2 L45 18.2 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>') + both(line("M49.6 41.4 L66.9 40.4", stroke, 0.3, 'opacity=".7"'));
+      }
+    },
+    chaussette: {
+      h: 64,
+      path: function () { return sockPath(function (x) { return x; }) + " " + sockPath(function (x) { return 90 - x; }); },
+      details: function (vue, stroke, collar) {
+        return both(line("M11.6 9.5 L28 9.5", stroke, 0.3, 'opacity=".8"') + '<path d="M10.8 50.5 Q10.2 59 17 59 L22 59 L22 55 Q15 55 10.8 50.5 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".2"/>' +
+          '<path d="M36 59 Q42 59 42 55 Q42 52 38.5 51 L36 55 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".2"/>');
+      }
+    },
     polo: {
       path: function (vue) { return vue === "dos" ? BODY_BACK : BODY_FRONT; },
       details: function (vue, stroke, collar) {
@@ -227,15 +341,15 @@
    */
   function render(opts) {
     var E = window.Engine, prod = opts.prod, vue = opts.vue || "face", out = "";
-    out += '<svg class="pv-svg" viewBox="0 0 90 82" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aperçu du vêtement, vue ' + (vue === "dos" ? "de dos" : "de face") + '">';
+    var mod = MODELS[prod.modele] || {}, H = mod.h || 82, dy = mod.dy || 0;
+    out += '<svg class="pv-svg" viewBox="0 0 90 ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aperçu du vêtement, vue ' + (vue === "dos" ? "de dos" : "de face") + '">';
     out += defs();
-    out += '<rect width="90" height="82" fill="url(#pv-g5)"/>';
-    var dy = (MODELS[prod.modele] || {}).dy || 0;
+    out += '<rect width="90" height="' + H + '" fill="url(#pv-g5)"/>';
     out += '<g transform="translate(0 ' + dy + ')">' + garment(opts.hex, vue, prod.modele);
 
     out += markings(opts, vue);
     out += '</g>';
-    out += '<text x="1.5" y="80.4" font-size="1.7" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">carreaux de 5 cm</text>';
+    out += '<text x="1.5" y="' + (H - 1.6) + '" font-size="1.7" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">carreaux de 5 cm</text>';
     out += '</svg>';
     return out;
   }
@@ -245,5 +359,5 @@
     return (z && z.label) || (opts.ctx.emplacements[empId] || {}).label || empId;
   }
 
-  window.Preview = { render: render, renderPhoto: renderPhoto, esc: esc, lum: lum, tone: tone, zoneForView: zoneForView };
+  window.Preview = { render: render, renderPhoto: renderPhoto, esc: esc, lum: lum, tone: tone, zoneForView: zoneForView, models: MODELS };
 })();

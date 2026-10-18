@@ -5,6 +5,20 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 2.3.0 — 18/10/2026
+
+19 nouveaux vêtements, une catégorie Ensembles et la livraison des vendeurs de la place de marché Decathlon.
+
+- Catalogue : 25 vêtements et 4 packs (6 vêtements et 1 pack avant). Nouveaux : 5 t-shirts (femme et homme), polo de golf, sweats de football (T100 et 1/2 zip Viralto Axton), hauts thermiques femme et homme, short 2 en 1 et short slim fitness femme, pantalon de jogging femme, chaussettes de football, et 5 articles de la place de marché (veste sans manches Regatta, doudoune Result Core, veste micropolaire Kariban, robe Hummel, survêtement Joma). Prix d'achat, tailles, compositions et photos relevés sur les fiches Decathlon.
+- Catégorie **Ensembles** : pack fitness femme (t-shirt + short slim), pack jogging femme (pantalon + t-shirt coton) et pack football (sweat T100 + chaussettes), en plus du pack basket. Chaque pack est fait de pièces achetées séparément et vendu comme un seul article, avec une seule marge. Le survêtement Joma n'existe qu'en un seul article (veste et pantalon ne s'achètent pas séparément) : il est classé dans Ensembles, le flocage se fait sur la veste.
+- Nouveau filtre **Type** (Hauts, Bas, Robes, Ensembles, Accessoires) à côté de Pour et Style.
+- Articles de la place de marché : étiquette « Livré par le vendeur », note sur la fiche et dans le configurateur (livraison par le vendeur, pas de retrait en magasin, stock limité, article personnalisé ni repris ni échangé). Frais de port du vendeur comptés une seule fois par vendeur et par commande, répartis sur ses pièces et inclus dans le prix. **Le montant (4,99 €) est une estimation** : Decathlon ne l'affiche qu'au moment de commander. À corriger dans `js/prix.js` (`livraisonVendeur`).
+- Espace atelier : les achats sont séparés en « en magasin » et « en ligne (place de marché) » avec le vendeur, le lien de la fiche et les frais de port estimés ; le détail des coûts ajoute les lignes correspondantes.
+- Chaussettes : nouveaux emplacements chaussette gauche et droite, réservés aux prénoms et aux numéros. Le prix de la vitrine compte un prénom de 3 cm. Le configurateur signale quand il n'y a encore rien à presser.
+- 10 nouveaux dessins : t-shirt, haut à manches longues, veste zippée, sweat 1/2 zip, gilet, gilet matelassé, robe, pantalon, short slim, chaussettes (le dessin peut maintenant être plus haut que large). Photos de l'aperçu : pas encore calées pour ces 19 articles, le bouton Photo est grisé avec une explication.
+- Avertissements ajoutés : chaussettes, hauts thermiques, micropolaire, doudoune, survêtement Joma (vendu en un seul article), sweat Viralto (une seule taille).
+- 7 tests de plus : 31 en tout. Aucun changement de règle de prix ni de format du fichier de commande (les anciens fichiers se lisent toujours).
+
 ## 2.2.0 — 18/10/2026
 
 Aperçu du logo, des prénoms et des numéros sur les vraies photos.

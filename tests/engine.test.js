@@ -4,6 +4,7 @@ const path = require("path");
 global.window = {};
 require(path.join("..", "js", "prix.js"));
 require(path.join("..", "js", "data.js"));
+require(path.join("..", "js", "preview.js"));
 const E = require(path.join("..", "js", "engine.js"));
 
 const PRIX = window.PRIX, DATA = window.DATA;
@@ -237,6 +238,94 @@ test("apercuPhoto : les emplacements tombent dans la photo (hors manches)", () =
       });
     });
   });
+});
+
+
+
+
+console.log("\nCatalogue étendu (v2.3.0)");
+const piece2 = (id, produitId, extra) => Object.assign({ id, produitId, couleurId: produits[produitId].couleurs[0].id, taille: produits[produitId].tailles[0], prenom: "", numero: "" }, extra || {});
+test("catalogue : identifiants uniques, emplacements, modèles de dessin et tags valides", () => {
+  const ids = {}, types = DATA.filtres.type.valeurs.map(v => v.id), genres = DATA.filtres.genre.valeurs.map(v => v.id), styles = DATA.filtres.style.valeurs.map(v => v.id);
+  DATA.produits.concat(DATA.packs).forEach(it => {
+    assert.ok(!ids[it.id], "identifiant en double : " + it.id); ids[it.id] = 1;
+    assert.ok(types.indexOf(it.tags.type) >= 0, it.id + " : type inconnu " + it.tags.type);
+    assert.ok(styles.indexOf(it.tags.style) >= 0, it.id + " : style inconnu");
+    it.tags.genre.forEach(g => assert.ok(genres.indexOf(g) >= 0, it.id + " : genre inconnu"));
+  });
+  DATA.produits.forEach(p => {
+    assert.ok(window.Preview.models[p.modele], p.id + " : modèle de dessin inconnu " + p.modele);
+    Object.keys(p.zones).forEach(e => assert.ok(DATA.emplacements[e], p.id + " : emplacement inconnu " + e));
+    p.vitrine.forEach(e => assert.ok(p.zones[e], p.id + " : la vitrine utilise un emplacement absent " + e));
+    assert.ok(p.couleurs.length && p.tailles.length && p.photos.length, p.id + " : couleurs, tailles ou photos manquantes");
+    assert.ok(p.prixAchat > 0 && p.polyesterPct >= 0 && p.polyesterPct <= 100, p.id + " : prix ou matière");
+    if (p.vendeur) assert.ok(PRIX.livraisonVendeur.vendeurs[p.vendeur], p.id + " : vendeur absent de prix.js");
+  });
+  DATA.packs.forEach(k => {
+    k.produits.forEach(id => assert.ok(produits[id], k.id + " : produit inconnu " + id));
+    k.vitrine.forEach(e => assert.ok(k.produits.some(id => produits[id].zones[e]), k.id + " : la vitrine utilise un emplacement absent " + e));
+  });
+});
+test("dessins : chaque vêtement se dessine de face et de dos, et ses zones tiennent dans le dessin", () => {
+  DATA.produits.forEach(p => {
+    const m = window.Preview.models[p.modele], H = m.h || 82, dy = m.dy || 0;
+    ["face", "dos"].forEach(vue => {
+      const svg = window.Preview.render({ prod: p, hex: p.couleurs[0].hex, vue, marquages: {}, ctx });
+      assert.ok(svg.indexOf("<svg") === 0 && svg.indexOf("NaN") < 0 && svg.indexOf("undefined") < 0, p.id + " " + vue);
+    });
+    Object.keys(p.zones).forEach(e => {
+      const z = p.zones[e]; if (z.cy != null) return;          // les manches sont tournées : on ne les contrôle pas ici
+      assert.ok(z.cx - z.w / 2 >= 0 && z.cx + z.w / 2 <= 90, p.id + " " + e + " : zone hors du dessin en largeur");
+      assert.ok(z.top >= 0 && z.top + z.h + dy <= H, p.id + " " + e + " : zone hors du dessin en hauteur");
+    });
+  });
+});
+test("place de marché : un seul frais de port par vendeur et par commande, réparti sur ses pièces", () => {
+  const marq = { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" } };
+  const un = E.computeOrder({ pieces: [piece2("a", "doudoune-sans-manche")], marquages: marq, technique: "dtf" }, ctx);
+  assert.strictEqual(un.couts.livraisonVendeurs, 4.99);
+  assert.strictEqual(un.vendeurs.length, 1);
+  assert.strictEqual(un.vendeurs[0].id, "sport-et-go-eu");
+  const memeVendeur = E.computeOrder({ pieces: [piece2("a", "doudoune-sans-manche"), piece2("b", "veste-micropolaire"), piece2("c", "doudoune-sans-manche")], marquages: marq, technique: "dtf" }, ctx);
+  assert.strictEqual(memeVendeur.couts.livraisonVendeurs, 4.99);
+  assert.strictEqual(memeVendeur.vendeurs[0].pieces, 3);
+  const deux = E.computeOrder({ pieces: [piece2("a", "doudoune-sans-manche"), piece2("b", "veste-sans-manches")], marquages: marq, technique: "dtf" }, ctx);
+  assert.strictEqual(deux.couts.livraisonVendeurs, 9.98);
+  assert.strictEqual(deux.vendeurs.length, 2);
+  const magasin = E.computeOrder({ pieces: [piece2("a", "polo-essential")], marquages: marq, technique: "dtf" }, ctx);
+  assert.strictEqual(magasin.couts.livraisonVendeurs, 0);
+  assert.strictEqual(magasin.vendeurs.length, 0);
+  // la somme des coûts par pièce égale le coût de revient
+  let somme = 0; Object.keys(deux.coutPieces).forEach(k => { somme += deux.coutPieces[k].total; });
+  assert.ok(Math.abs(somme - deux.couts.total) < 0.011, "somme " + somme + " pour un coût de " + deux.couts.total);
+  assert.strictEqual(deux.couts.total, E.round2(deux.couts.achats + deux.couts.planchesTTC + deux.couts.livraison + 9.98));
+  assert.ok(deux.prix.total >= deux.couts.total * 1.2 - 0.02, "la marge de 20 % est respectée avec les frais du vendeur");
+});
+test("place de marché : plus on commande de pièces, plus la part des frais de port baisse", () => {
+  const prix = [1, 5, 20].map(q => E.priceTable(produits["doudoune-sans-manche"], [q], ctx)[0].unitaire);
+  assert.ok(prix[0] > prix[1] && prix[1] > prix[2], prix.join(" > "));
+});
+test("chaussettes : le prix de la vitrine compte un prénom pressé (emplacement réservé aux prénoms)", () => {
+  const t = E.priceTable(produits["chaussettes-football"], [1, 10], ctx);
+  assert.ok(t[0].unitaire > produits["chaussettes-football"].prixAchat * 1.2 + 2.88, "la planche A6 et la livraison sont comptées : " + t[0].unitaire);
+  const marq = { chaussette_g: { actif: true, avecImage: false, prenom: { actif: true, hauteur: 2.5, police: "Bebas Neue", couleur: "#fff" }, numero: { actif: false }, maj: true } };
+  const r = E.computeOrder({ pieces: [piece2("a", "chaussettes-football", { prenom: "Léo" })], marquages: marq, technique: "dtf" }, ctx);
+  assert.strictEqual(r.motifs.length, 1); assert.strictEqual(r.motifs[0].kind, "prenom"); assert.strictEqual(r.motifs[0].emp, "chaussette_g");
+  const vide = E.computeOrder({ pieces: [piece2("a", "chaussettes-football")], marquages: marq, technique: "dtf" }, ctx);
+  assert.strictEqual(vide.motifs.length, 0);
+});
+test("packs d'ensembles : une seule marge, moins cher que les pièces séparées", () => {
+  ["pack-fitness-femme", "pack-jogging-femme", "pack-football", "pack-basket"].forEach(id => {
+    const k = DATA.packs.filter(x => x.id === id)[0];
+    const pk = E.priceTable(k, [1], ctx)[0].unitaire;
+    const sep = k.produits.reduce((s, pid) => s + E.priceTable(Object.assign({}, produits[pid], { vitrine: k.vitrine.filter(e => produits[pid].zones[e]) }), [1], ctx)[0].unitaire, 0);
+    assert.ok(pk < sep, id + " : pack " + pk + " contre " + sep + " séparés");
+  });
+});
+test("sublimation : chaussettes et robe blanches en polyester oui, t-shirt coton non", () => {
+  const ps = [piece2("a", "chaussettes-football"), piece2("b", "robe-hummel"), piece2("c", "tshirt-fitness-femme"), piece2("d", "thermique-femme")];
+  const order = { pieces: ps, marquages: A6poitrine, technique: "sublimation" };
+  assert.deepStrictEqual(ps.map(p => E.pieceTechno(order, p, ctx)), ["sublimation", "sublimation", "dtf", "dtf"]);
 });
 
 console.log("\n" + ok + " tests passés");

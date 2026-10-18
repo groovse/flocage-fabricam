@@ -11,7 +11,7 @@
   DATA.produits.forEach(function (p) { byId[p.id] = p; });
   var PACKS = {};
   (DATA.packs || []).forEach(function (p) { PACKS[p.id] = p; });
-  var EMP_ORDER = ["poitrine", "dos", "manche_g", "manche_d", "cuisse_g", "cuisse_d", "bas_jambe_g"];
+  var EMP_ORDER = ["poitrine", "dos", "manche_g", "manche_d", "cuisse_g", "cuisse_d", "bas_jambe_g", "chaussette_g", "chaussette_d"];
   var QUANTITES_VITRINE = [1, 5, 10, 20, 50];
 
   var nfEUR = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -51,12 +51,13 @@
     return "mailto:" + DATA.service.email + "?subject=" + encodeURIComponent("Demande de flocage, vêtement hors catalogue") + "&body=" + encodeURIComponent(body);
   }
   // Filtres du catalogue : une valeur par groupe, "" = tous
-  var FILTRE = { genre: "", style: "" };
+  var FILTRE = { genre: "", style: "", type: "" };
   function tagsOf(item) { return item.tags || {}; }
   function matchFiltre(item) {
     var t = tagsOf(item);
     if (FILTRE.genre && (t.genre || []).indexOf(FILTRE.genre) < 0) return false;
     if (FILTRE.style && t.style !== FILTRE.style) return false;
+    if (FILTRE.type && t.type !== FILTRE.type) return false;
     return true;
   }
   // Nom d'une ligne de prix : un produit, ou un pack
@@ -65,11 +66,33 @@
     return byId[g.produitId].nomCourt;
   }
 
+  // Article d'un vendeur de la place de marché Decathlon : frais de port estimés dans prix.js (livraisonVendeur)
+  function vendeurInfo(prod) {
+    if (!prod || !prod.vendeur) return null;
+    var lv = PRIX.livraisonVendeur || {}, d = (lv.vendeurs || {})[prod.vendeur] || {};
+    return { id: prod.vendeur, nom: d.nom || prod.vendeur, frais: d.frais != null ? d.frais : (lv.defaut || 0), delai: d.delai || "" };
+  }
+  // Texte d'information pour un ou plusieurs articles d'un même vendeur (noms : liste de noms à citer en tête, facultatif)
+  function vendeurTexte(prod, noms) {
+    var v = vendeurInfo(prod); if (!v) return "";
+    var pl = noms && noms.length > 1;
+    return (noms ? noms.join(", ") + " : " + (pl ? "articles vendus" : "article vendu") : (pl ? "Articles vendus" : "Article vendu")) + " par " + v.nom + " sur la place de marché Decathlon. " +
+      (pl ? "Ils sont livrés" : "Il est livré") + " à Fabr'Icam par le vendeur" + (v.delai ? " (" + v.delai + ")" : "") + ", sans retrait en magasin. " +
+      "Les frais de port du vendeur, estimés à " + fmtEUR(v.frais) + " pour toute la commande chez lui, sont compris dans le prix. " +
+      "Une fois floqué" + (pl ? "s" : "") + ", " + (pl ? "ils ne sont" : "il n'est") + " ni repris ni échangé" + (pl ? "s" : "") + ".";
+  }
+  // « 2XL seulement », « XS, S et 2XL » ou « XS à 3XL »
+  function taillesTxt(pr) {
+    var a = pr.tailles;
+    if (a.length === 1) return a[0] + " seulement";
+    return a.length <= 4 ? a.slice(0, -1).join(", ") + " et " + a[a.length - 1] : a[0] + " à " + a[a.length - 1];
+  }
+
   function darkColor(prod) { return P.lum(prod.couleurs[0].hex) < 0.5; }
 
   function newMarquage(empId, prod) {
     var emp = DATA.emplacements[empId], f = emp.formats;
-    var big = empId === "dos", tiny = empId === "bas_jambe_g", small = /^(manche|cuisse)/.test(empId);
+    var big = empId === "dos", tiny = empId === "bas_jambe_g" || /^chaussette/.test(empId), small = /^(manche|cuisse)/.test(empId);
     var txt = darkColor(prod) ? "#ffffff" : "#14213d";
     return {
       actif: false, avecImage: !emp.texteSeul, image: null,
@@ -111,8 +134,12 @@
     var prods = item.produits ? item.produits.map(function (id) { return byId[id]; }) : [item];
     if (!S.marquages) {
       S.marquages = {};
-      EMP_ORDER.forEach(function (e) { S.marquages[e] = newMarquage(e, prods[0]); });
-      (item.vitrine || ["poitrine"]).forEach(function (e) { if (S.marquages[e]) S.marquages[e].actif = true; });   // même configuration que le prix affiché sur la vitrine
+      EMP_ORDER.forEach(function (e) { S.marquages[e] = newMarquage(e, prods.filter(function (pr) { return pr.zones[e]; })[0] || prods[0]); });
+      (item.vitrine || ["poitrine"]).forEach(function (e) {   // même configuration que le prix affiché sur la vitrine
+        if (!S.marquages[e]) return;
+        S.marquages[e].actif = true;
+        if (DATA.emplacements[e].texteSeul) S.marquages[e].prenom.actif = true;
+      });
     }
     if (!S.pieces.length) S.pieces = item.produits ? newPack(item, null) : [newPiece(item)];
     if (!S.addModel) S.addModel = item.id;
@@ -126,7 +153,7 @@
   // Commande encore vierge : on peut la remplacer sans rien perdre
   function pristine() {
     return S.pieces.length <= 2 && S.pieces.every(function (p) { return !p.prenom && !p.numero; }) &&
-      EMP_ORDER.every(function (e) { var m = S.marquages[e]; return !m.image && !m.prenom.actif && !m.numero.actif; });
+      EMP_ORDER.every(function (e) { var m = S.marquages[e]; return !m.image && (DATA.emplacements[e].texteSeul || (!m.prenom.actif && !m.numero.actif)); });
   }
 
   // Arrivée sur un produit depuis la vitrine : on repart de zéro si la commande est vierge, sinon on l'ajoute à la commande
@@ -268,20 +295,25 @@
     var sw = isPack
       ? prods.map(function (pr) { return '<li><b>' + esc(pr.nomCourt) + '</b> ' + pr.couleurs.map(function (c) { return '<span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom); }).join(" ") + '</li>'; }).join("")
       : item.couleurs.map(function (c) { return '<li><span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom) + '</li>'; }).join("");
-    var tailles = prods.map(function (pr) { return (isPack ? esc(pr.nomCourt) + " " : "") + esc(pr.tailles[0]) + " à " + esc(pr.tailles[pr.tailles.length - 1]); }).join(", ");
-    var meta = isPack ? "Deux pièces Kipsta, Decathlon. Le pack coûte moins cher que le maillot et le short pris séparément." : esc(item.marque) + ". " + esc(item.matiere) + ".";
+    var pointures = prods.every(function (pr) { return /^\d/.test(pr.tailles[0]); });
+    var tailles = prods.map(function (pr) { return (isPack ? esc(pr.nomCourt) + " " : "") + esc(taillesTxt(pr)); }).join(", ");
+    var meta = isPack ? "Deux pièces : " + esc(prods.map(function (pr) { return pr.nomCourt.toLowerCase(); }).join(" et ")) + ". Le pack coûte moins cher que les deux pièces prises séparément." : esc(item.marque) + ". " + esc(item.matiere) + ".";
     var t = tagsOf(item), labels = [];
     (t.genre || []).forEach(function (g) { labels.push(valeurLabel("genre", g)); });
     if (t.style) labels.push(valeurLabel("style", t.style));
     if (t.sport) labels.push(t.sport);
-    var chips = labels.length ? '<ul class="tags" aria-label="Étiquettes">' + labels.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") + "</ul>" : "";
+    if (t.type) labels.push(valeurLabel("type", t.type));
+    var mp = prods.filter(function (pr) { return pr.vendeur; })[0];
+    var chips = labels.length || mp ? '<ul class="tags" aria-label="Étiquettes">' + labels.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") +
+      (mp ? '<li class="mp">Livré par le vendeur</li>' : "") + "</ul>" : "";
     return '<article class="produit" data-pack="' + (isPack ? "1" : "") + '"' + (matchFiltre(item) ? "" : " hidden") + '>' + cardPhoto(item) +
       '<div class="p-info">' + chips + '<h3>' + esc(item.nom) + '</h3>' +
       '<p class="p-meta">' + meta + '</p>' +
       '<ul class="swatches" aria-label="Couleurs">' + sw + '</ul>' +
-      '<p class="p-meta">Tailles : ' + tailles + '.</p>' +
+      '<p class="p-meta">' + (pointures ? "Pointures" : "Tailles") + ' : ' + tailles + '.</p>' +
       '<h4>Prix par ' + (isPack ? "pack" : "pièce") + '</h4>' + priceStrip(item) +
-      '<p class="note">Avec un visuel A6 ' + esc(item.texteVitrine || "à la poitrine") + '. Prix TTC, ' + (isPack ? "vêtements" : "vêtement") + ', planche de transfert et livraison compris. Le prix baisse avec la quantité.</p>' +
+      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel A6 " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : "vêtement") + ', planche de transfert et livraison compris. Le prix baisse avec la quantité.</p>' +
+      prods.filter(function (pr) { return pr.vendeur; }).map(function (pr) { return '<p class="note note-vendeur">' + esc(vendeurTexte(pr)) + '</p>'; }).join("") +
       '<a class="btn btn-primary" href="#/configurer/' + item.id + '">Personnaliser ' + esc(item.demonstratif || "ce produit") + '</a>' +
       '</div></article>';
   }
@@ -355,7 +387,7 @@
       '<section class="block facts"><h2>Bon à savoir</h2><dl>' +
       '<div><dt>Aucun minimum</dt><dd>Une seule pièce ou toute l\'équipe, le calcul est le même. Tu peux mélanger plusieurs vêtements dans une commande.</dd></div>' +
       '<div><dt>Deux techniques</dt><dd>Le DTF convient à toutes les couleurs. La sublimation, plus lisse, ne marche que sur polyester blanc ou clair.</dd></div>' +
-      '<div><dt>Des vêtements Decathlon</dt><dd>Fabr\'Icam les retire en magasin, il n\'y a donc pas de frais de livraison sur les vêtements.</dd></div>' +
+      '<div><dt>Des vêtements Decathlon</dt><dd>Fabr\'Icam les retire en magasin, il n\'y a donc pas de frais de livraison sur les vêtements. Les articles marqués « Livré par le vendeur » viennent de vendeurs partenaires de Decathlon : ils sont livrés à Fabr\'Icam, et leurs frais de port sont déjà dans le prix.</dd></div>' +
       '</dl></section>';
 
     majFiltres();
@@ -442,7 +474,7 @@
   function modelOptions() {
     var o = function (id, lab) { return '<option value="' + esc(id) + '"' + (id === S.addModel ? " selected" : "") + ">" + esc(lab) + "</option>"; };
     return '<optgroup label="Vêtements">' + DATA.produits.map(function (x) { return o(x.id, x.nomCourt); }).join("") + '</optgroup>' +
-      ((DATA.packs || []).length ? '<optgroup label="Packs">' + DATA.packs.map(function (x) { return o(x.id, x.nom); }).join("") + '</optgroup>' : "");
+      ((DATA.packs || []).length ? '<optgroup label="Packs (ensembles)">' + DATA.packs.map(function (x) { return o(x.id, x.nom); }).join("") + '</optgroup>' : "");
   }
 
   function renderPieces() {
@@ -635,6 +667,7 @@
     if (!/^\S+@\S+\.\S+$/.test(c.email.trim())) out.push("Indique une adresse e-mail valide.");
     var actifs = usedEmps().filter(function (e) { return S.marquages[e].actif; });
     if (!actifs.length) out.push("Active au moins un marquage.");
+    else if (S.result && S.result.motifs && !S.result.motifs.length) out.push("Il n'y a encore rien à presser : ajoute un visuel, ou écris les prénoms ou les numéros des pièces.");
     var manque = actifs.filter(function (e) { var m = S.marquages[e]; return m.avecImage && !m.image; });
     if (manque.length) out.push("Il manque le fichier du visuel : " + manque.map(function (e) { return DATA.emplacements[e].label.toLowerCase(); }).join(", ") + ". Tu peux aussi le joindre au mail à la main.");
     return { bloquants: out.filter(function (t) { return t.indexOf("Il manque le fichier") !== 0; }), infos: out.filter(function (t) { return t.indexOf("Il manque le fichier") === 0; }) };
@@ -792,11 +825,17 @@
         });
         var l = Object.keys(noms);
         var nom = (k === "prenom" ? "Prénom" : "Numéro") + " (" + label + ")";
-        if (l.length) out.push(nom + " : cette couleur se voit mal sur le polo " + l.join(" et ") + ". Choisis une couleur plus contrastée.");
+        if (l.length) out.push(nom + " : cette couleur se voit mal sur le vêtement " + l.join(" et ") + ". Choisis une couleur plus contrastée.");
         else if (sublBlanc) out.push(nom + " : en sublimation, le blanc n'est pas imprimé, le texte ne sera pas visible.");
       });
     });
     return out;
+  }
+
+  function fraisVendeurTxt(r) {
+    if (!r.vendeurs || !r.vendeurs.length) return "";
+    var tot = r.couts.livraisonVendeurs;
+    return ", ainsi que les frais de port " + (r.vendeurs.length > 1 ? "des vendeurs partenaires" : "du vendeur partenaire") + " (estimés à " + fmtEUR(tot) + ")";
   }
 
   function renderTotal(r) {
@@ -806,12 +845,12 @@
     else if (r.prix.unitaire != null) {
       html = '<div class="t-main"><span class="t-big">' + fmtEUR(r.prix.unitaire) + '</span><span class="t-unit">par pièce, TTC</span></div>' +
         '<p class="t-sub">' + r.N + (r.N > 1 ? " pièces" : " pièce") + ' : <b>' + fmtEUR(r.prix.total) + '</b></p>' +
-        '<p class="t-note">Vêtements, planches de transfert et livraison compris. Fabr\'Icam confirme le devis avant toute commande.</p>';
+        '<p class="t-note">Vêtements, planches de transfert et livraison compris' + fraisVendeurTxt(r) + '. Fabr\'Icam confirme le devis avant toute commande.</p>';
     } else {
       var pv = r.prix;
       html = '<div class="t-main"><span class="t-big">' + fmtEUR(pv.total) + '</span><span class="t-unit">au total, TTC, pour ' + r.N + (r.N > 1 ? " pièces" : " pièce") + '</span></div>' +
         '<ul class="t-lines">' + pv.groupes.map(function (g) { return '<li><span>' + g.n + ' × ' + esc(groupName(g)) + '</span><b>' + fmtEUR(g.unitaire) + '</b></li>'; }).join("") + '</ul>' +
-        '<p class="t-note">Prix à l\'unité, vêtements, planches de transfert et livraison compris. Fabr\'Icam confirme le devis avant toute commande.</p>';
+        '<p class="t-note">Prix à l\'unité, vêtements, planches de transfert et livraison compris' + fraisVendeurTxt(r) + '. Fabr\'Icam confirme le devis avant toute commande.</p>';
     }
     if (r.warnings.length) html += '<ul class="warn">' + r.warnings.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>";
     box.innerHTML = html;
@@ -825,6 +864,13 @@
     r.warnings = r.warnings.concat(contrastNotes());
     var vus = {};
     S.pieces.forEach(function (p) { var pr = prodOf(p); if (pr.avertissement && !vus[pr.id]) { vus[pr.id] = 1; r.warnings.push(pr.avertissement); } });
+    var vv = {}, ordre = [];       // une information par vendeur, avec la liste de ses articles
+    S.pieces.forEach(function (p) {
+      var pr = prodOf(p); if (!pr.vendeur) return;
+      if (!vv[pr.vendeur]) { vv[pr.vendeur] = { prod: pr, noms: [] }; ordre.push(pr.vendeur); }
+      if (vv[pr.vendeur].noms.indexOf(pr.nomCourt) < 0) vv[pr.vendeur].noms.push(pr.nomCourt);
+    });
+    ordre.forEach(function (k) { r.warnings.push(vendeurTexte(vv[k].prod, vv[k].noms) + " Le stock est limité : Fabr'Icam le confirme avant de commander."); });
     renderTotal(r); renderPreview(); updateTechniqueInfo();
     $$("[data-emp]").forEach(function (card) { var d = $("[data-dpi]", card); if (d) d.textContent = dpiText(S.marquages[card.dataset.emp]); });
     updatePieceSelect();
@@ -969,7 +1015,7 @@
     CTX: CTX, S: S, DATA: DATA, PRIX: PRIX, esc: esc, fmtEUR: fmtEUR, fmtN: fmtN, $: $, $$: $$, byId: byId,
     EMP_ORDER: EMP_ORDER, toast: toast, download: download, slug: slug, measure: measure, ensureFont: ensureFont,
     orderOf: orderOf, start: start, colorOf: colorOf, pieceLine: pieceLine,
-    mailHref: mailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
+    vendeurInfo: vendeurInfo, mailHref: mailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
   };
   window.addEventListener("load", start);
 })();
