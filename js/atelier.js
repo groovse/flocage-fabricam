@@ -106,7 +106,7 @@
 
     // en-tête
     html += '<section class="a-block a-head"><h2>Commande de ' + esc(c.asso || "asso inconnue") + '</h2><p>' +
-      (c.nom ? esc(c.nom) : "") + (c.email ? ', <a href="mailto:' + esc(c.email) + '">' + esc(c.email) + "</a>" : "") + (c.tel ? ", " + esc(c.tel) : "") + "<br>" +
+      (c.nom ? esc(c.nom) : "") + (c.email ? ', <a href="' + esc(A.gmailHref(c.email, "Ta commande de flocage")) + '" target="_blank" rel="noopener">' + esc(c.email) + "</a>" : "") + (c.tel ? ", " + esc(c.tel) : "") + "<br>" +
       r.N + (r.N > 1 ? " pièces" : " pièce") + ", technique demandée : " + (order.technique === "sublimation" ? "sublimation quand c'est possible, DTF sinon" : "DTF") +
       (c.date ? ", pour le " + new Date(c.date + "T12:00:00").toLocaleDateString("fr-FR") : "") + "</p>" +
       (c.message ? '<blockquote>' + esc(c.message) + "</blockquote>" : "") + "</section>";

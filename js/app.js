@@ -43,12 +43,18 @@
     contact: { asso: "", nom: "", email: "", tel: "", date: "", message: "" }, result: null,
     entryId: null, addModel: null, nextPack: 1 };
   function itemOf(id) { return byId[id] || PACKS[id]; }
+  // Mails : on ouvre Gmail (rédaction d'un message dans un nouvel onglet), pas l'application de mail installée sur l'ordinateur.
+  function gmailHref(to, subject, body) {
+    return "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(to) +
+      (subject ? "&su=" + encodeURIComponent(subject) : "") + (body ? "&body=" + encodeURIComponent(body) : "");
+  }
+  function gmailLink(a, href) { a.href = href; a.target = "_blank"; a.rel = "noopener"; }
   // Mail pré-rempli pour demander un vêtement qui n'est pas au catalogue
   function autreVetementHref() {
     var body = ["Bonjour,", "", "Je voudrais faire floquer un vêtement qui n'est pas dans le catalogue.", "",
       "Association :", "Vêtement souhaité (lien du produit, marque, couleur) :", "Nombre de pièces et tailles :",
       "Marquages souhaités (visuel, prénoms, numéros, emplacements) :", "Date souhaitée :", "", "Merci,"].join("\n");
-    return "mailto:" + DATA.service.email + "?subject=" + encodeURIComponent("Demande de flocage, vêtement hors catalogue") + "&body=" + encodeURIComponent(body);
+    return gmailHref(DATA.service.email, "Demande de flocage, vêtement hors catalogue", body);
   }
   // Filtres du catalogue : une valeur par groupe, "" = tous
   var FILTRE = { genre: "", style: "", type: "" };
@@ -655,8 +661,8 @@
       '<label>Un message pour nous (facultatif)<textarea id="c-message" data-c="message" rows="3">' + esc(c.message) + '</textarea></label>' +
       '<ol class="send">' +
       '<li><button type="button" class="btn btn-primary" data-act="dl">Télécharger mon fichier de commande</button><span class="hint">Il contient tes pièces et tes visuels. Tu le joins au mail.</span></li>' +
-      '<li><button type="button" class="btn btn-primary" data-act="mail">Écrire le mail à Fabr\'Icam</button><span class="hint">Ton application de mail s\'ouvre, le message est déjà rempli.</span></li></ol>' +
-      '<p><button type="button" class="linkbtn" data-act="copy">Copier le texte du mail</button></p>' +
+      '<li><button type="button" class="btn btn-primary" data-act="mail">Écrire le mail à Fabr\'Icam</button><span class="hint">Gmail s\'ouvre dans un nouvel onglet, le message est déjà rempli. N\'oublie pas d\'y joindre le fichier.</span></li></ol>' +
+      '<p><button type="button" class="linkbtn" data-act="copy">Pas de Gmail ? Copier le texte du mail</button></p>' +
       '<div class="issues" id="issues" aria-live="polite"></div>';
   }
 
@@ -747,7 +753,7 @@
     var subject = "Demande de flocage, " + S.contact.asso.trim() + ", " + S.pieces.length + (S.pieces.length > 1 ? " pièces" : " pièce");
     var body = mailText(false);
     if (encodeURIComponent(body).length > 1700) body = mailText(true);
-    return "mailto:" + DATA.service.email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    return gmailHref(DATA.service.email, subject, body);
   }
 
   /* ---------- aperçu et total ---------- */
@@ -970,7 +976,7 @@
     else if (act === "mail") {
       var pb2 = problems(); showIssues(pb2);
       if (pb2.bloquants.length) return;
-      window.location.href = mailHref();
+      var gm = document.createElement("a"); gmailLink(gm, mailHref()); document.body.appendChild(gm); gm.click(); gm.remove();   // Gmail s'ouvre dans un nouvel onglet
     }
     else if (act === "copy") {
       var pb3 = problems(); showIssues(pb3);
@@ -1005,8 +1011,8 @@
     window.addEventListener("hashchange", route);
     $("#brand-name").textContent = DATA.service.nom;
     var cfgLink = $(".nav a[data-cfg]"); if (cfgLink) cfgLink.href = "#/configurer";
-    $("#foot-mail").href = "mailto:" + DATA.service.email;
-    $("#top-note-mail").href = autreVetementHref();
+    gmailLink($("#foot-mail"), gmailHref(DATA.service.email));
+    gmailLink($("#top-note-mail"), autreVetementHref());
     $("#foot-mail").textContent = DATA.service.email;
     route();
   }
@@ -1015,7 +1021,7 @@
     CTX: CTX, S: S, DATA: DATA, PRIX: PRIX, esc: esc, fmtEUR: fmtEUR, fmtN: fmtN, $: $, $$: $$, byId: byId,
     EMP_ORDER: EMP_ORDER, toast: toast, download: download, slug: slug, measure: measure, ensureFont: ensureFont,
     orderOf: orderOf, start: start, colorOf: colorOf, pieceLine: pieceLine,
-    vendeurInfo: vendeurInfo, mailHref: mailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
+    vendeurInfo: vendeurInfo, mailHref: mailHref, gmailHref: gmailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
   };
   window.addEventListener("load", start);
 })();
