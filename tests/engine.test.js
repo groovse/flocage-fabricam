@@ -19,31 +19,40 @@ function pieces(n, couleur, extra) {
 const A6poitrine = { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" } };
 
 console.log("Prix de vente");
-test("prix = coût + 20 %, arrondi au centime supérieur, 1 pièce A6 poitrine", () => {
+test("prix = coût + 20 % plafonné à 2 €, arrondi au centime supérieur, 1 pièce A6 poitrine", () => {
   const r = E.computeOrder({ pieces: pieces(1), marquages: A6poitrine, technique: "dtf" }, ctx);
   assert.strictEqual(r.couts.achats, 7.99);
-  assert.strictEqual(r.couts.planchesHT, 2.40);
-  assert.strictEqual(r.couts.planchesTTC, 2.88);
+  assert.strictEqual(r.couts.planchesTTC, 5.50);   // une A6 prend une planche A4 chez DTF Print (prix TTC)
   assert.strictEqual(r.couts.livraison, 4.90);
-  assert.strictEqual(r.couts.total, 15.77);
-  assert.strictEqual(r.prix.unitaire, 18.93);   // 15,77 x 1,20 = 18,924 -> 18,93
-  assert.strictEqual(r.prix.marge, 3.16);
+  assert.strictEqual(r.couts.total, 18.39);
+  assert.strictEqual(r.prix.unitaire, 20.39);   // 20 % de 18,39 = 3,68 € : plafonné à 2 €
+  assert.strictEqual(r.prix.marge, 2);
+  assert.ok(r.prix.groupes[0].plafonne);
 });
 test("calcPrix : pas de palier de 2,50 €, seulement l'arrondi au centime", () => {
   const p = E.calcPrix(70, 10, PRIX.regles);        // 7,00 x 1,2 = 8,40
   assert.strictEqual(p.unitaire, 8.4); assert.strictEqual(p.marge, 14);
-  const q = E.calcPrix(10.01, 1, PRIX.regles);      // 12,012 -> 12,02
-  assert.strictEqual(q.unitaire, 12.02);
+  const q = E.calcPrix(10.07, 1, PRIX.regles);      // 20 % = 2,014 € : plafonné à 2 € -> 12,07
+  assert.strictEqual(q.unitaire, 12.07);
+  const r = E.calcPrix(9.51, 1, PRIX.regles);       // 9,51 x 1,2 = 11,412 -> 11,42
+  assert.strictEqual(r.unitaire, 11.42);
 });
-test("calcPrix : un euro de coût en plus change le prix de 1,20 €, pas de 2,50 €", () => {
-  const a = E.calcPrix(10, 1, PRIX.regles).unitaire, b = E.calcPrix(11, 1, PRIX.regles).unitaire;
-  assert.strictEqual(a, 12); assert.strictEqual(b, 13.2);
+test("calcPrix : jusqu'à 10 € de coût la marge est de 20 %, au-delà elle reste à 2 €", () => {
+  const u = c => E.calcPrix(c, 1, PRIX.regles).unitaire;
+  assert.strictEqual(u(5), 6); assert.strictEqual(u(10), 12);
+  assert.strictEqual(u(11), 13); assert.strictEqual(u(30), 32); assert.strictEqual(u(100), 102);
 });
-test("la marge d'une commande est toujours au moins 20 % du coût", () => {
+test("calcPrix : sans plafond (margeMax null) on retrouve les 20 %", () => {
+  const sans = Object.assign({}, PRIX.regles, { margeMax: null });
+  assert.strictEqual(E.calcPrix(30, 1, sans).unitaire, 36);
+});
+test("la marge d'une commande vaut 20 % du coût, plafonnée à 2 € par pièce", () => {
   [1, 2, 3, 5, 6, 7, 8, 12, 20, 50].forEach(n => {
     const r = E.computeOrder({ pieces: pieces(n), marquages: A6poitrine, technique: "dtf" }, ctx);
-    assert.ok(r.prix.marge >= 0.2 * r.couts.total - 1e-6, n + " pièces : marge " + r.prix.marge + " pour un coût de " + r.couts.total);
-    assert.ok(r.prix.marge <= 0.2 * r.couts.total + 0.01 * n + 1e-6, n + " pièces : marge trop haute " + r.prix.marge);
+    const attendu = n * Math.min(0.2 * r.couts.total / n, PRIX.regles.margeMax);
+    assert.ok(r.prix.marge >= attendu - 1e-6, n + " pièces : marge " + r.prix.marge + " pour un coût de " + r.couts.total);
+    assert.ok(r.prix.marge <= attendu + 0.01 * n + 1e-6, n + " pièces : marge trop haute " + r.prix.marge);
+    assert.ok(r.prix.marge <= PRIX.regles.margeMax * n + 0.01 * n + 1e-6, n + " pièces : au-dessus du plafond");
   });
 });
 
@@ -117,7 +126,7 @@ const marqMixte = {
   poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" },
   cuisse_g: { actif: true, avecImage: true, format: "A6", orient: "portrait" }
 };
-test("un prix par produit : chaque produit a le sien, marge d'au moins 20 %", () => {
+test("un prix par produit : chaque produit a le sien, marge de 20 % plafonnée à 2 €", () => {
   const ps = [piece("a", "short-basket"), piece("b", "short-basket"), piece("c", "sweat-molleton")];
   const r = E.computeOrder({ pieces: ps, marquages: marqMixte, technique: "dtf" }, ctx);
   assert.strictEqual(r.prix.groupes.length, 2);
@@ -125,7 +134,10 @@ test("un prix par produit : chaque produit a le sien, marge d'au moins 20 %", ()
   assert.strictEqual(short.n, 2); assert.strictEqual(sweat.n, 1);
   assert.ok(short.unitaire < sweat.unitaire, "le short doit coûter moins cher que le sweat");
   assert.strictEqual(r.prix.unitaire, null);
-  assert.ok(r.prix.marge >= 0.2 * r.couts.total - 1e-6);
+  r.prix.groupes.forEach(g => {
+    const marge = g.unitaire - g.coutMoyen, attendue = Math.min(0.2 * g.coutMoyen, PRIX.regles.margeMax);
+    assert.ok(marge >= attendue - 1e-6 && marge <= attendue + 0.01 + 1e-6, g.produitId + " : marge " + marge.toFixed(3));
+  });
   assert.strictEqual(r.prix.total, short.total + sweat.total);
   assert.ok(Math.abs(Object.values(r.coutPieces).reduce((s, c) => s + c.total, 0) - r.couts.total) < 0.01, "les coûts imputés doivent égaler le coût réel");
   console.log("     short", short.unitaire, "€ x2 | sweat", sweat.unitaire, "€ | total", r.prix.total, "| marge", r.prix.marge);
@@ -145,10 +157,12 @@ test("pack basket : un seul article, une seule marge (celle d'une pièce)", () =
   const g = r1.prix.groupes[0];
   assert.ok(g.pack && g.n === 1 && g.pieces === 2);
   assert.strictEqual(g.unitaire, r1.prix.total);
-  // marge du pack = 20 % du coût moyen d'une pièce = 10 % du coût du pack
-  assert.ok(r1.prix.marge >= 0.1 * r1.couts.total - 1e-6 && r1.prix.marge <= 0.1 * r1.couts.total + 0.01 + 1e-6, "marge " + r1.prix.marge);
+  // marge du pack = 20 % du coût moyen d'une pièce = 10 % du coût du pack, plafonnée à 2 € pour tout le pack
+  const margePack = Math.min(0.1 * r1.couts.total, PRIX.regles.margeMax);
+  assert.ok(r1.prix.marge >= margePack - 1e-6 && r1.prix.marge <= margePack + 0.01 + 1e-6, "marge " + r1.prix.marge);
   assert.ok(r1.prix.total < r2.prix.total, "le pack doit coûter moins cher que les deux pièces séparées");
-  assert.ok(Math.abs(r2.prix.marge - 0.2 * r2.couts.total) < 0.03);
+  const margeSeparees = r2.prix.groupes.reduce((s, g) => s + g.n * Math.min(0.2 * g.coutMoyen, PRIX.regles.margeMax), 0);
+  assert.ok(Math.abs(r2.prix.marge - margeSeparees) < 0.03, "marge séparée " + r2.prix.marge + " attendue " + margeSeparees.toFixed(2));
   console.log("     pack", r1.prix.total, "€ contre", r2.prix.total, "€ séparés");
 });
 test("plusieurs packs et des pièces seules dans la même commande", () => {
@@ -174,7 +188,7 @@ test("short de basket, 2 A6 (une par cuisse) : le prix suit le coût sans palier
     const ps = Array.from({ length: n }, (_, i) => piece("s" + i, "short-basket"));
     const r = E.computeOrder({ pieces: ps, marquages: marq, technique: "dtf" }, ctx);
     const u = r.prix.groupes[0].unitaire, cm = r.prix.groupes[0].coutMoyen;
-    assert.ok(Math.abs(u - cm * 1.2) < 0.02, n + " : prix " + u + " pour un coût moyen de " + cm);
+    assert.ok(Math.abs(u - (cm + Math.min(0.2 * cm, PRIX.regles.margeMax))) < 0.02, n + " : prix " + u + " pour un coût moyen de " + cm);
     console.log("     " + n + " shorts : coût moyen " + cm.toFixed(2) + " -> " + u.toFixed(2) + " € la pièce");
     prev = u;
   });
@@ -299,7 +313,8 @@ test("place de marché : un seul frais de port par vendeur et par commande, rép
   let somme = 0; Object.keys(deux.coutPieces).forEach(k => { somme += deux.coutPieces[k].total; });
   assert.ok(Math.abs(somme - deux.couts.total) < 0.011, "somme " + somme + " pour un coût de " + deux.couts.total);
   assert.strictEqual(deux.couts.total, E.round2(deux.couts.achats + deux.couts.planchesTTC + deux.couts.livraison + 9.98));
-  assert.ok(deux.prix.total >= deux.couts.total * 1.2 - 0.02, "la marge de 20 % est respectée avec les frais du vendeur");
+  const margeVoulue = deux.prix.groupes.reduce((s, g) => s + g.n * Math.min(0.2 * g.coutMoyen, PRIX.regles.margeMax), 0);
+  assert.ok(deux.prix.total >= deux.couts.total + margeVoulue - 0.02, "la marge (20 %, plafonnée à 2 €) est respectée avec les frais du vendeur");
 });
 test("place de marché : plus on commande de pièces, plus la part des frais de port baisse", () => {
   const prix = [1, 5, 20].map(q => E.priceTable(produits["doudoune-sans-manche"], [q], ctx)[0].unitaire);

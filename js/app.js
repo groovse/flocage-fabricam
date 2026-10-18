@@ -562,7 +562,7 @@
     var d = dimsOf(m), ar = (m.image.pxW || 1) / (m.image.pxH || 1);
     var printedW = Math.min(d.w, d.h * ar), dpi = Math.round((m.image.pxW || 0) / (printedW / 2.54));
     if (dpi >= 280) return "Résolution : " + dpi + " dpi, c'est bon.";
-    if (dpi >= 150) return "Résolution : " + dpi + " dpi. Sprint demande 300 dpi minimum, le rendu sera moins net.";
+    if (dpi >= 150) return "Résolution : " + dpi + " dpi. " + PRIX.fournisseur.nom + " demande 300 dpi minimum, le rendu sera moins net.";
     return "Résolution : " + dpi + " dpi, trop faible. Utilise une image plus grande (300 dpi minimum).";
   }
 

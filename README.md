@@ -1,6 +1,6 @@
 # Fabr'Icam Flocage
 
-Site de flocage pour les associations de l'Icam : vitrine avec prix par quantité, configurateur de vêtements avec aperçu à la taille réelle, calcul des planches de transfert Sprint Transfert, demande de devis par mail, et un espace atelier pour toi.
+Site de flocage pour les associations de l'Icam : vitrine avec prix par quantité, configurateur de vêtements avec aperçu à la taille réelle, calcul des planches de transfert DTF Print, demande de devis par mail, et un espace atelier pour toi.
 
 ## Ouvrir le site
 
@@ -18,7 +18,7 @@ Ouvre `index.html#/atelier` (lien « Espace atelier » en bas de page) et charge
 
 - le coût de revient, le prix de chaque produit (coût moyen + marge de 20 %) et la marge finale ;
 - la liste à acheter chez Decathlon en magasin, et la liste des articles à commander en ligne (place de marché, avec le vendeur et ses frais de port) ;
-- les lignes à commander chez Sprint Transfert (DTF et sublimation séparés) ;
+- les lignes à commander chez DTF Print (DTF et sublimation séparés), avec les règles du fichier à envoyer ;
 - le plan de chaque planche (quel motif de quelle pièce, où) ;
 - les réglages de presse, les visuels à télécharger, les points à vérifier.
 
@@ -54,19 +54,20 @@ Le dessin à la taille réelle reste la référence pour vérifier les dimension
 
 ## Règle de prix
 
-Les planches Sprint et la livraison sont réparties sur les pièces au prorata de la surface de leurs motifs. Chaque produit a son propre prix unitaire : coût moyen de ses pièces (vêtement + part des planches et de la livraison) + 20 %, arrondi au centime supérieur. Une pièce qui coûte 10 € est donc vendue 12 €. Il n'y a plus de palier de 2,50 € ni de marge minimale : le prix suit le coût.
+Les planches DTF Print et la livraison sont réparties sur les pièces au prorata de la surface de leurs motifs. Chaque produit a son propre prix unitaire : coût moyen de ses pièces (vêtement + part des planches et de la livraison) + 20 %, **avec une marge qui ne dépasse jamais 2 € par article**, arrondi au centime supérieur. Une pièce qui coûte 10 € est vendue 12 €, une pièce qui coûte 30 € est vendue 32 € (et non 36 €). Le plafond est `regles.margeMax` dans `js/prix.js` (mets `null` pour le supprimer). Le prix suit le coût, sans palier.
 
-Pack basket : le maillot et le short sont vendus comme un seul article, avec une seule marge. Elle vaut 20 % du coût moyen d'une pièce, soit 10 % du coût du pack. Le pack coûte donc moins cher que les deux pièces séparées. Le taux est dans `js/prix.js` (`regles.marge`).
+Pack basket : le maillot et le short sont vendus comme un seul article, avec une seule marge. Elle vaut 20 % du coût moyen d'une pièce, soit 10 % du coût du pack, et reste plafonnée à 2 € pour tout le pack. Le pack coûte donc moins cher que les deux pièces séparées. Le taux est dans `js/prix.js` (`regles.marge`).
 
-Frais de port d'un vendeur de la place de marché : un montant par vendeur et par commande (`livraisonVendeur` dans `js/prix.js`), ajouté au coût de revient et réparti sur les pièces de ce vendeur, avant la marge de 20 %. Plus la commande est grosse, plus la part par pièce baisse.
+Frais de port d'un vendeur de la place de marché : un montant par vendeur et par commande (`livraisonVendeur` dans `js/prix.js`), ajouté au coût de revient et réparti sur les pièces de ce vendeur, avant la marge (20 %, plafonnée à 2 €). Plus la commande est grosse, plus la part par pièce baisse.
 
 Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référence (poitrine, ou une cuisse pour les shorts), pour 1, 5, 10, 20 et 50 pièces. Pour un pack : le visuel A6 sur chaque pièce de référence, prix par pack. Pour les chaussettes (prénom seul), le prix affiché compte un prénom de 3 cm de haut.
 
 ## Choses à vérifier
 
-- **Prix Sprint HT ou TTC** : le site les traite comme HT (TVA 20 % ajoutée). Vérifie au panier. Si ce sont déjà des TTC, mets `sprintPrixHT: false` dans `js/prix.js`.
-- **Remises par quantité de Sprint** : leur page ne les affiche pas ici. Si tu les relèves, remplis `remises` dans `js/prix.js` (`{ min: 10, pct: 0.05 }`) et le calcul en tient compte.
-- **Livraison** : Colissimo 4,90 €, offerte dès 100 € HT de planches.
+- **Fournisseur des planches** : DTF Print (Port-de-Bouc), prix relevés TTC le 18/10/2026 sur dtfprint.fr : DTF A4 5,50 €, A3 8,00 €, A2 14,00 €, mètre 18,00 € ; sublimation A4 3,90 €, A3 7,50 €, A2 13,00 €. Avant, le site utilisait Sprint Transfert (plus cher et sans remise relevée). Un fournisseur qui affiche des prix HT se règle avec `prixPlanchesHT: true` dans `js/prix.js`.
+- **Remises par quantité de DTF Print** : elles démarrent à 10 planches (A4 4,00 € au lieu de 5,50 €). Une commande de flocage en compte rarement autant, donc elles ne sont pas appliquées. Pour les ajouter, remplis `remises` dans `js/prix.js` (`{ min: 10, pct: 0.27 }`).
+- **Livraison** : offerte dès 100 € TTC de transferts. En dessous, DTF Print n'affiche le prix qu'au panier : 4,90 € est une estimation à corriger dans `livraison.colissimo`.
+- **Sublimation** : DTF Print annonce un polyester d'au moins 65 % ; le site garde 90 % pour un rendu net. La planche A4 de sublimation fait 20 × 28 cm (le visuel A4 de 21 cm de large part donc sur une A3).
 - **Prix d'achat** : relevés sur les fiches Decathlon le 18/10/2026 (polo 7,99 €, sweat 14,99 €, maillot 6,99 €, short de basket 6,99 €, short de tennis 5,99 €, débardeur 9,99 €, et ceux des 19 articles ajoutés en 2.3.0). Le polo blanc est supposé au même prix que le marine. Vérifie en magasin et corrige `prixAchat` dans `js/data.js`.
 - **Stock** : les articles de la place de marché ont un stock très limité (le survêtement Joma n'a que les tailles XS, S et 2XL, le sweat Viralto Axton que la 2XL). Les tailles du catalogue sont celles des fiches du 18/10/2026 ; vérifie avant de promettre une commande.
 - **Aperçu sur photo** : il n'existe que pour les 6 premiers vêtements. Les 19 articles ajoutés en 2.3.0 s'affichent en dessin (le bouton Photo est grisé avec une explication).
@@ -85,7 +86,7 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 
 | Je veux… | Je modifie |
 |---|---|
-| changer un prix de planche, la TVA, la livraison, la marge (20 %), l'arrondi | `js/prix.js` |
+| changer un prix de planche, le fournisseur, la TVA, la livraison, la marge (20 %, plafond 2 €), l'arrondi | `js/prix.js` |
 | ajouter un vêtement, une couleur, une taille | `js/data.js` (copie un bloc de `produits`) |
 | ajouter un pack ou un ensemble | `js/data.js` (`packs`, avec `type: "ensemble"` dans les `tags`) |
 | marquer un article de la place de marché, ou changer les frais de port d'un vendeur | `js/data.js` (`vendeur` du produit) et `js/prix.js` (`livraisonVendeur`) |
@@ -110,7 +111,7 @@ Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (
 node tests/engine.test.js
 ```
 
-31 tests : 21 sur le moteur, marge de 20 %, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité ; 3 sur les réglages de l'aperçu sur photo (couleur et rang de photo valides, emplacements dans la photo) ; 7 sur le catalogue étendu (données cohérentes, dessins de face et de dos, frais de port par vendeur, chaussettes, packs, sublimation).
+32 tests : 22 sur le moteur, marge de 20 % plafonnée à 2 €, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité ; 3 sur les réglages de l'aperçu sur photo (couleur et rang de photo valides, emplacements dans la photo) ; 7 sur le catalogue étendu (données cohérentes, dessins de face et de dos, frais de port par vendeur, chaussettes, packs, sublimation).
 
 ## Publier sur GitHub Pages
 

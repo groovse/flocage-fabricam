@@ -122,14 +122,15 @@
     if (nMag) rows.push(["Vêtements Decathlon (retrait en magasin)", plur(nMag), fmtEUR(eurMag)]);
     if (nMp) rows.push(["Vêtements de la place de marché Decathlon (livrés par le vendeur)", plur(nMp), fmtEUR(eurMp)]);
     if (r.couts.livraisonVendeurs) rows.push(["Frais de port des vendeurs (estimation)", r.vendeurs.map(function (v) { return v.nom + " " + fmtEUR(v.frais); }).join(", "), fmtEUR(r.couts.livraisonVendeurs)]);
+    var fn = A.PRIX.fournisseur.nom, plHT = A.PRIX.prixPlanchesHT;
+    if (plHT) rows.push(["Planches " + fn + ", hors taxes", "", fmtEUR(r.couts.planchesHT)]);
     rows = rows.concat([
-      ["Planches Sprint, hors taxes", "", fmtEUR(r.couts.planchesHT)],
-      ["Planches Sprint, TTC", "TVA " + Math.round(A.PRIX.tva * 100) + " %", fmtEUR(r.couts.planchesTTC)],
-      ["Livraison Sprint", r.couts.livraison ? "Colissimo" : "offerte", fmtEUR(r.couts.livraison)],
+      ["Planches " + fn + ", TTC", plHT ? "TVA " + Math.round(A.PRIX.tva * 100) + " %" : "", fmtEUR(r.couts.planchesTTC)],
+      ["Livraison " + fn, r.couts.livraison ? "estimation" : "offerte", fmtEUR(r.couts.livraison)],
       ["<b>Coût de revient</b>", "", "<b>" + fmtEUR(r.couts.total) + "</b>"]
     ]);
     pv.groupes.forEach(function (g) {
-      var detail = "coût moyen " + fmtEUR(g.coutMoyen) + ", marge " + fmtPct(g.taux) + (g.pack ? " (une seule pièce du pack)" : "") + ", soit " + fmtEUR(g.unitaire) + " l'unité";
+      var detail = "coût moyen " + fmtEUR(g.coutMoyen) + ", marge " + (g.plafonne ? "plafonnée à " + fmtEUR(A.PRIX.regles.margeMax) : fmtPct(g.taux)) + (g.pack ? " (une seule pièce du pack)" : "") + ", soit " + fmtEUR(g.unitaire) + " l'unité";
       rows.push([esc(A.groupName(g)) + " × " + g.n, detail, fmtEUR(g.total)]);
     });
     rows.push(["<b>Total à facturer</b>", pv.unitaire != null ? r.N + " × " + fmtEUR(pv.unitaire) : "", "<b>" + fmtEUR(pv.total) + "</b>"]);
@@ -160,14 +161,15 @@
         '<p class="hint">Prix d\'achat enregistré : ' + prixConnus(enligne) + ".</p></section>";
     }
 
-    // Sprint
-    var lines = r.lignesPlanches;
-    html += '<section class="a-block"><h2>À commander chez Sprint Transfert</h2>';
+    // Fournisseur
+    var lines = r.lignesPlanches, F = A.PRIX.fournisseur, suf = A.PRIX.prixPlanchesHT ? "HT" : "TTC";
+    html += '<section class="a-block"><h2>À commander chez ' + esc(F.nom) + '</h2>';
     if (lines.length) {
-      html += table(["Technique", "Format", { t: "Quantité", num: true }, { t: "Prix HT l'unité", num: true }, { t: "Remise", num: true }, { t: "Total HT", num: true }],
+      html += table(["Technique", "Format", { t: "Quantité", num: true }, { t: "Prix " + suf + " l'unité", num: true }, { t: "Remise", num: true }, { t: "Total " + suf, num: true }],
         lines.map(function (l) { return [esc(A.PRIX.planches[l.techno].nom), esc(l.nom), l.qty, fmtEUR(l.prixUnitaire), l.remise ? Math.round(l.remise * 100) + " %" : "aucune", fmtEUR(l.totalHT)]; }));
-      html += '<p class="hint">Total HT ' + fmtEUR(r.couts.planchesHT) + ", soit " + fmtEUR(r.couts.planchesTTC) + " TTC. " +
-        (r.couts.livraison ? "Livraison Colissimo " + fmtEUR(r.couts.livraison) + "." : "Livraison offerte.") + " Délai choisi : standard 48/72h.</p>";
+      html += '<p class="hint">' + (A.PRIX.prixPlanchesHT ? "Total HT " + fmtEUR(r.couts.planchesHT) + ", soit " + fmtEUR(r.couts.planchesTTC) + " TTC. " : "Total " + fmtEUR(r.couts.planchesTTC) + " TTC. ") +
+        (r.couts.livraison ? "Livraison estimée à " + fmtEUR(r.couts.livraison) + " (le prix réel s'affiche au panier)." : "Livraison offerte.") + " " + esc(F.delai) + "</p>" +
+        '<p class="hint">' + esc(F.nom) + " demande : " + esc(F.fichier) + (F.url ? ' <a href="' + esc(F.url) + '" target="_blank" rel="noopener">Ouvrir le site</a>.' : "") + "</p>";
     } else html += '<p class="empty">Aucune planche à commander (aucun marquage actif).</p>';
     html += "</section>";
 
@@ -178,7 +180,7 @@
       var sorted = plan.sheets.slice().sort(function (a, b) { return b.format.w * b.format.h - a.format.w * a.format.h; });
       sorted.forEach(function (sh, i) {
         html += '<figure class="sheetfig"><figcaption>Planche ' + (i + 1) + " sur " + sorted.length + " : " + esc(sh.format.nom) + ", " + sh.placed.length + (sh.placed.length > 1 ? " motifs" : " motif") +
-          (techno === "sublimation" ? ". Imprime le fichier en miroir si Sprint ne le fait pas." : "") + '</figcaption><div class="sheetscroll">' + sheetSVG(sh, order) + "</div></figure>";
+          (techno === "sublimation" ? ". Envoie le fichier à l'endroit, sans miroir." : "") + '</figcaption><div class="sheetscroll">' + sheetSVG(sh, order) + "</div></figure>";
       });
       html += "</section>";
     });

@@ -1,7 +1,7 @@
 /*
  * MOTEUR DE CALCUL
  * - construit la liste des motifs à presser (un par pièce, par emplacement, par élément)
- * - les range sur les planches Sprint au moindre coût (rotation autorisée, écart entre motifs)
+ * - les range sur les planches du fournisseur au moindre coût (rotation autorisée, écart entre motifs)
  * - calcule coûts TTC, prix unitaire (marge en pourcentage du coût) et marge
  * Fonctionne dans le navigateur (window.Engine) et sous Node (tests).
  */
@@ -316,14 +316,18 @@
   /* Prix de vente                                                       */
   /* ------------------------------------------------------------------ */
   // Fixe le prix unitaire de chaque article (groupes : { n, cout, pieces } avec cout = coût total du groupe).
-  // Prix = coût moyen de l'article + marge (regles.marge, en pourcentage du coût), arrondi au supérieur de regles.pas.
+  // Prix = coût moyen de l'article + marge (regles.marge, en pourcentage du coût, plafonnée à regles.margeMax en euros par article),
+  // arrondi au supérieur de regles.pas.
   // Un article de plusieurs pièces (pack) ne porte la marge que d'une seule pièce : le taux est divisé par le nombre de pièces.
   function fixerPrix(groupes, coutTotal, r) {
     var total = 0;
     groupes.forEach(function (g) {
       g.coutMoyen = g.cout / g.n;
       g.taux = r.marge / (g.pieces || 1);
-      g.brut = g.coutMoyen * (1 + g.taux);
+      var marge = g.coutMoyen * g.taux;
+      g.plafonne = r.margeMax != null && marge > r.margeMax + 1e-9;
+      if (g.plafonne) marge = r.margeMax;
+      g.brut = g.coutMoyen + marge;
       g.unitaire = round2(Math.ceil(g.brut / r.pas - 1e-9) * r.pas);
       g.total = round2(g.unitaire * g.n);
       total += g.total;
@@ -344,7 +348,7 @@
     var built = buildMotifs(order, ctx);
     var motifs = built.motifs, warnings = built.warnings.slice();
     var plans = {}, allLines = [], planchesHT = 0;
-    var tvaCoef = prix.sprintPrixHT ? 1 + prix.tva : 1;
+    var tvaCoef = prix.prixPlanchesHT ? 1 + prix.tva : 1;
     var plancheParPiece = {};     // coût des planches (TTC) imputé à chaque pièce, au prorata de la surface de ses motifs
 
     ["dtf", "sublimation"].forEach(function (techno) {
@@ -370,11 +374,11 @@
     });
     planchesHT = round2(planchesHT);
 
-    var planchesTTC = prix.sprintPrixHT ? round2(planchesHT * (1 + prix.tva)) : planchesHT;
+    var planchesTTC = prix.prixPlanchesHT ? round2(planchesHT * (1 + prix.tva)) : planchesHT;
     var achats = round2(order.pieces.reduce(function (s, p) {
       var prod = ctx.produits[p.produitId]; return s + (prod ? prod.prixAchat : 0);
     }, 0));
-    var baseSeuil = prix.sprintPrixHT ? planchesHT : planchesTTC;
+    var baseSeuil = prix.prixPlanchesHT ? planchesHT : planchesTTC;
     var livraison = planchesHT > 0 && baseSeuil < prix.livraison.seuilGratuit ? prix.livraison.colissimo : 0;
 
     // Articles d'un vendeur de la place de marché Decathlon : le vendeur livre et facture des frais de port,
@@ -439,7 +443,7 @@
         unitaire: seul ? groupes[0].unitaire : null,   // un seul prix par pièce seulement s'il n'y a qu'un produit et pas de pack
         groupes: groupes.map(function (g) {
           return { pack: g.pack, produitId: g.produitId || null, packType: g.packType || null, produitIds: g.produitIds || null, n: g.n, pieces: g.pieces,
-            coutMoyen: round2(g.coutMoyen), taux: g.taux, unitaire: g.unitaire, total: g.total };
+            coutMoyen: round2(g.coutMoyen), taux: g.taux, plafonne: g.plafonne, unitaire: g.unitaire, total: g.total };
         }),
         packs: { n: nbPacks },
         total: fx.total, marge: fx.marge
