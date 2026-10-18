@@ -29,23 +29,121 @@
   var BODY_FRONT = "M36 6.5 C39.5 10.5 50.5 10.5 54 6.5 L71 11.5 L87 24.5 L77 36 L69 28 L69 75 Q45 77.5 21 75 L21 28 L13 36 L3 24.5 L19 11.5 Z";
   var BODY_BACK = "M36.5 5.5 C40 7.5 50 7.5 53.5 5.5 L71 11.5 L87 24.5 L77 36 L69 28 L69 75 Q45 77.5 21 75 L21 28 L13 36 L3 24.5 L19 11.5 Z";
 
-  function garment(hex, vue) {
+  /*
+   * Contour symétrique : on ne décrit que la moitié droite (x >= 45), du haut au centre jusqu'au bas au centre.
+   * segs : ["L", x, y] | ["Q", cx, cy, x, y] | ["C", c1x, c1y, c2x, c2y, x, y]
+   */
+  function symPath(start, segs) {
+    var d = "M" + start[0] + " " + start[1], pts = [start];
+    segs.forEach(function (sg) { d += " " + sg[0] + sg.slice(1).join(" "); pts.push([sg[sg.length - 2], sg[sg.length - 1]]); });
+    var m = function (x) { return 90 - x; };
+    for (var i = segs.length - 1; i >= 0; i--) {
+      var sg = segs[i], to = pts[i];
+      if (sg[0] === "L") d += " L" + m(to[0]) + " " + to[1];
+      else if (sg[0] === "Q") d += " Q" + m(sg[1]) + " " + sg[2] + " " + m(to[0]) + " " + to[1];
+      else d += " C" + m(sg[3]) + " " + sg[4] + " " + m(sg[1]) + " " + sg[2] + " " + m(to[0]) + " " + to[1];
+    }
+    return d + " Z";
+  }
+
+  // détails de la moitié droite, recopiés en miroir pour la moitié gauche
+  function both(inner) { return inner + '<g transform="translate(90 0) scale(-1 1)">' + inner + '</g>'; }
+  function line(d, stroke, w, extra) { return '<path d="' + d + '" fill="none" stroke="' + stroke + '" stroke-width="' + (w || 0.3) + '" stroke-linecap="round" ' + (extra || "") + '/>'; }
+
+  var SLEEVE_LONG = [["Q", 80.5, 30, 82, 66], ["L", 73, 67], ["Q", 70.5, 52, 68.5, 33]];
+
+  function sweatSegs(back) {
+    return { start: [45, back ? 8.5 : 12], segs: [["Q", 51, back ? 8.5 : 12, 53.5, 5], ["L", 70, 9]].concat(SLEEVE_LONG, [["L", 69, 74], ["Q", 58, 76.5, 45, 76.5]]) };
+  }
+  function polaireSegs(back) {
+    return { start: [45, back ? 5 : 7], segs: [["Q", 50, back ? 5 : 7, 53, 2.5], ["L", 55.5, 7.5], ["L", 70, 10.5]].concat(SLEEVE_LONG, [["L", 69, 74], ["Q", 58, 76.5, 45, 76.5]]) };
+  }
+  function debardeurSegs(back) {
+    return { start: [45, back ? 9 : 15], segs: [["Q", 50, back ? 9 : 15, 51, 4], ["L", 57.5, 4.5], ["C", 57, 15, 66.5, 19, 67, 30], ["L", 67.5, 74], ["Q", 58, 76, 45, 76]] };
+  }
+  function maillotSegs(back) {
+    return { start: [45, back ? 10 : 17], segs: [["Q", 54, back ? 10 : 17, 55, 4], ["L", 61.5, 4.5], ["C", 61, 16, 71, 21, 71.5, 34], ["L", 70.5, 74], ["Q", 58, 76, 45, 76]] };
+  }
+  var MODELS = {
+    polo: {
+      path: function (vue) { return vue === "dos" ? BODY_BACK : BODY_FRONT; },
+      details: function (vue, stroke, collar) {
+        var out = '<path d="M85.2 22.7 L75.2 34.2 M4.8 22.7 L14.8 34.2" stroke="' + stroke + '" stroke-width=".3" fill="none" opacity=".7"/>';
+        if (vue === "dos") {
+          out += '<path d="M35.5 5.3 C40 9.5 50 9.5 54.5 5.3 L54.5 7.6 C50 12 40 12 35.5 7.6 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".3"/>';
+        } else {
+          out += '<path d="M35 5.5 L44.4 9.5 L44.4 18 L36.5 12.5 Z M55 5.5 L45.6 9.5 L45.6 18 L53.5 12.5 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".3" stroke-linejoin="round"/>';
+          out += '<rect x="43.9" y="9.5" width="2.2" height="17" rx=".3" fill="none" stroke="' + stroke + '" stroke-width=".3"/>';
+          [13, 17.5, 22].forEach(function (y) { out += '<circle cx="45" cy="' + y + '" r=".55" fill="' + stroke + '" opacity=".8"/>'; });
+        }
+        return out;
+      }
+    },
+    sweat: {
+      path: function (vue) { var g = sweatSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var back = vue === "dos", y = back ? 8.5 : 12;
+        var band = both('<path d="M45 ' + y + ' Q51 ' + y + ' 53.5 5 L53.5 7.6 Q51 ' + (y + 2.6) + ' 45 ' + (y + 2.6) + ' Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>');
+        var hem = line("M21 69.8 Q45 72.3 69 69.8", stroke, 0.3, 'opacity=".8"');
+        var cuff = both(line("M72.4 61.4 L81.9 61", stroke, 0.3, 'opacity=".8"'));
+        return band + hem + cuff;
+      }
+    },
+    polaire: {
+      path: function (vue) { var g = polaireSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var back = vue === "dos", y = back ? 5 : 7;
+        var band = both('<path d="M45 ' + y + ' Q50 ' + y + ' 53 2.5 L55.5 7.5 Q50 ' + (y + 5.5) + ' 45 ' + (y + 5.5) + ' Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>');
+        var zip = back ? "" : line("M45 " + y + " L45 36", stroke, 0.45) + '<rect x="44.3" y="33" width="1.4" height="3.4" rx=".5" fill="' + stroke + '"/>';
+        var hem = line("M21 70.3 Q45 72.6 69 70.3", stroke, 0.3, 'opacity=".8"');
+        var cuff = both(line("M72.4 61.4 L81.9 61", stroke, 0.3, 'opacity=".8"'));
+        return band + zip + hem + cuff;
+      }
+    },
+    debardeur: {
+      path: function (vue) { var g = debardeurSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var hem = line("M23 71.4 Q45 73.8 67 71.4", stroke, 0.3, 'opacity=".8"');
+        return hem;
+      }
+    },
+    maillot: {
+      path: function (vue) { var g = maillotSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke, collar) {
+        var hem = line("M19.8 71.4 Q45 73.8 70.2 71.4", stroke, 0.3, 'opacity=".8"');
+        // liseré noir du col et des emmanchures
+        var y = vue === "dos" ? 10 : 17;
+        var trim = both('<path d="M45 ' + y + ' Q54 ' + y + ' 55 4" fill="none" stroke="#2a2a2e" stroke-width="1.1" stroke-linecap="round"/><path d="M61.5 4.5 C61 16 71 21 71.5 34" fill="none" stroke="#2a2a2e" stroke-width="1.1" stroke-linecap="round"/>');
+        return hem + trim;
+      }
+    },
+    "short-basket": {
+      dy: 9,
+      path: function () { return symPath([45, 13], [["L", 68, 13], ["L", 71.5, 57], ["L", 49, 58.5], ["L", 45, 35]]); },
+      details: function (vue, stroke, collar) {
+        return both('<path d="M45 13 L68 13 L68.3 18.8 L45 18.8 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>') +
+          line("M45 18.8 L45 23", stroke, 0.3) + both(line("M43.2 20 Q44.5 24.5 44 28", stroke, 0.35)) +
+          both(line("M49.6 54.2 L71 52.8", stroke, 0.3, 'opacity=".7"'));
+      }
+    },
+    "short-tennis": {
+      dy: 12,
+      path: function () { return symPath([45, 13], [["L", 67, 13], ["L", 69.5, 50], ["L", 50.5, 51.5], ["L", 45, 33]]); },
+      details: function (vue, stroke, collar) {
+        return both('<path d="M45 13 L67 13 L67.2 18.2 L45 18.2 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>') +
+          line("M45 18.2 L45 22", stroke, 0.3) + both(line("M43.2 19.5 Q44.5 24 44 27.5", stroke, 0.35)) +
+          both(line("M50.8 47.2 L69.3 46", stroke, 0.3, 'opacity=".7"'));
+      }
+    }
+  };
+
+  function garment(hex, vue, model) {
     var dark = lum(hex) < 0.5;
     var stroke = tone(hex, dark ? 0.28 : -0.28);
     var collar = tone(hex, dark ? 0.12 : -0.07);
-    var out = "";
-    out += '<path d="' + (vue === "dos" ? BODY_BACK : BODY_FRONT) + '" fill="' + hex + '" stroke="' + stroke + '" stroke-width=".35" stroke-linejoin="round"/>';
-    out += '<path d="' + (vue === "dos" ? BODY_BACK : BODY_FRONT) + '" fill="url(#pv-shade)"/>';
-    // revers de manches
-    out += '<path d="M85.2 22.7 L75.2 34.2 M4.8 22.7 L14.8 34.2" stroke="' + stroke + '" stroke-width=".3" fill="none" opacity=".7"/>';
-    if (vue === "dos") {
-      out += '<path d="M35.5 5.3 C40 9.5 50 9.5 54.5 5.3 L54.5 7.6 C50 12 40 12 35.5 7.6 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".3"/>';
-    } else {
-      out += '<path d="M35 5.5 L44.4 9.5 L44.4 18 L36.5 12.5 Z M55 5.5 L45.6 9.5 L45.6 18 L53.5 12.5 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".3" stroke-linejoin="round"/>';
-      out += '<rect x="43.9" y="9.5" width="2.2" height="17" rx=".3" fill="none" stroke="' + stroke + '" stroke-width=".3"/>';
-      [13, 17.5, 22].forEach(function (y) { out += '<circle cx="45" cy="' + y + '" r=".55" fill="' + stroke + '" opacity=".8"/>'; });
-    }
-    return out;
+    var m = MODELS[model] || MODELS.polo, d = m.path(vue);
+    return '<path d="' + d + '" fill="' + hex + '" stroke="' + stroke + '" stroke-width=".35" stroke-linejoin="round"/>' +
+      '<path d="' + d + '" fill="url(#pv-shade)"/>' + m.details(vue, stroke, collar);
   }
 
   // Zone d'un emplacement selon la vue (face ou dos). Les manches sont inversées au dos.
@@ -95,7 +193,8 @@
     out += '<svg class="pv-svg" viewBox="0 0 90 82" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aperçu du vêtement, vue ' + (vue === "dos" ? "de dos" : "de face") + '">';
     out += defs();
     out += '<rect width="90" height="82" fill="url(#pv-g5)"/>';
-    out += garment(opts.hex, vue);
+    var dy = (MODELS[prod.modele] || {}).dy || 0;
+    out += '<g transform="translate(0 ' + dy + ')">' + garment(opts.hex, vue, prod.modele);
 
     Object.keys(prod.zones).forEach(function (empId) {
       var z = zoneForView(prod, empId, vue);
@@ -125,6 +224,7 @@
       out += '</g>';
     });
 
+    out += '</g>';
     out += '<text x="1.5" y="80.4" font-size="1.7" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">carreaux de 5 cm</text>';
     out += '</svg>';
     return out;

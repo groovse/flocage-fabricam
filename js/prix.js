@@ -21,7 +21,13 @@ window.PRIX = {
     pas: 2.5,       // on arrondit au supérieur de 2,50 € en 2,50 €
     margeMin: 2,    // la marge totale de la commande doit dépasser 2 €
     ajout: 1        // sinon on ajoute 1 € par pièce, et on revérifie
+    // Chaque produit a son propre prix unitaire : coût moyen de ses pièces (produit, part des planches
+    // et de la livraison), arrondi au supérieur de 2,50 €.
   },
+
+  // Pack (plusieurs produits vendus ensemble) : remise en € retirée du prix par pack complet,
+  // après l'arrondi. La marge de la commande reste vérifiée.
+  packs: { remise: 2.5 },
 
   // Placement des motifs sur les planches.
   // ecart = marge de coupe entre deux motifs, en cm. À 0, quatre A6 tiennent exactement sur une A4
