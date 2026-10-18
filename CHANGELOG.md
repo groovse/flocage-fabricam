@@ -5,6 +5,21 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 3.2.0 — 19/10/2026
+
+Catégorie Accessoires : 18 articles Decathlon.
+
+- **Gourdes** : alu 1 L Quechua (9,99 €), fitness 750 mL Domyos (9,00 €), verre Phoenix (7,99 €).
+- **Coiffes** : casquettes de randonnée Forclaz (4,99 €), de chasse orange Solognac (5,99 €) et de tennis Artengo (5,99 €) ; bonnet à revers Rider 500 Wedze (8,99 €) et bonnet de running seamless Kiprun (5,99 €) ; tour de cou Morf (7,99 €, 13 coloris, vendeur partenaire Atelier Katanga : 4,99 € de port estimés, une seule fois par commande).
+- **Sacs** : sac tube pliable Move 100 30 L, sac de sport pliable Club 100 20 L, sacs à dos Arpenaz 50, Travel 100 pliable, Arpenaz 100, Arpenaz 500 et MH100. **Running** : bandeau V2 et ceinture smartphone Basique 2 Kiprun.
+- Neuf nouveaux dessins à l'échelle réelle (gourde, casquette, bonnet, tour de cou, bandeau, sac tube, sac de sport, sac à dos, ceinture) avec vue de face et de dos. Deux nouveaux formats de visuel pour les petites surfaces : Mini (5 × 5 cm) et A7 (7 × 10 cm). Le prix affiché d'un petit accessoire compte un Mini, celui d'un sac un A6.
+- Sept nouveaux emplacements : face du sac, gourde, devant de la casquette, du bonnet et du bandeau, tour de cou, ceinture. Prénoms et numéros possibles partout, en petit.
+- Avertissements : les gourdes (surface ronde, technique de pose à confirmer), les bonnets en maille, le tour de cou, le bandeau et les casquettes demandent un essai avant la série. Pas de sublimation sur ces articles, sauf le tour de cou blanc (`sublimation: false` dans les données).
+- Chaque couleur garde sa référence Decathlon et le lien de sa page (`ref`, `lien`), pour la future base d'achat de l'atelier.
+- Packs de trois ou quatre pièces : les photos du catalogue s'affichent en trois colonnes ou en grille de deux par deux.
+- Le catalogue compte des « articles » (et non plus des « vêtements »).
+- Aucun changement de règle de prix ni de format du fichier de commande. Tests : 37 en tout (formats et zones des accessoires, sublimation, frais de port des deux vendeurs).
+
 ## 3.1.0 — 18/10/2026
 
 Chaussettes dans les packs, pack entraîneur et deux nouveaux vêtements.

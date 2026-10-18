@@ -176,6 +176,96 @@
           '<path d="M36 59 Q42 59 42 55 Q42 52 38.5 51 L36 55 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".2"/>');
       }
     },
+    /* ---- Accessoires : dessinés à l'échelle réelle (1 unité = 1 cm) sur un fond plus petit que celui des vêtements (w x h) ---- */
+    gourde: {
+      w: 40, h: 36,
+      path: function () { return "M15.7 33.6 L15.7 14 Q15.7 10 18.2 8.6 L18.2 6.3 L21.8 6.3 L21.8 8.6 Q24.3 10 24.3 14 L24.3 33.6 Q24.3 34.6 23.3 34.6 L16.7 34.6 Q15.7 34.6 15.7 33.6 Z"; },
+      details: function (vue, stroke, collar) {
+        return '<path d="M17.4 3.4 L22.6 3.4 L22.6 6.3 L17.4 6.3 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>' +
+          line("M18.6 3.4 Q20 1.2 21.4 3.4", stroke, 0.35) + line("M15.9 31.6 L24.1 31.6", stroke, 0.3, 'opacity=".7"') +
+          line("M16.6 14.5 L16.6 30", "#ffffff", 0.5, 'opacity=".3"');
+      }
+    },
+    casquette: {
+      w: 36, h: 30,
+      path: function (vue) {
+        return vue === "dos" ? "M7 19 C7 9 13 4.5 18 4.5 C23 4.5 29 9 29 19 Q18 21.4 7 19 Z"
+          : "M7 19 C7 9 13 4.5 18 4.5 C23 4.5 29 9 29 19 Q33.8 20.6 31.6 23.8 Q18 28.8 4.4 23.8 Q2.2 20.6 7 19 Z";
+      },
+      details: function (vue, stroke, collar) {
+        var out = '<circle cx="18" cy="4.9" r=".9" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".2"/>' +
+          line("M18 5.6 Q17.2 12 18 19", stroke, 0.25, 'opacity=".7"') + line("M12.4 6.6 Q11 12 12 18.6", stroke, 0.25, 'opacity=".6"') + line("M23.6 6.6 Q25 12 24 18.6", stroke, 0.25, 'opacity=".6"');
+        if (vue === "dos") return out + line("M8 17.4 Q18 19.6 28 17.4", stroke, 0.3) + '<rect x="14" y="17.2" width="8" height="1.9" rx=".4" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".2"/>';
+        return out + line("M7.2 19 Q18 17.4 28.8 19", stroke, 0.35) + line("M5.6 22.9 Q18 27.4 30.4 22.9", stroke, 0.25, 'opacity=".7"');
+      }
+    },
+    bonnet: {
+      w: 36, h: 32,
+      path: function () { return "M6 26.6 L6 17.6 C5.4 9.6 11.2 3.2 18 3.2 C24.8 3.2 30.6 9.6 30 17.6 L30 26.6 Q18 28.2 6 26.6 Z"; },
+      details: function (vue, stroke, collar) {
+        var rib = "";
+        for (var x = 8; x < 30; x += 2) rib += line("M" + x + " 18.6 L" + x + " 26.9", stroke, 0.2, 'opacity=".45"');
+        return '<path d="M6 17.6 Q18 19.4 30 17.6 L30 26.6 Q18 28.2 6 26.6 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>' + rib +
+          line("M6 17.6 Q18 19.4 30 17.6", stroke, 0.3) +
+          line("M12 6.4 Q10 11 10.6 15.6", stroke, 0.2, 'opacity=".5"') + line("M18 3.6 L18 15.8", stroke, 0.2, 'opacity=".5"') + line("M24 6.4 Q26 11 25.4 15.6", stroke, 0.2, 'opacity=".5"');
+      }
+    },
+    "tour-de-cou": {
+      w: 56, h: 56,
+      path: function () { return "M15.5 3.4 L40.5 3.4 L40.5 52.6 L15.5 52.6 Z"; },
+      details: function (vue, stroke) {
+        return line("M15.5 5.6 L40.5 5.6", stroke, 0.3, 'opacity=".8"') + line("M15.5 50.4 L40.5 50.4", stroke, 0.3, 'opacity=".8"') +
+          line("M18 6 Q17 28 18 50", stroke, 0.2, 'opacity=".35"') + line("M38 6 Q39 28 38 50", stroke, 0.2, 'opacity=".35"');
+      }
+    },
+    bandeau: {
+      w: 40, h: 30,
+      path: function () { return "M9 10.6 Q20 9 31 10.6 L31 19.6 Q20 21.2 9 19.6 Z"; },
+      details: function (vue, stroke) {
+        return line("M9.6 12.1 Q20 10.6 30.4 12.1", stroke, 0.25, 'opacity=".7"') + line("M9.6 18.2 Q20 19.8 30.4 18.2", stroke, 0.25, 'opacity=".7"');
+      }
+    },
+    "sac-tube": {
+      w: 70, h: 44,
+      path: function () { return "M12 8 L58 8 Q65 8 65 15 L65 31 Q65 38 58 38 L12 38 Q5 38 5 31 L5 15 Q5 8 12 8 Z"; },
+      details: function (vue, stroke, collar) {
+        return line("M22 8 Q22 3 27 3 L43 3 Q48 3 48 8", collar, 1.3) + line("M22 8 Q22 3 27 3 L43 3 Q48 3 48 8", stroke, 0.25) +
+          line("M12.5 8.3 Q9.6 23 12.5 37.7", stroke, 0.3, 'opacity=".8"') + line("M57.5 8.3 Q60.4 23 57.5 37.7", stroke, 0.3, 'opacity=".8"') +
+          line("M16 11.4 Q35 13.2 54 11.4", stroke, 0.3, 'opacity=".7"') + '<rect x="33.2" y="10.6" width="3.6" height="1.8" rx=".5" fill="' + stroke + '"/>';
+      }
+    },
+    "sac-sport": {
+      w: 64, h: 50,
+      path: function () { return "M8 15 Q8 11.4 11.6 11.4 L52.4 11.4 Q56 11.4 56 15 L56 38.4 Q56 42 52.4 42 L11.6 42 Q8 42 8 38.4 Z"; },
+      details: function (vue, stroke, collar) {
+        return line("M20 11.4 Q20 5.6 25 5.6 L39 5.6 Q44 5.6 44 11.4", collar, 1.3) + line("M20 11.4 Q20 5.6 25 5.6 L39 5.6 Q44 5.6 44 11.4", stroke, 0.25) +
+          line("M12 11.8 Q32 2 52 11.8", stroke, 0.4, 'opacity=".75" stroke-dasharray="1.2 .6"') +
+          line("M11 15.6 L53 15.6", stroke, 0.3, 'opacity=".75"') + line("M11 39 L53 39", stroke, 0.3, 'opacity=".6"') +
+          '<rect x="29.2" y="14.8" width="5.6" height="1.8" rx=".5" fill="' + stroke + '"/>';
+      }
+    },
+    "sac-a-dos": {
+      w: 56, h: 52,
+      path: function () { return "M16.4 10.2 Q16.4 5.2 21.4 5.2 L34.6 5.2 Q39.6 5.2 39.6 10.2 L40.8 42.4 Q41 47.4 36 47.4 L20 47.4 Q15 47.4 15.2 42.4 Z"; },
+      details: function (vue, stroke, collar) {
+        var out = line("M24.4 5.4 Q24.4 2.6 28 2.6 Q31.6 2.6 31.6 5.4", collar, 1.1) + line("M24.4 5.4 Q24.4 2.6 28 2.6 Q31.6 2.6 31.6 5.4", stroke, 0.25);
+        if (vue === "dos") {
+          return out + '<path d="M19.4 8.6 Q16.6 28 20.2 44.6 L23.8 44.4 Q21.2 28 24.4 8.8 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>' +
+            '<path d="M36.6 8.6 Q39.4 28 35.8 44.6 L32.2 44.4 Q34.8 28 31.6 8.8 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>' +
+            line("M22 18 Q28 20 34 18", stroke, 0.25, 'opacity=".6"');
+        }
+        return out + line("M20 10.4 Q28 8.6 36 10.4", stroke, 0.3, 'opacity=".75"') + '<rect x="26.6" y="9.1" width="2.8" height="1.6" rx=".4" fill="' + stroke + '"/>' +
+          line("M17.4 33 Q28 35.6 38.6 33", stroke, 0.3, 'opacity=".7"') + line("M17.6 41.4 Q28 43.6 38.4 41.4", stroke, 0.25, 'opacity=".5"');
+      }
+    },
+    ceinture: {
+      w: 40, h: 30,
+      path: function () { return "M2 13.4 L10 13.4 L10 11.2 Q10 10 11.2 10 L28.8 10 Q30 10 30 11.2 L30 13.4 L38 13.4 L38 18.4 L30 18.4 L30 19.8 Q30 21 28.8 21 L11.2 21 Q10 21 10 19.8 L10 18.4 L2 18.4 Z"; },
+      details: function (vue, stroke) {
+        return line("M11.4 12.4 L28.6 12.4", stroke, 0.3, 'opacity=".75"') + '<rect x="18" y="11.6" width="4" height="1.6" rx=".5" fill="' + stroke + '"/>' +
+          line("M3 15.9 L9.6 15.9", stroke, 0.25, 'opacity=".6"') + line("M30.4 15.9 L37 15.9", stroke, 0.25, 'opacity=".6"');
+      }
+    },
     polo: {
       path: function (vue) { return vue === "dos" ? BODY_BACK : BODY_FRONT; },
       details: function (vue, stroke, collar) {
@@ -341,10 +431,10 @@
    */
   function render(opts) {
     var E = window.Engine, prod = opts.prod, vue = opts.vue || "face", out = "";
-    var mod = MODELS[prod.modele] || {}, H = mod.h || 82, dy = mod.dy || 0;
-    out += '<svg class="pv-svg" viewBox="0 0 90 ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aperçu du vêtement, vue ' + (vue === "dos" ? "de dos" : "de face") + '">';
+    var mod = MODELS[prod.modele] || {}, W = mod.w || 90, H = mod.h || 82, dy = mod.dy || 0;
+    out += '<svg class="pv-svg" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aperçu, vue ' + (vue === "dos" ? "de dos" : "de face") + '">';
     out += defs();
-    out += '<rect width="90" height="' + H + '" fill="url(#pv-g5)"/>';
+    out += '<rect width="' + W + '" height="' + H + '" fill="url(#pv-g5)"/>';
     out += '<g transform="translate(0 ' + dy + ')">' + garment(opts.hex, vue, prod.modele);
 
     out += markings(opts, vue);

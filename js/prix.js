@@ -34,7 +34,8 @@ window.PRIX = {
     defaut: 4.99,
     vendeurs: {
       "sport-et-go-eu": { nom: "Sport & Go EU", frais: 4.99, delai: "2 à 6 jours" },
-      "pertemba-fr": { nom: "Pertemba FR", frais: 4.99, delai: "" }
+      "pertemba-fr": { nom: "Pertemba FR", frais: 4.99, delai: "" },
+      "atelier-katanga": { nom: "Atelier Katanga", frais: 4.99, delai: "" }
     }
   },
 
@@ -61,8 +62,10 @@ window.PRIX = {
   // Plateau de ta presse : limite A4, aucun motif ne doit dépasser
   plateau: { w: 21, h: 28 },
 
-  // Dimensions des tailles de motif
+  // Dimensions des tailles de motif (Mini et A7 : accessoires, casquettes, bonnets, gourdes...)
   formatsMotif: {
+    Mini: { w: 5, h: 5, nom: "Mini" },
+    A7: { w: 7, h: 10, nom: "A7" },
     A6: { w: 10, h: 14, nom: "A6" },
     A5: { w: 14, h: 21, nom: "A5" },
     A4: { w: 21, h: 28, nom: "A4" }

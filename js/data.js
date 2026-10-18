@@ -2,8 +2,10 @@
  * CATALOGUE — pour ajouter un vêtement, copie un bloc de « produits » et change :
  * id, nom, prixAchat (TTC), tailles, couleurs, modele (le dessin : polo, sweat, debardeur,
  * maillot, short-basket, short-tennis, short-slim, tshirt, manches-longues, veste, sweat-zip, gilet, gilet-matelasse, robe,
- * pantalon, chaussette), tags (genre, style, type : haut, bas, robe, ensemble ou accessoire), vendeur (seulement pour un article
- * de la place de marché Decathlon, voir prix.js), vitrine (emplacements du prix affiché) et zones.
+ * pantalon, chaussette, gourde, casquette, bonnet, tour-de-cou, bandeau, sac-tube, sac-sport, sac-a-dos, ceinture), tags (genre, style, type : haut, bas, robe,
+ * ensemble ou accessoire), vendeur (seulement pour un article de la place de marché Decathlon, voir prix.js), sublimation: false
+ * (article qui ne se sublime pas), vitrine (emplacements du prix affiché) et zones. Chaque couleur peut porter ref (référence Decathlon)
+ * et lien (la page de cette couleur).
  * Les zones sont en cm sur le dessin du vêtement (90 cm de large) : cx = centre horizontal,
  * top = haut de la zone (ou cy = centre), w/h = taille max de la zone.
  */
@@ -23,7 +25,15 @@ window.DATA = {
     cuisse_d:    { label: "Cuisse droite", formats: ["A6", "A5"] },
     bas_jambe_g: { label: "Bas de la jambe gauche", formats: [], texteSeul: true },
     chaussette_g: { label: "Chaussette gauche", formats: [], texteSeul: true },
-    chaussette_d: { label: "Chaussette droite", formats: [], texteSeul: true }
+    chaussette_d: { label: "Chaussette droite", formats: [], texteSeul: true },
+    // Accessoires : petits formats (Mini 5 x 5 cm, A7 7 x 10 cm, voir formatsMotif dans prix.js)
+    sac:         { label: "Face du sac", formats: ["A6", "A5"] },
+    gourde:      { label: "Face de la gourde", formats: ["Mini", "A7"] },
+    casquette:   { label: "Devant de la casquette", formats: ["Mini"] },
+    bonnet:      { label: "Devant du bonnet", formats: ["Mini", "A7"] },
+    tour_de_cou: { label: "Face du tour de cou", formats: ["Mini", "A7"] },
+    bandeau:     { label: "Devant du bandeau", formats: ["Mini"] },
+    ceinture:    { label: "Face de la ceinture", formats: ["Mini", "A7"] }
   },
 
   // Filtres du catalogue (tags « genre », « style » et « type » de chaque produit ou pack). « sport » (tennis, basket...)
@@ -964,6 +974,611 @@ window.DATA = {
       zones: {
         cuisse_g: { vue: "face", cx: 57.5, top: 20, w: 14, h: 21, label: "Cuisse gauche" },
         cuisse_d: { vue: "face", cx: 32.5, top: 20, w: 14, h: 21, label: "Cuisse droite" }
+      }
+    },
+    {
+      id: "gourde-alu-1l",
+      nomCourt: "Gourde alu 1 L",
+      nom: "Gourde alu 1 L avec bouchon instantané",
+      marque: "Quechua, Decathlon",
+      modele: "gourde",
+      demonstratif: "cette gourde",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Randonnée", type: "accessoire" },
+      prixAchat: 9.99,
+      matiere: "Aluminium recyclé, bouchon polypropylène",
+      polyesterPct: 0,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["1 L"],
+      couleurs: [
+        { id: "bleu-canard", nom: "Bleu canard", hex: "#1f6f7d", clair: false, ref: "8612536", lien: "https://www.decathlon.fr/p/gourde-alu-1l-avec-bouchon-instantane-composee-a-100percent-dalu-recycle-bleu/330041/c98m8612536" },
+        { id: "vert-eucalyptus", nom: "Vert eucalyptus", hex: "#6f9d86", clair: false, ref: "8914342", lien: "https://www.decathlon.fr/p/gourde-alu-1l-avec-bouchon-instantane-composee-a-100percent-dalu-recycle-bleu/330041/c261m8914342" },
+        { id: "orange-abricot", nom: "Orange abricot", hex: "#f2a15f", clair: false, ref: "8914343", lien: "https://www.decathlon.fr/p/gourde-alu-1l-avec-bouchon-instantane-composee-a-100percent-dalu-recycle-bleu/330041/c329m8914343" }
+      ],
+      lien: "https://www.decathlon.fr/p/gourde-alu-1l-avec-bouchon-instantane-composee-a-100percent-dalu-recycle-bleu/330041/c98m8612536",
+      photos: [
+        "https://contents.mediadecathlon.com/p2579584/k$6ca4ddf66bdc61cefd58225cb14ae926/picture.jpg",
+        "https://contents.mediadecathlon.com/p2201844/k$e09b054551ba918f14d858419b0a526d/picture.jpg",
+        "https://contents.mediadecathlon.com/p2201852/k$36ef852b724f1a14239d5e033c6a7c0f/picture.jpg",
+        "https://contents.mediadecathlon.com/p2201851/k$8642c0eb5c5463cec869e9a1fedba9a3/picture.jpg",
+        "https://contents.mediadecathlon.com/p2201850/k$b935d84ad62dc05f7f57b3a46275529c/picture.jpg",
+        "https://contents.mediadecathlon.com/p2201849/k$82659a0434adc4388130746738039f4f/picture.jpg"
+      ],
+      vitrine: ["gourde"],
+      texteVitrine: "sur la face de la gourde",
+      avertissement: "Gourde : surface ronde et dure (métal ou verre), impossible à presser à plat comme un vêtement. Fabr'Icam confirme la technique de pose avant la série. Le prix affiché est celui d'un transfert DTF et peut changer.",
+      zones: {
+        gourde: { vue: "face", cx: 20, top: 13, w: 7, h: 15, label: "Face de la gourde" }
+      }
+    },
+    {
+      id: "gourde-fitness-750",
+      nomCourt: "Gourde fitness 750 mL",
+      nom: "Gourde de fitness training aluminium 750 mL",
+      marque: "Domyos, Decathlon",
+      modele: "gourde",
+      demonstratif: "cette gourde",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Fitness", type: "accessoire" },
+      prixAchat: 9.00,
+      matiere: "Aluminium, bouchon polypropylène",
+      polyesterPct: 0,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["750 mL"],
+      couleurs: [
+        { id: "bleu-marine", nom: "Bleu marine", hex: "#1f2b4a", clair: false, ref: "8796697", lien: "https://www.decathlon.fr/p/gourde-de-fitness-training-aluminium-750-ml-bleu/345015/c195m8796697" },
+        { id: "vert-sauge", nom: "Vert sauge", hex: "#9db5a0", clair: false, ref: "8796696", lien: "https://www.decathlon.fr/p/gourde-de-fitness-training-aluminium-750-ml-bleu/345015/c219m8796696" }
+      ],
+      lien: "https://www.decathlon.fr/p/gourde-de-fitness-training-aluminium-750-ml-bleu/345015/c195m8796697",
+      photos: [
+        "https://contents.mediadecathlon.com/p2673170/k$8694fe9977769d156de43e65c6f6cb5c/picture.jpg",
+        "https://contents.mediadecathlon.com/p2673198/k$7005747afdb0472bb5c9db14d6341902/picture.jpg",
+        "https://contents.mediadecathlon.com/p2673188/k$593592a343514feeeb3caba110b14bbc/picture.jpg",
+        "https://contents.mediadecathlon.com/p2673166/k$ae0c9600b39b1a761561f59a9ed26b9e/picture.jpg"
+      ],
+      vitrine: ["gourde"],
+      texteVitrine: "sur la face de la gourde",
+      avertissement: "Gourde : surface ronde et dure (métal ou verre), impossible à presser à plat comme un vêtement. Fabr'Icam confirme la technique de pose avant la série. Le prix affiché est celui d'un transfert DTF et peut changer.",
+      zones: {
+        gourde: { vue: "face", cx: 20, top: 13, w: 7, h: 15, label: "Face de la gourde" }
+      }
+    },
+    {
+      id: "gourde-verre",
+      nomCourt: "Gourde en verre",
+      nom: "Gourde en verre avec ouverture facile",
+      marque: "Phoenix, Decathlon",
+      modele: "gourde",
+      demonstratif: "cette gourde",
+      tags: { genre: ["homme", "femme"], style: "casual", sport: "Randonnée", type: "accessoire" },
+      prixAchat: 7.99,
+      matiere: "Verre (500 à 600 mL), bouchon vissable, housse",
+      polyesterPct: 0,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["500 à 600 mL"],
+      couleurs: [
+        { id: "transparent", nom: "Transparent", hex: "#d5e6ea", clair: true, ref: "8946490", lien: "https://www.decathlon.fr/p/gourde-en-verre-avec-ouverture-facile/366458/c1m8946490" }
+      ],
+      lien: "https://www.decathlon.fr/p/gourde-en-verre-avec-ouverture-facile/366458/c1m8946490",
+      photos: [
+        "https://contents.mediadecathlon.com/p2825850/k$72511b4ca7fe13a13b316bff63d95bd8/picture.jpg",
+        "https://contents.mediadecathlon.com/p2825851/k$a443fecd086d9a4ac0f584f293a78c5d/picture.jpg",
+        "https://contents.mediadecathlon.com/p2825853/k$28a7df380de0919eb023d871c999c928/picture.jpg",
+        "https://contents.mediadecathlon.com/p2825852/k$26b68c73aedfe9d24bddd2b6a6d6b40b/picture.jpg"
+      ],
+      vitrine: ["gourde"],
+      texteVitrine: "sur la face de la gourde",
+      avertissement: "Gourde en verre : fragile et ronde, pas de pressage à plat possible. Fabr'Icam confirme la technique de pose avant la série. Le prix affiché est celui d'un transfert DTF et peut changer.",
+      zones: {
+        gourde: { vue: "face", cx: 20, top: 13, w: 7, h: 15, label: "Face de la gourde" }
+      }
+    },
+    {
+      id: "casquette-hike-100",
+      nomCourt: "Casquette randonnée",
+      nom: "Casquette de randonnée HIKE 100",
+      marque: "Forclaz, Decathlon",
+      modele: "casquette",
+      demonstratif: "cette casquette",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Randonnée", type: "accessoire" },
+      prixAchat: 4.99,
+      matiere: "100 % polyester",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "bleu", nom: "Bleu", hex: "#2f5f9c", clair: false, ref: "8969347", lien: "https://www.decathlon.fr/p/casquette-de-randonnee-hike-100-bleu/302963/c43m8969347" }
+      ],
+      lien: "https://www.decathlon.fr/p/casquette-de-randonnee-hike-100-bleu/302963/c43m8969347",
+      photos: [
+        "https://contents.mediadecathlon.com/p3007477/k$c4ee85e8923af023082ec182f6539373/picture.jpg",
+        "https://contents.mediadecathlon.com/p3069399/k$5bbd189ac0e77d180f5ea5d656a7d4f9/picture.jpg",
+        "https://contents.mediadecathlon.com/p3016744/k$52c178f96531c5e2720f12302bc3b871/picture.jpg",
+        "https://contents.mediadecathlon.com/p3007360/k$1cac46c835739a647cc7c8d0b431ad01/picture.jpg",
+        "https://contents.mediadecathlon.com/p3007442/k$7f74ed468f0714f22232c36d6912f679/picture.jpg",
+        "https://contents.mediadecathlon.com/p3007433/k$1a9e0ca625c26a49b0bdbf5ae2caf0de/picture.jpg"
+      ],
+      vitrine: ["casquette"],
+      texteVitrine: "sur le devant de la casquette",
+      avertissement: "Casquette : le devant est bombé et le tissu fin. Un visuel de 5 × 5 cm au plus, pressé avec une presse adaptée. Fabr'Icam fait un essai avant la série.",
+      zones: {
+        casquette: { vue: "face", cx: 18, top: 8, w: 12, h: 8, label: "Devant de la casquette" }
+      }
+    },
+    {
+      id: "casquette-chasse-100",
+      nomCourt: "Casquette chasse orange",
+      nom: "Casquette de chasse orange 100",
+      marque: "Solognac, Decathlon",
+      modele: "casquette",
+      demonstratif: "cette casquette",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Chasse", type: "accessoire" },
+      prixAchat: 5.99,
+      matiere: "100 % polyester",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique", "S/M", "L/XL", "2XL/3XL"],
+      couleurs: [
+        { id: "orange-fluo", nom: "Orange fluo", hex: "#f26b1d", clair: false, ref: "8070067", lien: "https://www.decathlon.fr/p/casquette-chasse-orange-100/6457/c379m8070067" }
+      ],
+      lien: "https://www.decathlon.fr/p/casquette-chasse-orange-100/6457/c379m8070067",
+      photos: [
+        "https://contents.mediadecathlon.com/p1097439/k$826e8aef997002dede100ef04ef82e3c/picture.jpg",
+        "https://contents.mediadecathlon.com/p1097447/k$8be0a2b27ab0c9de9ccda646ec633c4b/picture.jpg",
+        "https://contents.mediadecathlon.com/p1097440/k$00c1fff8f33d36dd00d4fe8bf5a7561d/picture.jpg",
+        "https://contents.mediadecathlon.com/p1097443/k$fe78240b64fd854bb0a05e3e365df5d6/picture.jpg",
+        "https://contents.mediadecathlon.com/p1097446/k$7f95e487c18b1f1730c36669611c83e0/picture.jpg",
+        "https://contents.mediadecathlon.com/p1097445/k$7b33299f5a15a1bb3e0e288492666442/picture.jpg"
+      ],
+      vitrine: ["casquette"],
+      texteVitrine: "sur le devant de la casquette",
+      avertissement: "Casquette : le devant est bombé et le tissu fin. Un visuel de 5 × 5 cm au plus, pressé avec une presse adaptée. Fabr'Icam fait un essai avant la série.",
+      zones: {
+        casquette: { vue: "face", cx: 18, top: 8, w: 12, h: 8, label: "Devant de la casquette" }
+      }
+    },
+    {
+      id: "casquette-tennis-tc100",
+      nomCourt: "Casquette tennis",
+      nom: "Casquette de tennis TC 100",
+      marque: "Artengo, Decathlon",
+      modele: "casquette",
+      demonstratif: "cette casquette",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Tennis", type: "accessoire" },
+      prixAchat: 5.99,
+      matiere: "100 % polyester",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8618832", lien: "https://www.decathlon.fr/p/casquette-tennis-artengo-tc-100-noir/330799/c382m8618832" },
+        { id: "blanc", nom: "Blanc", hex: "#f3f3f0", clair: true, ref: "8618831", lien: "https://www.decathlon.fr/p/casquette-tennis-artengo-tc-100-noir/330799/c227m8618831" }
+      ],
+      lien: "https://www.decathlon.fr/p/casquette-tennis-artengo-tc-100-noir/330799/c382m8618832",
+      photos: [
+        "https://contents.mediadecathlon.com/p2797307/k$8f8b4e2943235ab68cc72e10db7ef72d/picture.jpg",
+        "https://contents.mediadecathlon.com/p2797309/k$f37cee2df404c61bf3e44836936515ae/picture.jpg",
+        "https://contents.mediadecathlon.com/p2797308/k$a68032a48dc83dd7f39a233c934ff4d6/picture.jpg",
+        "https://contents.mediadecathlon.com/p2797306/k$5eb2678324e016aada33ed4faa8f934e/picture.jpg"
+      ],
+      vitrine: ["casquette"],
+      texteVitrine: "sur le devant de la casquette",
+      avertissement: "Casquette : le devant est bombé et le tissu fin. Un visuel de 5 × 5 cm au plus, pressé avec une presse adaptée. Fabr'Icam fait un essai avant la série.",
+      zones: {
+        casquette: { vue: "face", cx: 18, top: 8, w: 12, h: 8, label: "Devant de la casquette" }
+      }
+    },
+    {
+      id: "bonnet-rider-500",
+      nomCourt: "Bonnet à revers",
+      nom: "Bonnet à revers adulte RIDER 500",
+      marque: "Wedze, Decathlon",
+      modele: "bonnet",
+      demonstratif: "ce bonnet",
+      tags: { genre: ["homme", "femme"], style: "casual", sport: "Ski", type: "accessoire" },
+      prixAchat: 8.99,
+      matiere: "100 % acrylique",
+      polyesterPct: 0,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["M (56-59 cm)"],
+      couleurs: [
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8940552", lien: "https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-noir/353824/c382m8940552" },
+        { id: "marron-caramel", nom: "Marron caramel", hex: "#a8703a", clair: false, ref: "8940513", lien: "https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-noir/353824/c152m8940513" },
+        { id: "blanc-coton", nom: "Blanc coton", hex: "#f1efe6", clair: true, ref: "8940507", lien: "https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-noir/353824/c183m8940507" },
+        { id: "violet-fume", nom: "Violet fumé", hex: "#5d4a7a", clair: false, ref: "8940511", lien: "https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-noir/353824/c368m8940511" },
+        { id: "rose-tendre", nom: "Rose tendre", hex: "#f0b8c8", clair: true, ref: "8940512", lien: "https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-noir/353824/c391m8940512" },
+        { id: "jaune-vanille", nom: "Jaune vanille", hex: "#f1e08a", clair: true, ref: "8992939", lien: "https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-noir/353824/c269m8992939" }
+      ],
+      lien: "https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-noir/353824/c382m8940552",
+      photos: [
+        "https://contents.mediadecathlon.com/p2996321/k$0405095409a073502d56dbc5dd025331/picture.jpg",
+        "https://contents.mediadecathlon.com/p2996332/k$7cb7b3bca0774909dc86ab070fed452b/picture.jpg",
+        "https://contents.mediadecathlon.com/p2996340/k$fb3ba52948e7438abce1de5dd10ee614/picture.jpg",
+        "https://contents.mediadecathlon.com/p2996350/k$6ad1308f4e0a17018829658f93978edf/picture.jpg"
+      ],
+      vitrine: ["bonnet"],
+      texteVitrine: "sur le devant du bonnet",
+      avertissement: "Bonnet en maille acrylique : tricot épais et très élastique, le transfert tient mal et se déforme à l'étirement. Fabr'Icam teste sur le revers avant la série et confirme que c'est faisable.",
+      zones: {
+        bonnet: { vue: "face", cx: 18, top: 18.6, w: 14, h: 7.4, label: "Devant du bonnet" }
+      }
+    },
+    {
+      id: "bonnet-running-seamless",
+      nomCourt: "Bonnet running",
+      nom: "Bonnet de running seamless adulte",
+      marque: "Kiprun, Decathlon",
+      modele: "bonnet",
+      demonstratif: "ce bonnet",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Course à pied", type: "accessoire" },
+      prixAchat: 5.99,
+      matiere: "72 % polyester, 23 % polyamide, 5 % élasthanne",
+      polyesterPct: 72,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8368935", lien: "https://www.decathlon.fr/p/bonnet-running-seamless-adulte-kiprun-noir/157211/c382m8368935" },
+        { id: "gris-beton", nom: "Gris béton", hex: "#a3a5a8", clair: true, ref: "8920402", lien: "https://www.decathlon.fr/p/bonnet-running-seamless-adulte-kiprun-noir/157211/c208m8920402" },
+        { id: "violet-charbon", nom: "Violet charbon", hex: "#4b3a5c", clair: false, ref: "8920404", lien: "https://www.decathlon.fr/p/bonnet-running-seamless-adulte-kiprun-noir/157211/c89m8920404" }
+      ],
+      lien: "https://www.decathlon.fr/p/bonnet-running-seamless-adulte-kiprun-noir/157211/c382m8368935",
+      photos: [
+        "https://contents.mediadecathlon.com/p2698482/k$dfd2fb85ff5d9ba1a6f48e2687f66b4f/picture.jpg",
+        "https://contents.mediadecathlon.com/p2698527/k$955f0023691923487cfec2eab5e16600/picture.jpg",
+        "https://contents.mediadecathlon.com/p2709558/k$59197f2cf67320b6724f5504b631a83f/picture.jpg",
+        "https://contents.mediadecathlon.com/p2709488/k$b8e557ff810876d8de4acde2387e5997/picture.jpg"
+      ],
+      vitrine: ["bonnet"],
+      texteVitrine: "sur le devant du bonnet",
+      avertissement: "Bonnet sans couture très fin et élastique : petit visuel ou prénom seulement, la déformation est possible. Fabr'Icam fait un essai avant la série.",
+      zones: {
+        bonnet: { vue: "face", cx: 18, top: 18.6, w: 14, h: 7.4, label: "Devant du bonnet" }
+      }
+    },
+    {
+      id: "tour-de-cou-morf",
+      nomCourt: "Tour de cou Morf",
+      nom: "Tour de cou Morf Original",
+      marque: "Beechfield (Morf)",
+      modele: "tour-de-cou",
+      demonstratif: "ce tour de cou",
+      tags: { genre: ["homme", "femme"], style: "casual", sport: "Ski", type: "accessoire" },
+      vendeur: "atelier-katanga",   // vendeur de la place de marché Decathlon : livré à Fabr'Icam, frais de port dans prix.js (livraisonVendeur)
+      prixAchat: 7.99,
+      matiere: "Polyester (microfibre), composition non précisée par le vendeur",
+      polyesterPct: 100,
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "blanc", nom: "Blanc", hex: "#f3f3f0", clair: true, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c4" },
+        { id: "rouge", nom: "Rouge", hex: "#c4252b", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c14" },
+        { id: "jaune-fluo", nom: "Jaune fluo", hex: "#e8f23a", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c142" },
+        { id: "fuchsia", nom: "Fuchsia", hex: "#d02a82", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c144" },
+        { id: "bordeaux", nom: "Bordeaux", hex: "#6e1e2c", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c15" },
+        { id: "violet", nom: "Violet", hex: "#6a3d98", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c16" },
+        { id: "bleu-marine", nom: "Bleu marine", hex: "#1f2b4a", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c189" },
+        { id: "orange", nom: "Orange", hex: "#f26b1d", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c20" },
+        { id: "vert-foret", nom: "Vert forêt", hex: "#1f5a3a", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c211" },
+        { id: "bleu-royal", nom: "Bleu royal", hex: "#2450b0", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c218" },
+        { id: "jaune", nom: "Jaune", hex: "#f4cf1e", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c22" },
+        { id: "gris-graphite", nom: "Gris graphite", hex: "#4a4d52", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c383" },
+        { id: "vert-citron", nom: "Vert citron", hex: "#b9d61e", clair: false, lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c78" }
+      ],
+      lien: "https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c4",
+      photos: [
+        "https://contents.mediadecathlon.com/m36483920/k$f4bc61424dd4b535250632231d69c7f8/picture.jpg",
+        "https://contents.mediadecathlon.com/m36483951/k$e360acaa54d2cbff201bf905d1f87c0a/picture.jpg",
+        "https://contents.mediadecathlon.com/m36483941/k$68eff2ff25169916d761a582f88fa5cf/picture.jpg",
+        "https://contents.mediadecathlon.com/m36483921/k$6c64531d691312b2aef1a1df3302517a/picture.jpg",
+        "https://contents.mediadecathlon.com/m36483944/k$0c06530df4209cd9b9f3937b5bafcfbe/picture.jpg"
+      ],
+      vitrine: ["tour_de_cou"],
+      texteVitrine: "sur la face du tour de cou",
+      avertissement: "Tour de cou en microfibre très élastique : le visuel se déforme quand le tissu est étiré. Fabr'Icam fait un essai (pressage, étirement, lavage) avant la série.",
+      zones: {
+        tour_de_cou: { vue: "face", cx: 28, top: 20, w: 18, h: 18, label: "Face du tour de cou" }
+      }
+    },
+    {
+      id: "sac-tube-move-100",
+      nomCourt: "Sac tube 30 L",
+      nom: "Sac tube pliable Move 100 30 L",
+      marque: "Decathlon",
+      modele: "sac-tube",
+      demonstratif: "ce sac",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Sport", type: "accessoire" },
+      prixAchat: 6.00,
+      matiere: "100 % polyester, enduction polyuréthane",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8200579", lien: "https://www.decathlon.fr/p/sac-tube-pliable-move-100-30l/11233/c382c382m8200579" },
+        { id: "bleu-marine", nom: "Bleu marine", hex: "#1f2b4a", clair: false, ref: "8841252", lien: "https://www.decathlon.fr/p/sac-tube-pliable-move-100-30l/11233/c195m8841252" }
+      ],
+      lien: "https://www.decathlon.fr/p/sac-tube-pliable-move-100-30l/11233/c382c382m8200579",
+      photos: [
+        "https://contents.mediadecathlon.com/p2426984/k$a23fd87487dd2b34bc73ef713d8fbebb/picture.jpg",
+        "https://contents.mediadecathlon.com/p2426983/k$5502aaf623062f8aea8a278b48e5ae09/picture.jpg",
+        "https://contents.mediadecathlon.com/p2426982/k$0110f7846493c95516b0585518557120/picture.jpg",
+        "https://contents.mediadecathlon.com/p2426981/k$b955e7ca6e055d346efad537c4feb8c9/picture.jpg",
+        "https://contents.mediadecathlon.com/p2426980/k$5b36f7a3da631bc77b166976dd8a4330/picture.jpg",
+        "https://contents.mediadecathlon.com/p2426979/k$6f56af313748022ca10a87aa4ffb92c9/picture.jpg"
+      ],
+      vitrine: ["sac"],
+      texteVitrine: "sur la face du sac",
+      avertissement: "Toile enduite de polyuréthane : le DTF tient, mais à 120-125 °C avec une feuille de téflon. Fabr'Icam fait un essai sur une chute avant la série.",
+      zones: {
+        sac: { vue: "face", cx: 35, top: 12, w: 26, h: 22, label: "Face du sac" }
+      }
+    },
+    {
+      id: "sac-sport-club-100",
+      nomCourt: "Sac de sport 20 L",
+      nom: "Sac de sport pliable à bandoulière Club 100 20 L",
+      marque: "Decathlon",
+      modele: "sac-sport",
+      demonstratif: "ce sac",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Sport", type: "accessoire" },
+      prixAchat: 5.99,
+      matiere: "100 % polyester, enduction polyuréthane",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8917221", lien: "https://www.decathlon.fr/p/sac-de-sport-pliable-a-bandouliere-club-100-20l/324098/c1c344m8917221" },
+        { id: "bleu-indigo", nom: "Bleu indigo", hex: "#2b3f7a", clair: false, ref: "8917223", lien: "https://www.decathlon.fr/p/sac-de-sport-pliable-a-bandouliere-club-100-20l/324098/c59c1c344m8917223" },
+        { id: "violet-amethyste", nom: "Violet améthyste", hex: "#6b4a8f", clair: false, ref: "8917226", lien: "https://www.decathlon.fr/p/sac-de-sport-pliable-a-bandouliere-club-100-20l/324098/c95c190m8917226" }
+      ],
+      lien: "https://www.decathlon.fr/p/sac-de-sport-pliable-a-bandouliere-club-100-20l/324098/c1c344m8917221",
+      photos: [
+        "https://contents.mediadecathlon.com/p2929783/k$252af5c5370166123bf235076a0440b6/picture.jpg",
+        "https://contents.mediadecathlon.com/p2929786/k$43dbfbacf4c1a253402284338c637874/picture.jpg",
+        "https://contents.mediadecathlon.com/p2929863/k$6ee8def6be95c0d92a3b693a5951491a/picture.jpg",
+        "https://contents.mediadecathlon.com/p2929856/k$1eb10738ff3c85ffbdf0a4e9ba8276ce/picture.jpg",
+        "https://contents.mediadecathlon.com/p2929845/k$6b6a94d9920af28841f881c96249924b/picture.jpg",
+        "https://contents.mediadecathlon.com/p2929831/k$f7fa9ea498a4d168b1dbb4228491e575/picture.jpg"
+      ],
+      vitrine: ["sac"],
+      texteVitrine: "sur la face du sac",
+      avertissement: "Toile enduite de polyuréthane : le DTF tient, mais à 120-125 °C avec une feuille de téflon. Fabr'Icam fait un essai sur une chute avant la série.",
+      zones: {
+        sac: { vue: "face", cx: 32, top: 17, w: 24, h: 22, label: "Face du sac" }
+      }
+    },
+    {
+      id: "sac-a-dos-arpenaz-50",
+      nomCourt: "Sac à dos 10 L Arpenaz 50",
+      nom: "Sac à dos de randonnée 10 L Arpenaz 50",
+      marque: "Quechua, Decathlon",
+      modele: "sac-a-dos",
+      demonstratif: "ce sac à dos",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Randonnée", type: "accessoire" },
+      prixAchat: 2.99,
+      matiere: "100 % polyester, enduction polyuréthane",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "bleu-cosmos", nom: "Bleu cosmos", hex: "#2a4a7a", clair: false, ref: "8502149", lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-50-bleu/301684/c43m8502149" },
+        { id: "beige-cendre", nom: "Beige cendré", hex: "#cdbfa8", clair: true, ref: "8988229", lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-50-bleu/301684/c407m8988229" }
+      ],
+      lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-50-bleu/301684/c43m8502149",
+      photos: [
+        "https://contents.mediadecathlon.com/p2629748/k$839af1a28c54cbf0917d4ee9eeb9a961/picture.jpg",
+        "https://contents.mediadecathlon.com/p2583201/k$48aa3a91dc7a64c6022f506d159281b7/picture.jpg",
+        "https://contents.mediadecathlon.com/p2387660/k$02dc03defd940130b7d0669cffc8db9e/picture.jpg",
+        "https://contents.mediadecathlon.com/p2629747/k$66d7d129daf8700c7aa9f49d70e5c205/picture.jpg",
+        "https://contents.mediadecathlon.com/p2629745/k$2c43b5d7b24ddea4dceeed94213048d6/picture.jpg",
+        "https://contents.mediadecathlon.com/p3017085/k$0046e2e4d522c4daad6ef75010c08c9a/picture.jpg",
+        "https://contents.mediadecathlon.com/p3079554/k$130c87d657714ca193a21e2119b448bf/picture.jpg",
+        "https://contents.mediadecathlon.com/p3078203/k$0497871e4b400e805f5b7aaeebcc717e/picture.jpg"
+      ],
+      vitrine: ["sac"],
+      texteVitrine: "sur la face du sac à dos",
+      avertissement: "Toile enduite de polyuréthane : le DTF tient, mais à 120-125 °C avec une feuille de téflon. Fabr'Icam fait un essai sur une chute avant la série.",
+      zones: {
+        sac: { vue: "face", cx: 28, top: 12, w: 18, h: 22, label: "Face du sac à dos" }
+      }
+    },
+    {
+      id: "sac-a-dos-travel-100",
+      nomCourt: "Sac à dos pliable 10 L",
+      nom: "Sac à dos de poche pliable 10 L Travel 100",
+      marque: "Forclaz, Decathlon",
+      modele: "sac-a-dos",
+      demonstratif: "ce sac à dos",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Randonnée", type: "accessoire" },
+      prixAchat: 2.99,
+      matiere: "100 % polyester, enduction polyuréthane",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "vert-acide", nom: "Vert acide", hex: "#b5d62b", clair: false, ref: "8576231", lien: "https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-vert/309861/c34m8576231" },
+        { id: "gris-fonte", nom: "Gris fonte", hex: "#5a5d63", clair: false, ref: "8576230", lien: "https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-vert/309861/c210m8576230" },
+        { id: "bleu-acier-noir", nom: "Bleu acier et noir", hex: "#3f5878", clair: false, ref: "8560404", lien: "https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-vert/309861/c364c382m8560404" },
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8560403", lien: "https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-vert/309861/c382c382m8560403" },
+        { id: "violet-pourpre-noir", nom: "Violet pourpre et noir", hex: "#5c2d6e", clair: false, ref: "8560406", lien: "https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-vert/309861/c403c382m8560406" },
+        { id: "bleu-cendre-noir", nom: "Bleu cendré et noir", hex: "#7a93ad", clair: false, ref: "9039490", lien: "https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-vert/309861/c340c382m9039490" }
+      ],
+      lien: "https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-vert/309861/c34m8576231",
+      photos: [
+        "https://contents.mediadecathlon.com/p2604498/k$983e8ee348648af5f50ba4a84c0e76f7/picture.jpg",
+        "https://contents.mediadecathlon.com/p2581289/k$1e1de5e7184c98d1d7ec2bc1bdb4aeba/picture.jpg",
+        "https://contents.mediadecathlon.com/p2581285/k$878514dc9b0467d2822d01e0bb39f09e/picture.jpg",
+        "https://contents.mediadecathlon.com/p2581284/k$a831804e1636045d5ff80aa0491e10fa/picture.jpg",
+        "https://contents.mediadecathlon.com/p2581268/k$5304fe4ff0dbea6787ce20b7983728d4/picture.jpg"
+      ],
+      vitrine: ["sac"],
+      texteVitrine: "sur la face du sac à dos",
+      avertissement: "Sac pliable en toile très fine : le transfert se fait à 120 °C au plus, avec une feuille de téflon, et le visuel se plie avec le sac. Fabr'Icam fait un essai avant la série.",
+      zones: {
+        sac: { vue: "face", cx: 28, top: 12, w: 18, h: 22, label: "Face du sac à dos" }
+      }
+    },
+    {
+      id: "sac-a-dos-arpenaz-100",
+      nomCourt: "Sac à dos 10 L Arpenaz 100",
+      nom: "Sac à dos de randonnée 10 L Arpenaz 100",
+      marque: "Quechua, Decathlon",
+      modele: "sac-a-dos",
+      demonstratif: "ce sac à dos",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Randonnée", type: "accessoire" },
+      prixAchat: 5.99,
+      matiere: "100 % polyester, enduction polyuréthane",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "bleu-abysse", nom: "Bleu abysse", hex: "#1a2f55", clair: false, ref: "8775637", lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-bleu/344147/c246m8775637" },
+        { id: "violet-cerise", nom: "Violet cerise", hex: "#8a2b5f", clair: false, ref: "8844353", lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-bleu/344147/c271m8844353" },
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8775634", lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-bleu/344147/c382m8775634" },
+        { id: "blanc-vert", nom: "Blanc et vert", hex: "#e3ebe4", clair: true, ref: "8971381", lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-bleu/344147/c4c311m8971381" }
+      ],
+      lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-bleu/344147/c246m8775637",
+      photos: [
+        "https://contents.mediadecathlon.com/p2583162/k$b960ca7ce6f25d8338a60b6bc6eec750/picture.jpg",
+        "https://contents.mediadecathlon.com/p2423150/k$50a11948ed80ca699d0c21f9c4ca7b1d/picture.jpg",
+        "https://contents.mediadecathlon.com/p2876607/k$13a3fc1229ae7bf4ce7178ce6ecf9704/picture.jpg",
+        "https://contents.mediadecathlon.com/p2423152/k$8be9e55068c470ac645e98adf9ad35a6/picture.jpg",
+        "https://contents.mediadecathlon.com/p2423155/k$f1b59315b98b0d9c1844d2deb4c75924/picture.jpg",
+        "https://contents.mediadecathlon.com/p2423153/k$f6a2be3453a981cebec85358ac5fb121/picture.jpg"
+      ],
+      vitrine: ["sac"],
+      texteVitrine: "sur la face du sac à dos",
+      avertissement: "Toile enduite de polyuréthane : le DTF tient, mais à 120-125 °C avec une feuille de téflon. Fabr'Icam fait un essai sur une chute avant la série.",
+      zones: {
+        sac: { vue: "face", cx: 28, top: 12, w: 18, h: 22, label: "Face du sac à dos" }
+      }
+    },
+    {
+      id: "sac-a-dos-arpenaz-500",
+      nomCourt: "Sac à dos 20 L Arpenaz 500",
+      nom: "Sac à dos de randonnée 20 L Arpenaz 500",
+      marque: "Quechua, Decathlon",
+      modele: "sac-a-dos",
+      demonstratif: "ce sac à dos",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Randonnée", type: "accessoire" },
+      prixAchat: 19.99,
+      matiere: "100 % polyester, enduction polyuréthane",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "gris-carbone", nom: "Gris carbone", hex: "#4b4e53", clair: false, ref: "8971389", lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-20l-arpenaz-500-gris/350154/c71m8971389" }
+      ],
+      lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-20l-arpenaz-500-gris/350154/c71m8971389",
+      photos: [
+        "https://contents.mediadecathlon.com/p3079444/k$017e8d9880a72409f2993b86a5106588/picture.jpg",
+        "https://contents.mediadecathlon.com/p3078055/k$229fb4750a5698753c1aa6f98bd81362/picture.jpg",
+        "https://contents.mediadecathlon.com/p3078145/k$86b5666bdf82ab7859a0c1027e9b3500/picture.jpg",
+        "https://contents.mediadecathlon.com/p3079388/k$dcd3ad7a0b3c7ccdb4136f747467510d/picture.jpg",
+        "https://contents.mediadecathlon.com/p3079315/k$7fdac7277807dbb10de219e80ae90b91/picture.jpg",
+        "https://contents.mediadecathlon.com/p3079371/k$5bf8f00dd6f78ac6d289b31c0c568eda/picture.jpg"
+      ],
+      vitrine: ["sac"],
+      texteVitrine: "sur la face du sac à dos",
+      avertissement: "Toile enduite de polyuréthane : le DTF tient, mais à 120-125 °C avec une feuille de téflon. Fabr'Icam fait un essai sur une chute avant la série.",
+      zones: {
+        sac: { vue: "face", cx: 28, top: 12, w: 18, h: 22, label: "Face du sac à dos" }
+      }
+    },
+    {
+      id: "sac-a-dos-mh100",
+      nomCourt: "Sac à dos 20 L MH100",
+      nom: "Sac à dos de randonnée montagne 20 L MH100",
+      marque: "Quechua, Decathlon",
+      modele: "sac-a-dos",
+      demonstratif: "ce sac à dos",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Randonnée", type: "accessoire" },
+      prixAchat: 24.99,
+      matiere: "100 % polyester, enduction polyuréthane",
+      polyesterPct: 100,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8649476", lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-montagne-20l-mh100-noir/331022/c382m8649476" }
+      ],
+      lien: "https://www.decathlon.fr/p/sac-a-dos-de-randonnee-montagne-20l-mh100-noir/331022/c382m8649476",
+      photos: [
+        "https://contents.mediadecathlon.com/p2621198/k$783a358435d113ab4e549e29ac240c34/picture.jpg",
+        "https://contents.mediadecathlon.com/p2437569/k$e32cf98daa696931994ce54f8f1473f3/picture.jpg",
+        "https://contents.mediadecathlon.com/p2422482/k$9d18e9299bb2f2ab21207937d05a4703/picture.jpg",
+        "https://contents.mediadecathlon.com/p2876589/k$2c2c69ecec490657df4e8eddd2f9cf9c/picture.jpg",
+        "https://contents.mediadecathlon.com/p2422480/k$6a3323ae1bd68ef27c4731b234ae690d/picture.jpg",
+        "https://contents.mediadecathlon.com/p2422483/k$23357dde00d7e4b91253dd9ca1f5981c/picture.jpg"
+      ],
+      vitrine: ["sac"],
+      texteVitrine: "sur la face du sac à dos",
+      avertissement: "Toile enduite de polyuréthane : le DTF tient, mais à 120-125 °C avec une feuille de téflon. Fabr'Icam fait un essai sur une chute avant la série.",
+      zones: {
+        sac: { vue: "face", cx: 28, top: 12, w: 18, h: 22, label: "Face du sac à dos" }
+      }
+    },
+    {
+      id: "bandeau-running-v2",
+      nomCourt: "Bandeau running",
+      nom: "Bandeau de running V2",
+      marque: "Kiprun, Decathlon",
+      modele: "bandeau",
+      demonstratif: "ce bandeau",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Course à pied", type: "accessoire" },
+      prixAchat: 5.99,
+      matiere: "83 % polyester, 17 % élasthanne",
+      polyesterPct: 83,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8871353", lien: "https://www.decathlon.fr/p/bandeau-running-v2-homme-femme-kiprun-noir/352680/c382m8871353" },
+        { id: "blanc", nom: "Blanc", hex: "#f3f3f0", clair: true, ref: "8883077", lien: "https://www.decathlon.fr/p/bandeau-running-v2-homme-femme-kiprun-noir/352680/c227m8883077" }
+      ],
+      lien: "https://www.decathlon.fr/p/bandeau-running-v2-homme-femme-kiprun-noir/352680/c382m8871353",
+      photos: [
+        "https://contents.mediadecathlon.com/p2789056/k$f3e7b511c62ca6c1a8fa0b59de11a472/picture.jpg",
+        "https://contents.mediadecathlon.com/p2789057/k$86a10d6e5970fb501472851a016de7b7/picture.jpg",
+        "https://contents.mediadecathlon.com/p2789058/k$ef52f63b7f4cc6b003bbddf5af3aed9c/picture.jpg",
+        "https://contents.mediadecathlon.com/p2788140/k$dd1271e614e7456bdb9f11ff99861a10/picture.jpg",
+        "https://contents.mediadecathlon.com/p2788138/k$d348684f9e01ad25d8460f7a27a554e1/picture.jpg"
+      ],
+      vitrine: ["bandeau"],
+      texteVitrine: "sur le devant du bandeau",
+      avertissement: "Bandeau très élastique (17 % d'élasthanne) : le visuel se déforme à l'étirement. Petit visuel ou prénom seulement ; Fabr'Icam fait un essai avant la série.",
+      zones: {
+        bandeau: { vue: "face", cx: 20, top: 11.6, w: 14, h: 7.2, label: "Devant du bandeau" }
+      }
+    },
+    {
+      id: "ceinture-running-basique-2",
+      nomCourt: "Ceinture running",
+      nom: "Ceinture de running smartphone Basique 2",
+      marque: "Kiprun, Decathlon",
+      modele: "ceinture",
+      demonstratif: "cette ceinture",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Course à pied", type: "accessoire" },
+      prixAchat: 9.99,
+      matiere: "80 % polyester, 20 % polyuréthane (doublure : 87 % polyester, 13 % élasthanne)",
+      polyesterPct: 80,
+      sublimation: false,   // pas de sublimation sur cet article (forme ronde, enduit ou élastique)
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "jaune-vanille", nom: "Jaune vanille", hex: "#f1e08a", clair: true, ref: "8945385", lien: "https://www.decathlon.fr/p/ceinture-de-running-smartphone-homme-femme-kiprun-basique-2-jaune/334226/c269c255m8945385" },
+        { id: "bleu-brumeux", nom: "Bleu brumeux", hex: "#9fb7cc", clair: true, ref: "8913258", lien: "https://www.decathlon.fr/p/ceinture-de-running-smartphone-homme-femme-kiprun-basique-2-jaune/334226/c143m8913258" },
+        { id: "vert-givre", nom: "Vert givré", hex: "#b7d8c3", clair: true, ref: "8945014", lien: "https://www.decathlon.fr/p/ceinture-de-running-smartphone-homme-femme-kiprun-basique-2-jaune/334226/c241m8945014" },
+        { id: "bleu-abysse", nom: "Bleu abysse", hex: "#1a2f55", clair: false, ref: "8913259", lien: "https://www.decathlon.fr/p/ceinture-de-running-smartphone-homme-femme-kiprun-basique-2-jaune/334226/c246m8913259" },
+        { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false, ref: "8648869", lien: "https://www.decathlon.fr/p/ceinture-de-running-smartphone-homme-femme-kiprun-basique-2-jaune/334226/c382m8648869" }
+      ],
+      lien: "https://www.decathlon.fr/p/ceinture-de-running-smartphone-homme-femme-kiprun-basique-2-jaune/334226/c269c255m8945385",
+      photos: [
+        "https://contents.mediadecathlon.com/p3089147/k$da1a3dbc249ba368a235a9e6aec6aa11/picture.jpg",
+        "https://contents.mediadecathlon.com/p3141493/k$7cbe2b0b2b9e6a3bae03ce17c82a3be1/picture.jpg",
+        "https://contents.mediadecathlon.com/p3089145/k$7b6b0888efa28144bf403f3f1603d636/picture.jpg",
+        "https://contents.mediadecathlon.com/p3089146/k$153764c6e9a0431867b1fd01be55d2bf/picture.jpg",
+        "https://contents.mediadecathlon.com/p3141492/k$7e9afff6e165b4acf497bf143a059eb9/picture.jpg",
+        "https://contents.mediadecathlon.com/p3141488/k$ebf9df7b7d7a8f8a3f12422b3d1694a3/picture.jpg"
+      ],
+      vitrine: ["ceinture"],
+      texteVitrine: "sur la face de la ceinture",
+      avertissement: "Ceinture en tissu technique extensible : petit visuel, essai de pressage avant la série.",
+      zones: {
+        ceinture: { vue: "face", cx: 20, top: 11, w: 16, h: 9, label: "Face de la ceinture" }
       }
     }
   ],
