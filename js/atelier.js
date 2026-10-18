@@ -9,7 +9,7 @@
   var esc = A.esc, fmtEUR = A.fmtEUR, fmtN = A.fmtN, $ = A.$, $$ = A.$$;
   var loaded = null;
 
-  var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD" };
+  var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD", cuisse_g: "CG", cuisse_d: "CD", bas_jambe_g: "BJ" };
   var KIND = { image: "v", prenom: "p", numero: "n" };
 
   function fontsFor(order) {
@@ -91,6 +91,8 @@
     if (usesPoly) notes.push(pr.dtf_polyester);
     if (usesOther) notes.push(pr.dtf_autre);
     if (usesSub) notes.push(pr.sublimation);
+    var vus = {};
+    order.pieces.forEach(function (p) { var prod = A.byId[p.produitId]; if (prod.avertissement && !vus[prod.id]) { vus[prod.id] = 1; notes.push(prod.avertissement); } });
     notes.push("Plateau de la presse : " + A.PRIX.plateau.w + " × " + A.PRIX.plateau.h + " cm au maximum. Les motifs en DTF se découpent le long de leur case sur la planche.");
     return notes;
   }
@@ -110,21 +112,22 @@
 
     // calcul
     var rows = [
-      ["Polos Decathlon (retrait en magasin)", r.N + " × " + fmtEUR(r.couts.achats / r.N), fmtEUR(r.couts.achats)],
+      ["Vêtements Decathlon (retrait en magasin)", r.N + (r.N > 1 ? " pièces" : " pièce"), fmtEUR(r.couts.achats)],
       ["Planches Sprint, hors taxes", "", fmtEUR(r.couts.planchesHT)],
       ["Planches Sprint, TTC", "TVA " + Math.round(A.PRIX.tva * 100) + " %", fmtEUR(r.couts.planchesTTC)],
       ["Livraison Sprint", r.couts.livraison ? "Colissimo" : "offerte", fmtEUR(r.couts.livraison)],
-      ["<b>Coût de revient</b>", "", "<b>" + fmtEUR(r.couts.total) + "</b>"],
-      ["Coût par pièce", "", fmtEUR(pv.brut)],
-      ["Arrondi au supérieur de " + fmtN(A.PRIX.regles.pas) + " €", "", fmtEUR(pv.arrondi)],
-      ["Ajustement pour dépasser " + fmtEUR(A.PRIX.regles.margeMin) + " de marge", pv.ajouts ? "+" + pv.ajouts + " × " + fmtEUR(A.PRIX.regles.ajout) : "aucun", fmtEUR(pv.unitaire - pv.arrondi)],
-      ["<b>Prix de vente par pièce</b>", "", "<b>" + fmtEUR(pv.unitaire) + "</b>"],
-      ["<b>Total à facturer</b>", r.N + " × " + fmtEUR(pv.unitaire), "<b>" + fmtEUR(pv.total) + "</b>"],
-      ["<b>Marge</b>", "", "<b>" + fmtEUR(pv.marge) + "</b>"]
+      ["<b>Coût de revient</b>", "", "<b>" + fmtEUR(r.couts.total) + "</b>"]
     ];
+    pv.groupes.forEach(function (g) {
+      var nom = A.byId[g.produitId].nomCourt;
+      rows.push([esc(nom) + " × " + g.n, "coût moyen " + fmtEUR(g.coutMoyen) + ", arrondi " + fmtEUR(g.arrondi) + (pv.ajouts ? ", +" + fmtEUR(pv.ajouts * A.PRIX.regles.ajout) : "") + ", soit " + fmtEUR(g.unitaire) + " l'unité", fmtEUR(g.total)]);
+    });
+    if (pv.packs.n) rows.push(["Remise pack", pv.packs.n + " × -" + fmtEUR(pv.packs.remiseUnitaire), "-" + fmtEUR(pv.packs.remise)]);
+    rows.push(["<b>Total à facturer</b>", pv.unitaire != null ? r.N + " × " + fmtEUR(pv.unitaire) : "", "<b>" + fmtEUR(pv.total) + "</b>"]);
+    rows.push(["<b>Marge</b>", pv.ajouts ? "ajustement : +" + pv.ajouts + " × " + fmtEUR(A.PRIX.regles.ajout) + " par pièce pour dépasser " + fmtEUR(A.PRIX.regles.margeMin) : "", "<b>" + fmtEUR(pv.marge) + "</b>"]);
     html += '<section class="a-block"><h2>Coûts et prix</h2>' + table(["Ligne", "Détail", { t: "Montant", num: true }], rows.map(function (x) { return [x[0], x[1], x[2]]; }), "calc");
     if (loaded.prixAffiche && Math.abs(loaded.prixAffiche.total - pv.total) > 0.005) {
-      html += '<p class="warn-line">Le client a vu ' + fmtEUR(loaded.prixAffiche.unitaire) + " par pièce (" + fmtEUR(loaded.prixAffiche.total) + "). Avec les tarifs actuels, le calcul donne " + fmtEUR(pv.unitaire) + " par pièce. Les tarifs ont changé entre-temps.</p>";
+      html += '<p class="warn-line">Le client a vu un total de ' + fmtEUR(loaded.prixAffiche.total) + ". Avec les tarifs actuels, le calcul donne " + fmtEUR(pv.total) + ". Les tarifs ont changé entre-temps.</p>";
     } else if (loaded.prixAffiche) {
       html += '<p class="ok-line">Le prix recalculé est identique à celui vu par le client.</p>';
     }
@@ -158,16 +161,17 @@
       });
       html += "</section>";
     });
-    if (lines.length) html += '<p class="hint key">Lecture des étiquettes : numéro de pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Les motifs tournés de 90° sont déjà dessinés tournés.</p>';
+    if (lines.length) html += '<p class="hint key">Lecture des étiquettes : numéro de pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de la jambe gauche, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Les motifs tournés de 90° sont déjà dessinés tournés.</p>';
 
     // pièces
-    html += '<section class="a-block"><h2>Pièces à presser</h2>' + table(["N°", "Polo", "Prénom", "Numéro", "Motifs"],
+    html += '<section class="a-block"><h2>Pièces à presser</h2>' + table(["N°", "Modèle", "Prénom", "Numéro", "Motifs"],
       order.pieces.map(function (p, i) {
         var col = A.colorOf(p), mine = r.motifs.filter(function (m) { return m.pieceId === p.id; });
         var emps = {}; mine.forEach(function (m) { (emps[m.emp] = emps[m.emp] || []).push(KIND[m.kind]); });
         var txt = Object.keys(emps).map(function (e) { return ABBR[e] + " " + emps[e].join("+"); }).join(", ");
         var tech = E.pieceTechno(order, p, A.CTX) === "sublimation" ? ' <span class="tag">sublimation</span>' : "";
-        return [i + 1, esc(col.nom) + " " + esc(p.taille) + tech, esc(p.prenom || ""), esc(p.numero || ""), esc(txt)];
+        var pack = p.pack ? ' <span class="tag">pack</span>' : "";
+        return [i + 1, esc(A.byId[p.produitId].nomCourt) + ", " + esc(col.nom.toLowerCase()) + " " + esc(p.taille) + pack + tech, esc(p.prenom || ""), esc(p.numero || ""), esc(txt)];
       })) + "</section>";
 
     // presse
@@ -210,7 +214,7 @@
       rd.readAsText(f);
     });
     $("#a-current").addEventListener("click", function () {
-      if (!A.S.marquages || !A.S.pieces.length) { A.toast("Aucune commande en cours. Configure d'abord un polo, ou charge un fichier."); return; }
+      if (!A.S.marquages || !A.S.pieces.length) { A.toast("Aucune commande en cours. Configure d'abord une commande, ou charge un fichier."); return; }
       setLoaded({ order: JSON.parse(JSON.stringify(A.orderOf(), function (k, v) { return k === "url" ? undefined : v; })), contact: Object.assign({}, A.S.contact), prixAffiche: null, creeLe: null });
     });
     $("#a-print").addEventListener("click", function () { window.print(); });

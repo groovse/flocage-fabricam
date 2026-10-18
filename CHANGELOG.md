@@ -5,6 +5,20 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 1.1.0 — 18/10/2026
+
+Ajout de la sélection de produits.
+
+- Nouveaux produits : sweat chaud en molleton, polaire MH100 demi-zip, maillot de basket TANK 100, short de basket SHORT 100, short de tennis Essential, débardeur fitness 500.
+- Pack basket (maillot + short) avec remise de 2,50 € par pack.
+- Nouveaux emplacements pour les shorts : cuisse gauche, cuisse droite (visuel A6 ou A5, prénom, numéro) et bas de la jambe gauche (petit texte).
+- Un prix par produit dans une même commande (avant : un prix moyen unique). Les planches et la livraison sont réparties selon la surface des motifs.
+- Une commande peut mélanger plusieurs produits ; « Ma commande » permet de la reprendre depuis le catalogue.
+- Dessins des nouveaux vêtements, avec les zones de marquage ; le bouton Dos est grisé quand le vêtement n'a rien au dos.
+- Avertissement sur la polaire (DTF sur duvet) et sur les couleurs de texte peu lisibles.
+- Catalogue en grille, fichier de commande en version 2 (les fichiers de la version 1 restent lisibles dans l'espace atelier).
+- Non repris pour l'instant : les 2 t-shirts vendus par un vendeur tiers (Bahrain, Gildan), qui n'ont pas de retrait en magasin.
+
 ## 1.0.0 — 18/10/2026
 
 Première version publiée.
