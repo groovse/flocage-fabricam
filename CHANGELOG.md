@@ -5,6 +5,15 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 1.1.1 — 18/10/2026
+
+Photos des produits.
+
+- Photos Decathlon pour les 6 produits du catalogue (le polo en avait 2, il en a maintenant 4) : 4 à 8 par produit, relevées sur les fiches le 18/10/2026.
+- Catalogue : la première photo s'affiche en grand, les autres en vignettes cliquables. Le pack montre la photo du maillot et celle du short.
+- Si une photo ne charge pas, le dessin du vêtement la remplace.
+- Les photos restent liées depuis Decathlon, elles ne sont pas copiées dans le dépôt.
+
 ## 1.1.0 — 18/10/2026
 
 Ajout de la sélection de produits.

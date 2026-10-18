@@ -61,7 +61,7 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 | changer la liste des polices | `js/data.js` (`polices`) |
 | changer les couleurs, les polices du site | `css/style.css` (variables en haut) |
 
-Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (le dessin : `polo`, `sweat`, `polaire`, `debardeur`, `maillot`, `short-basket` ou `short-tennis`), `prixAchat` (TTC), `polyesterPct`, `tailles`, `couleurs` (avec `clair: true` pour les couleurs claires), `vitrine` (emplacements du prix affiché) et les `zones` (position en cm sur le dessin). Un nouveau modèle de dessin se code dans `js/preview.js`. Seul le polo a des photos Decathlon, chargées depuis leur site ; les autres produits (et le polo si ses photos ne s'affichent pas) utilisent un dessin. Pour ajouter une photo : champ `photos` du produit.
+Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (le dessin : `polo`, `sweat`, `polaire`, `debardeur`, `maillot`, `short-basket` ou `short-tennis`), `prixAchat` (TTC), `polyesterPct`, `tailles`, `couleurs` (avec `clair: true` pour les couleurs claires), `vitrine` (emplacements du prix affiché) et les `zones` (position en cm sur le dessin). Un nouveau modèle de dessin se code dans `js/preview.js`. Chaque produit a ses photos Decathlon (4 à 8), chargées depuis leur site : la première est celle du catalogue, les autres apparaissent en vignettes. Si une photo ne s'affiche pas (hors ligne, lien périmé), le catalogue montre le dessin du vêtement. Pour changer ou ajouter une photo : champ `photos` du produit, avec l'adresse de l'image sans paramètres (la taille est ajoutée par le site).
 
 ## Versions et modifications
 

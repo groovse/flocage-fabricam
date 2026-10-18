@@ -182,10 +182,29 @@
     return P.render({ prod: prod, hex: prod.couleurs[0].hex, vue: "face", marquages: {}, ctx: CTX, bare: true });
   }
 
+  // Les photos sont liées depuis Decathlon : on demande la taille voulue (largeur en px) dans l'adresse
+  function photoSrc(url, w) { return url + (url.indexOf("?") < 0 ? "?format=auto&f=" + w + "x0" : ""); }
+
+  function photoImg(prod, url, w) {
+    return '<img src="' + esc(photoSrc(url, w)) + '" alt="' + esc(prod.nom) + '" loading="lazy" referrerpolicy="no-referrer">';
+  }
+
   function cardPhoto(item) {
-    if (item.produits) return '<div class="p-photo duo">' + item.produits.map(function (id) { return silhouette(byId[id]); }).join("") + '</div>';
-    if (item.photos && item.photos[0]) return '<div class="p-photo" data-prod="' + item.id + '"><img src="' + esc(item.photos[0]) + '" alt="' + esc(item.nom) + '" loading="lazy" referrerpolicy="no-referrer"></div>';
-    return '<div class="p-photo">' + silhouette(item) + '</div>';
+    if (item.produits) {
+      return '<div class="p-photo duo">' + item.produits.map(function (id) {
+        var pr = byId[id];
+        return '<div class="cell" data-prod="' + pr.id + '">' + (pr.photos && pr.photos[0] ? photoImg(pr, pr.photos[0], 600) : silhouette(pr)) + '</div>';
+      }).join("") + '</div>';
+    }
+    var ph = item.photos || [];
+    if (!ph.length) return '<div class="p-photo">' + silhouette(item) + '</div>';
+    var thumbs = ph.length > 1
+      ? '<div class="p-thumbs" role="group" aria-label="Photos de ' + esc(item.nomCourt.toLowerCase()) + '">' + ph.map(function (u, i) {
+        return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === 0 ? "true" : "false") + '" aria-label="Photo ' + (i + 1) + ' sur ' + ph.length + '">' +
+          '<img src="' + esc(photoSrc(u, 120)) + '" alt="" loading="lazy" referrerpolicy="no-referrer"></button>';
+      }).join("") + '</div>'
+      : "";
+    return '<div class="p-media" data-prod="' + item.id + '"><div class="p-photo" data-prod="' + item.id + '">' + photoImg(item, ph[0], 800) + '</div>' + thumbs + '</div>';
   }
 
   function cardHTML(item) {
@@ -228,10 +247,21 @@
       '<div><dt>Des vêtements Decathlon</dt><dd>Fabr\'Icam les retire en magasin, il n\'y a donc pas de frais de livraison sur les vêtements.</dd></div>' +
       '</dl></section>';
 
-    $$(".p-photo img").forEach(function (img) {
+    // Photo introuvable (hors ligne, lien périmé) : on affiche le dessin du vêtement à la place
+    $$(".p-photo > img, .p-photo .cell > img").forEach(function (img) {
       img.addEventListener("error", function () {
-        var prod = byId[img.closest(".p-photo").dataset.prod];
-        img.closest(".p-photo").innerHTML = silhouette(prod);
+        var host = img.closest("[data-prod]"), media = img.closest(".p-media");
+        host.innerHTML = silhouette(byId[host.dataset.prod]);
+        var th = media && $(".p-thumbs", media); if (th) th.remove();
+      });
+    });
+    // Vignettes : un clic affiche la photo choisie
+    $$(".p-thumbs button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var media = b.closest(".p-media"), prod = byId[media.dataset.prod], main = $(".p-photo > img", media);
+        if (!main) return;
+        main.src = photoSrc(prod.photos[Number(b.dataset.i)], 800);
+        $$(".p-thumbs button", media).forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
       });
     });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {

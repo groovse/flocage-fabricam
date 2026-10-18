@@ -100,6 +100,13 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .produit { display: flex; flex-direction: column; gap: 1.1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: clamp(1rem, 2vw, 1.5rem); }
 .p-photo { background: #f7f9f8; border: 1px solid var(--line); border-radius: var(--r); display: grid; place-items: center; min-height: 230px; overflow: hidden; }
 .p-photo.duo { grid-template-columns: 1fr 1fr; align-items: center; }
+.p-photo .cell { display: grid; place-items: center; min-width: 0; }
+.p-photo.duo .cell + .cell { border-left: 1px solid var(--line); }
+.p-media { min-width: 0; }
+.p-thumbs { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .5rem; }
+.p-thumbs button { width: 46px; height: 46px; padding: 0; border: 1px solid var(--line); border-radius: var(--r); background: #f7f9f8; cursor: pointer; overflow: hidden; }
+.p-thumbs button[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.p-thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .p-info { display: flex; flex-direction: column; flex: 1; }
 .p-info .btn { margin-top: auto; align-self: flex-start; }
 .p-info .note { margin-bottom: 1.1rem; }
