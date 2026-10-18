@@ -39,7 +39,7 @@
   var CTX = { prix: PRIX, produits: byId, packs: PACKS, emplacements: DATA.emplacements, measure: measure };
 
   /* ---------------- état de la commande en cours ---------------- */
-  var S = { pieces: [], nextId: 1, marquages: null, technique: "dtf", vue: "face", previewId: null,
+  var S = { pieces: [], nextId: 1, marquages: null, technique: "dtf", vue: "face", mode: "dessin", previewId: null,
     contact: { asso: "", nom: "", email: "", tel: "", date: "", message: "" }, result: null,
     entryId: null, addModel: null, nextPack: 1 };
   function itemOf(id) { return byId[id] || PACKS[id]; }
@@ -210,11 +210,16 @@
     return '<img src="' + esc(photoSrc(url, w)) + '" alt="' + esc(prod.nom) + '" loading="lazy" referrerpolicy="no-referrer">';
   }
 
+  var ZOOM_ICON = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12.6 12.6L18 18M8.5 6v5M6 8.5h5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  function zoomBtn(pr) {
+    return '<button type="button" class="p-zoom" data-zoom="' + pr.id + '" aria-label="Agrandir les photos : ' + esc(pr.nomCourt.toLowerCase()) + '">' + ZOOM_ICON + '</button>';
+  }
+
   function cardPhoto(item) {
     if (item.produits) {
       return '<div class="p-photo duo">' + item.produits.map(function (id) {
-        var pr = byId[id];
-        return '<div class="cell" data-prod="' + pr.id + '">' + (pr.photos && pr.photos[0] ? photoImg(pr, pr.photos[0], 600) : silhouette(pr)) + '</div>';
+        var pr = byId[id], ok = pr.photos && pr.photos[0];
+        return '<div class="cell" data-prod="' + pr.id + '">' + (ok ? photoImg(pr, pr.photos[0], 600) + zoomBtn(pr) : silhouette(pr)) + '</div>';
       }).join("") + '</div>';
     }
     var ph = item.photos || [];
@@ -225,7 +230,7 @@
           '<img src="' + esc(photoSrc(u, 120)) + '" alt="" loading="lazy" referrerpolicy="no-referrer"></button>';
       }).join("") + '</div>'
       : "";
-    return '<div class="p-media" data-prod="' + item.id + '"><div class="p-photo" data-prod="' + item.id + '">' + photoImg(item, ph[0], 800) + '</div>' + thumbs + '</div>';
+    return '<div class="p-media" data-prod="' + item.id + '" data-i="0"><div class="p-photo" data-prod="' + item.id + '">' + photoImg(item, ph[0], 800) + zoomBtn(item) + '</div>' + thumbs + '</div>';
   }
 
   function valeurLabel(groupe, id) {
@@ -281,6 +286,56 @@
       '</div></article>';
   }
 
+  /* ---------- visionneuse de photos (catalogue) ---------- */
+  var LB = { prod: null, i: 0, dlg: null };
+  function lbEnsure() {
+    if (LB.dlg) return LB.dlg;
+    var d = document.createElement("dialog");
+    d.className = "lightbox";
+    d.setAttribute("aria-labelledby", "lb-title");
+    d.innerHTML = '<div class="lb-top"><p class="lb-title" id="lb-title"></p><p class="lb-count" id="lb-count" aria-live="polite"></p>' +
+      '<button type="button" class="lb-close" data-lb="close" aria-label="Fermer">&times;</button></div>' +
+      '<div class="lb-stage"><button type="button" class="lb-nav" data-lb="prev" aria-label="Photo précédente">&#8249;</button>' +
+      '<figure class="lb-fig"><img id="lb-img" alt="" referrerpolicy="no-referrer"><p class="lb-err" id="lb-err" hidden>Cette photo ne se charge pas. Vérifie ta connexion.</p></figure>' +
+      '<button type="button" class="lb-nav" data-lb="next" aria-label="Photo suivante">&#8250;</button></div>';
+    document.body.appendChild(d);
+    d.addEventListener("click", function (e) {
+      if (e.target === d) { d.close(); return; }
+      var b = e.target.closest("[data-lb]"); if (!b) return;
+      if (b.dataset.lb === "close") d.close();
+      else lbShow(LB.i + (b.dataset.lb === "next" ? 1 : -1));
+    });
+    d.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft") { e.preventDefault(); lbShow(LB.i - 1); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); lbShow(LB.i + 1); }
+    });
+    var img = $("#lb-img", d);
+    img.addEventListener("error", function () { img.hidden = true; $("#lb-err", d).hidden = false; });
+    img.addEventListener("load", function () { img.hidden = false; $("#lb-err", d).hidden = true; });
+    LB.dlg = d;
+    return d;
+  }
+  function lbShow(i) {
+    var pr = byId[LB.prod], n = pr.photos.length, d = LB.dlg;
+    LB.i = ((i % n) + n) % n;
+    var img = $("#lb-img", d);
+    img.alt = pr.nom + ", photo " + (LB.i + 1) + " sur " + n;
+    img.src = photoSrc(pr.photos[LB.i], 1600);
+    $("#lb-title", d).textContent = pr.nom;
+    $("#lb-count", d).textContent = (LB.i + 1) + " / " + n;
+    $$(".lb-nav", d).forEach(function (b) { b.hidden = n < 2; });
+    // précharge la photo suivante pour que le passage soit rapide
+    if (n > 1) { var nx = new Image(); nx.referrerPolicy = "no-referrer"; nx.src = photoSrc(pr.photos[(LB.i + 1) % n], 1600); }
+  }
+  function openLightbox(prodId, i) {
+    var pr = byId[prodId];
+    if (!pr || !pr.photos || !pr.photos.length) return;
+    var d = lbEnsure();
+    LB.prod = prodId;
+    lbShow(i || 0);
+    if (!d.open) { if (d.showModal) d.showModal(); else d.setAttribute("open", ""); }
+  }
+
   function viewVitrine() {
     var cards = DATA.produits.concat(DATA.packs || []).map(cardHTML).join("");
 
@@ -315,12 +370,22 @@
         var th = media && $(".p-thumbs", media); if (th) th.remove();
       });
     });
+    // Agrandir : le bouton loupe ou un clic sur la photo ouvre la visionneuse
+    $$(".p-photo").forEach(function (box) {
+      box.addEventListener("click", function (e) {
+        var cell = e.target.closest(".cell"), host = cell || box, z = $(".p-zoom", host);
+        if (!z) return;
+        var media = box.closest(".p-media");
+        openLightbox(z.dataset.zoom, media ? Number(media.dataset.i) || 0 : 0, z);
+      });
+    });
     // Vignettes : un clic affiche la photo choisie
     $$(".p-thumbs button").forEach(function (b) {
       b.addEventListener("click", function () {
         var media = b.closest(".p-media"), prod = byId[media.dataset.prod], main = $(".p-photo > img", media);
         if (!main) return;
         main.src = photoSrc(prod.photos[Number(b.dataset.i)], 800);
+        media.dataset.i = b.dataset.i;
         $$(".p-thumbs button", media).forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
       });
     });
@@ -348,8 +413,9 @@
       '</div>' +
       '<aside class="cfg-side"><div class="pv-card">' +
       '<div class="pv-bar"><div class="seg" role="group" aria-label="Vue"><button type="button" data-vue="face">Face</button><button type="button" data-vue="dos">Dos</button></div>' +
+      '<div class="seg" role="group" aria-label="Type d\'aperçu"><button type="button" data-mode="dessin" title="Dessin à la taille réelle">Dessin</button><button type="button" data-mode="photo">Photo</button></div>' +
       '<label class="pv-piece">Aperçu pour <select id="pv-piece"></select></label></div>' +
-      '<div id="pv"></div></div>' +
+      '<div id="pv"></div><p class="pv-note" id="pv-note" hidden></p></div>' +
       '<div class="total" id="total" aria-live="polite"></div></aside>' +
       '</div></div>';
     renderPieces(); renderMarquages(); renderTechnique(); renderDevis();
@@ -652,16 +718,60 @@
   }
 
   /* ---------- aperçu et total ---------- */
+  /* Aperçu sur photo : possible seulement dans la couleur de la photo, et pour une vue calibrée (voir data.js, apercuPhoto). */
+  var PHOTO_KO = {};
+  function photoApercu(piece, vue) {
+    var prod = prodOf(piece), ap = prod.apercuPhoto;
+    if (!ap) return { ok: false, why: "Pas de photo de face ou de dos exploitable pour ce vêtement." };
+    var coul = prod.couleurs.filter(function (c) { return c.id === ap.couleur; })[0];
+    if (colorOf(piece).id !== ap.couleur) return { ok: false, why: "Les photos montrent le vêtement en " + (coul ? coul.nom.toLowerCase() : ap.couleur) + ". Choisis cette couleur pour voir ton visuel dessus." };
+    var cfg = ap[vue], url = cfg && prod.photos[cfg.photo];
+    if (!cfg || !url) return { ok: false, why: "Pas de photo de " + (vue === "dos" ? "dos" : "face") + " pour ce vêtement." };
+    var src = photoSrc(url, 800);
+    if (PHOTO_KO[src]) return { ok: false, why: "La photo ne s'est pas chargée (connexion ?). Le dessin la remplace." };
+    return { ok: true, cfg: cfg, src: src };
+  }
+
   function renderPreview() {
     var piece = S.pieces.filter(function (p) { return p.id === S.previewId; })[0] || S.pieces[0];
     if (!piece) return;
     var prod = prodOf(piece);
     var hasBack = Object.keys(prod.zones).some(function (k) { var v = prod.zones[k].vue; return v === "dos" || v === "cote"; });
     if (!hasBack && S.vue === "dos") S.vue = "face";
-    $("#pv").innerHTML = P.render({ prod: prod, hex: colorOf(piece).hex, vue: S.vue, marquages: S.marquages, piece: piece, ctx: CTX });
+    var ph = photoApercu(piece, S.vue), photo = S.mode === "photo" && ph.ok;
+    var opts = { prod: prod, hex: colorOf(piece).hex, vue: S.vue, marquages: S.marquages, piece: piece, ctx: CTX };
+    var pv = $("#pv");
+    if (photo) {
+      var html = P.renderPhoto(Object.assign({}, opts, { cfg: ph.cfg, src: ph.src })), cur = $(".pv-photo img", pv);
+      if (cur && cur.getAttribute("src") === ph.src) {
+        // même photo : on ne remplace que le calque, pour que l'image ne clignote pas à chaque frappe
+        var tmp = document.createElement("div"); tmp.innerHTML = html;
+        $(".pv-overlay", pv).replaceWith($(".pv-overlay", tmp));
+      } else {
+        pv.innerHTML = html;
+        var img = $(".pv-photo img", pv);
+        if (img) img.addEventListener("error", function () { PHOTO_KO[ph.src] = true; renderPreview(); });
+      }
+    } else {
+      pv.innerHTML = P.render(opts);
+    }
+    // note sous l'aperçu : pourquoi la photo n'est pas affichée, ou ce qu'elle ne montre pas
+    var note = $("#pv-note"), txt = "";
+    if (S.mode === "photo" && !ph.ok) txt = ph.why;
+    else if (photo) {
+      txt = "Aperçu indicatif : la photo est prise sous un angle, les positions sont approximatives.";
+      var manches = Object.keys(prod.zones).some(function (k) { var z = prod.zones[k]; return z.cy != null && S.marquages[k] && S.marquages[k].actif; });
+      if (manches) txt += " Les manches ne sont pas montrées sur la photo, elles restent visibles sur le dessin.";
+    }
+    note.textContent = txt; note.hidden = !txt;
     $$(".seg button").forEach(function (b) {
-      b.setAttribute("aria-pressed", b.dataset.vue === S.vue ? "true" : "false");
-      if (b.dataset.vue === "dos") { b.disabled = !hasBack; b.title = hasBack ? "" : "Pas de marquage au dos sur ce vêtement"; }
+      if (b.dataset.vue) {
+        b.setAttribute("aria-pressed", b.dataset.vue === S.vue ? "true" : "false");
+        if (b.dataset.vue === "dos") { b.disabled = !hasBack; b.title = hasBack ? "" : "Pas de marquage au dos sur ce vêtement"; }
+      } else if (b.dataset.mode) {
+        b.setAttribute("aria-pressed", b.dataset.mode === (photo ? "photo" : "dessin") ? "true" : "false");
+        if (b.dataset.mode === "photo") { b.setAttribute("aria-disabled", ph.ok ? "false" : "true"); b.classList.toggle("is-off", !ph.ok); b.title = ph.ok ? "Ton visuel sur la photo du vêtement" : ph.why; }
+      }
     });
   }
 
@@ -778,6 +888,7 @@
     if (!b) return;
     if (b.dataset.scroll) { e.preventDefault(); var el = document.getElementById(b.dataset.scroll); if (el) el.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); return; }
     if (b.dataset.vue) { S.vue = b.dataset.vue; renderPreview(); return; }
+    if (b.dataset.mode) { S.mode = b.dataset.mode; renderPreview(); return; }
     var act = b.dataset.act; if (!act) return;
     var tr = b.closest("tr[data-pid]");
     var piecesChanged = function () { fixPreview(); renderPieces(); renderMarquages(); refresh(); };

@@ -9,7 +9,7 @@ Double-clique sur `index.html`. Aucun serveur, aucune installation. Il faut just
 ## Utiliser côté client
 
 1. L'association configure : pièces (couleur, taille, prénom, numéro), marquages par emplacement (poitrine, dos, manches), technique.
-2. Le prix TTC par pièce se met à jour à chaque changement.
+2. Le prix TTC par pièce se met à jour à chaque changement. L'aperçu montre le vêtement en dessin à la taille réelle, ou sur la photo du vêtement (bouton Dessin / Photo).
 3. Elle télécharge le fichier de commande, puis clique sur « Écrire le mail » : le message est pré-rempli vers fabricam.toulouse@icam.fr. Elle joint le fichier.
 
 ## Utiliser côté atelier
@@ -28,7 +28,20 @@ Polo de tennis Essential, sweat chaud en molleton, maillot de basket TANK 100, s
 
 Le catalogue se filtre par genre (Homme, Femme) et par style (Sport, Casual) ; un vêtement mixte apparaît dans les deux genres. Un bandeau tout en haut du site invite à demander un vêtement qui n'est pas au catalogue : il ouvre un mail pré-rempli vers Fabr'Icam.
 
+Sur le catalogue, chaque photo a une loupe : un clic ouvre la visionneuse en grand (flèches du clavier pour changer de photo, Échap pour fermer). Pour le pack, la loupe de chaque pièce ouvre les photos de cette pièce.
+
 Emplacements : poitrine, dos et manches pour les hauts ; cuisse gauche, cuisse droite (visuel A6 ou A5, avec prénom ou numéro possible) et bas de la jambe gauche (petit texte seul) pour les shorts. Les maillots et débardeurs n'ont ni manches.
+
+## Aperçu sur photo
+
+Dans le configurateur, le bouton **Photo** pose le logo, les prénoms et les numéros sur la vraie photo du vêtement, en face et au dos. C'est indicatif : les photos sont prises de trois quarts, les positions sont approchées. Les limites :
+
+- il faut choisir la couleur de la photo (polo marine, sweat bleu foncé, maillot, short de basket et débardeur blancs) ; sinon le site explique pourquoi et garde le dessin ;
+- les manches ne sont pas montrées sur la photo (elles restent sur le dessin) ;
+- le short de tennis n'a pas de photo exploitable ;
+- si la photo ne se charge pas, le dessin la remplace.
+
+Le dessin à la taille réelle reste la référence pour vérifier les dimensions.
 
 ## Règle de prix
 
@@ -48,6 +61,7 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 - **Teintes d'aperçu** : les codes couleur du dessin sont estimés, ils n'ont aucun effet sur les prix.
 - **Sweat** : le molleton est en mélange polyester et coton (59 % de polyester), il part donc toujours en DTF. Fais un essai de pressage avant de lancer toute la commande.
 - **Maillot et débardeur** : le maillot de basket a des bordures noires, le débardeur est en coton (DTF uniquement).
+- **Calage de l'aperçu sur photo** : `u0` et `v0` donnent la position de l'origine du dessin sur la photo (0 à 1, fraction de la largeur et de la hauteur), `kx` et `ky` la fraction de photo par centimètre. Si tu changes une photo, recale ces quatre nombres : le test `node tests/engine.test.js` vérifie au moins que les emplacements restent dans la photo.
 - **Écart entre motifs** : `placement.ecart` vaut 0 cm, ce qui permet de loger 4 A6 sur une A4. Monte-le à 0,3 si tu veux plus de marge de découpe.
 - **Plateau** : aucun motif ne dépasse l'A4 (21 × 28 cm), les planches plus grandes ne servent qu'à regrouper plusieurs motifs.
 - **Sublimation** : seulement sur polyester blanc ou clair (90 % de polyester minimum). Le blanc n'est pas imprimé. Tout le reste part en DTF.
@@ -61,6 +75,7 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 | ajouter un vêtement, une couleur, une taille | `js/data.js` (copie un bloc de `produits`) |
 | ajouter un pack | `js/data.js` (`packs`) |
 | changer les filtres du catalogue (Homme, Femme, Sport, Casual) ou les étiquettes d'un vêtement | `js/data.js` (`filtres`, et `tags` du produit) |
+| ajouter l'aperçu sur photo à un vêtement, ou corriger la position du visuel sur une photo | `js/data.js` (`apercuPhoto` du produit : `couleur`, puis `face` et `dos` avec `photo` = rang dans `photos`, `u0`, `v0`, `kx`, `ky`) |
 | changer le bandeau du haut (vêtement hors catalogue) | `index.html` (`#top-note`) et le mail pré-rempli dans `js/app.js` (`autreVetementHref`) |
 | changer la liste des polices | `js/data.js` (`polices`) |
 | changer les couleurs, les polices du site | `css/style.css` (variables en haut) |
@@ -80,7 +95,7 @@ Pour un nouveau produit, il faut : `id`, `nom`, `nomCourt`, `marque`, `modele` (
 node tests/engine.test.js
 ```
 
-21 tests sur le moteur : marge de 20 %, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité.
+24 tests : 21 sur le moteur, marge de 20 %, arrondi au centime, prix par produit, pack à une seule marge, texte seul, regroupement de motifs sur les planches, sublimation, livraison offerte, rapidité ; 3 sur les réglages de l'aperçu sur photo (couleur et rang de photo valides, emplacements dans la photo).
 
 ## Publier sur GitHub Pages
 

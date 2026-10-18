@@ -170,24 +170,17 @@
       '" fill="' + esc(el.couleur) + '" style="paint-order:stroke;stroke:rgba(0,0,0,.28);stroke-width:.09px">' + esc(el.text) + '</text>';
   }
 
-  /*
-   * opts : { prod, hex, vue, marquages, piece, ctx, sample, zones }
-   * ctx : { prix, produits, emplacements, measure }
-   */
-  function render(opts) {
-    var E = window.Engine, prod = opts.prod, vue = opts.vue || "face", out = "";
-    out += '<svg class="pv-svg" viewBox="0 0 90 82" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aperçu du vêtement, vue ' + (vue === "dos" ? "de dos" : "de face") + '">';
-    out += defs();
-    out += '<rect width="90" height="82" fill="url(#pv-g5)"/>';
-    var dy = (MODELS[prod.modele] || {}).dy || 0;
-    out += '<g transform="translate(0 ' + dy + ')">' + garment(opts.hex, vue, prod.modele);
-
+  // Marquages d'une vue : cadres des emplacements, visuels, prénoms et numéros (en cm, dans le repère du vêtement).
+  // opts.photo : sur une photo, on ne dessine que les emplacements utilisés (pas les manches).
+  function markings(opts, vue) {
+    var E = window.Engine, prod = opts.prod, out = "";
     Object.keys(prod.zones).forEach(function (empId) {
       var z = zoneForView(prod, empId, vue);
       if (!z) return;
       var cfg = opts.marquages && opts.marquages[empId];
       var actif = !!(cfg && cfg.actif);
-      if (opts.bare && !actif) return;
+      if ((opts.bare || opts.photo) && !actif) return;
+      if (opts.photo && z.cy != null) return;
       var top = z.top != null ? z.top : z.cy - z.h / 2;
       var sleeve = z.cy != null;
       var tf = sleeve ? "translate(" + z.cx + " " + z.cy + ") rotate(" + (z.rot || 0) + ")" : "translate(" + z.cx + " " + top + ")";
@@ -210,6 +203,37 @@
       out += '</g>';
     });
 
+    return out;
+  }
+
+  /*
+   * Aperçu sur photo : la photo avec, par-dessus, un calque SVG transparent. Le calque a pour repère le vêtement en cm ;
+   * sa fenêtre (viewBox) est calculée pour que le dessin tombe sur le vêtement porté, d'après le calage de la photo
+   * (cfg = { u0, v0, kx, ky }, voir data.js, apercuPhoto). Les échelles horizontale et verticale peuvent différer :
+   * c'est la perspective de la photo (vêtement porté de trois quarts).
+   */
+  function renderPhoto(opts) {
+    var prod = opts.prod, vue = opts.vue || "face", cfg = opts.cfg, dy = (MODELS[prod.modele] || {}).dy || 0;
+    var vb = [-cfg.u0 / cfg.kx, -cfg.v0 / cfg.ky, 1 / cfg.kx, 1 / cfg.ky].map(function (x) { return Math.round(x * 100) / 100; }).join(" ");
+    return '<div class="pv-photo">' +
+      '<img src="' + esc(opts.src) + '" alt="Photo : ' + esc(prod.nom) + ', vue ' + (vue === "dos" ? "de dos" : "de face") + '" referrerpolicy="no-referrer">' +
+      '<svg class="pv-overlay" viewBox="' + vb + '" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<g transform="translate(0 ' + dy + ')">' + markings(Object.assign({}, opts, { photo: true }), vue) + '</g></svg></div>';
+  }
+
+  /*
+   * opts : { prod, hex, vue, marquages, piece, ctx, sample, zones }
+   * ctx : { prix, produits, emplacements, measure }
+   */
+  function render(opts) {
+    var E = window.Engine, prod = opts.prod, vue = opts.vue || "face", out = "";
+    out += '<svg class="pv-svg" viewBox="0 0 90 82" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aperçu du vêtement, vue ' + (vue === "dos" ? "de dos" : "de face") + '">';
+    out += defs();
+    out += '<rect width="90" height="82" fill="url(#pv-g5)"/>';
+    var dy = (MODELS[prod.modele] || {}).dy || 0;
+    out += '<g transform="translate(0 ' + dy + ')">' + garment(opts.hex, vue, prod.modele);
+
+    out += markings(opts, vue);
     out += '</g>';
     out += '<text x="1.5" y="80.4" font-size="1.7" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">carreaux de 5 cm</text>';
     out += '</svg>';
@@ -221,5 +245,5 @@
     return (z && z.label) || (opts.ctx.emplacements[empId] || {}).label || empId;
   }
 
-  window.Preview = { render: render, esc: esc, lum: lum, tone: tone, zoneForView: zoneForView };
+  window.Preview = { render: render, renderPhoto: renderPhoto, esc: esc, lum: lum, tone: tone, zoneForView: zoneForView };
 })();
