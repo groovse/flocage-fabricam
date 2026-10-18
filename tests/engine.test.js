@@ -217,13 +217,17 @@ test("apercuPhoto : couleur, photo et réglages valides pour chaque vêtement co
       assert.ok(c.kx > 0 && c.ky > 0, p.id + " " + v + " : échelle positive");
     });
   });
-  assert.strictEqual(n, 9);
+  assert.ok(n >= 9, "au moins les 9 vues des 6 premiers vêtements doivent rester calées");
 });
-test("apercuPhoto : les emplacements du dos n'existent que s'il y a une photo de dos", () => {
+test("apercuPhoto : une vue de dos calée suppose un emplacement au dos (et inversement pour la face)", () => {
+  // Certains articles n'ont pas de photo de dos exploitable (vendeur partenaire, chaussettes) : l'aperçu photo n'est alors
+  // proposé que de face, et le dessin reste affiché au dos. On vérifie seulement la cohérence des vues calées.
   DATA.produits.forEach(p => {
     if (!p.apercuPhoto) return;
     const aDos = Object.keys(p.zones).some(k => p.zones[k].vue === "dos");
-    if (aDos) assert.ok(p.apercuPhoto.dos, p.id + " : zone au dos sans photo de dos");
+    const aFace = Object.keys(p.zones).some(k => p.zones[k].vue !== "dos");
+    if (p.apercuPhoto.dos) assert.ok(aDos, p.id + " : photo de dos calée sans emplacement au dos");
+    if (p.apercuPhoto.face) assert.ok(aFace, p.id + " : photo de face calée sans emplacement de face");
   });
 });
 test("apercuPhoto : les emplacements tombent dans la photo (hors manches)", () => {
