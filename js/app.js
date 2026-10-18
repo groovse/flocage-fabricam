@@ -158,7 +158,7 @@
 
   // Commande encore vierge : on peut la remplacer sans rien perdre
   function pristine() {
-    return S.pieces.length <= 2 && S.pieces.every(function (p) { return !p.prenom && !p.numero; }) &&
+    return S.pieces.length <= taillePackMax() && S.pieces.every(function (p) { return !p.prenom && !p.numero; }) &&
       EMP_ORDER.every(function (e) { var m = S.marquages[e]; return !m.image && (DATA.emplacements[e].texteSeul || (!m.prenom.actif && !m.numero.actif)); });
   }
 
@@ -296,6 +296,10 @@
     else out.textContent = nV + (nV > 1 ? " vêtements" : " vêtement") + (nP ? " et " + nP + (nP > 1 ? " packs" : " pack") : "");
   }
 
+  function nombreEnLettres(n) { return ["Zéro", "Une", "Deux", "Trois", "Quatre", "Cinq", "Six"][n] || String(n); }
+  // Plus grand nombre de pièces d'un pack : une commande qui ne contient qu'un pack non personnalisé reste « vierge »
+  function taillePackMax() { return Math.max(2, ...(DATA.packs || []).map(function (pk) { return pk.produits.length; })); }
+
   function cardHTML(item) {
     var isPack = !!item.produits, prods = isPack ? item.produits.map(function (id) { return byId[id]; }) : [item];
     var sw = isPack
@@ -303,7 +307,8 @@
       : item.couleurs.map(function (c) { return '<li><span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom) + '</li>'; }).join("");
     var pointures = prods.every(function (pr) { return /^\d/.test(pr.tailles[0]); });
     var tailles = prods.map(function (pr) { return (isPack ? esc(pr.nomCourt) + " " : "") + esc(taillesTxt(pr)); }).join(", ");
-    var meta = isPack ? "Deux pièces : " + esc(prods.map(function (pr) { return pr.nomCourt.toLowerCase(); }).join(" et ")) + ". Le pack coûte moins cher que les deux pièces prises séparément." : esc(item.marque) + ". " + esc(item.matiere) + ".";
+    var noms = prods.map(function (pr) { return esc(pr.nomCourt.toLowerCase()); });
+    var meta = isPack ? nombreEnLettres(prods.length) + " pièces : " + (noms.length > 1 ? noms.slice(0, -1).join(", ") + " et " + noms[noms.length - 1] : noms[0]) + ". Le pack coûte moins cher que les pièces prises séparément." : esc(item.marque) + ". " + esc(item.matiere) + ".";
     var t = tagsOf(item), labels = [];
     (t.genre || []).forEach(function (g) { labels.push(valeurLabel("genre", g)); });
     if (t.style) labels.push(valeurLabel("style", t.style));

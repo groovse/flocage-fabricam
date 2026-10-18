@@ -330,12 +330,33 @@ test("chaussettes : le prix de la vitrine compte un prénom pressé (emplacement
   assert.strictEqual(vide.motifs.length, 0);
 });
 test("packs d'ensembles : une seule marge, moins cher que les pièces séparées", () => {
-  ["pack-fitness-femme", "pack-jogging-femme", "pack-football", "pack-basket"].forEach(id => {
+  ["pack-fitness-femme", "pack-jogging-femme", "pack-football", "pack-basket", "pack-entraineur"].forEach(id => {
     const k = DATA.packs.filter(x => x.id === id)[0];
     const pk = E.priceTable(k, [1], ctx)[0].unitaire;
     const sep = k.produits.reduce((s, pid) => s + E.priceTable(Object.assign({}, produits[pid], { vitrine: k.vitrine.filter(e => produits[pid].zones[e]) }), [1], ctx)[0].unitaire, 0);
     assert.ok(pk < sep, id + " : pack " + pk + " contre " + sep + " séparés");
   });
+});
+test("packs : chaque pack contient les chaussettes, trois pièces (quatre pour l'entraîneur), et une seule marge plafonnée à 2 €", () => {
+  const taille = { "pack-basket": 3, "pack-fitness-femme": 3, "pack-jogging-femme": 3, "pack-football": 3, "pack-entraineur": 4 };
+  assert.deepStrictEqual(DATA.packs.map(k => k.id).sort(), Object.keys(taille).sort());
+  DATA.packs.forEach(k => {
+    assert.strictEqual(k.produits.length, taille[k.id], k.id);
+    assert.ok(k.produits.includes("chaussettes-football"), k.id + " : chaussettes");
+    k.produits.forEach(pid => assert.ok(produits[pid], k.id + " : produit inconnu " + pid));
+    assert.ok(k.vitrine.includes("chaussette_g"), k.id + " : la vitrine compte un prénom sur une chaussette");
+    const pieces = k.produits.map((pid, j) => ({ id: "x" + j, produitId: pid, couleurId: produits[pid].couleurs[0].id, taille: produits[pid].tailles[1] || produits[pid].tailles[0], prenom: "Léa", numero: "", pack: "pk0", packType: k.id }));
+    const marq = {}; k.vitrine.forEach(e => { const t = !!DATA.emplacements[e].texteSeul; marq[e] = { actif: true, avecImage: !t, image: null, format: "A6", orient: "portrait" }; if (t) { marq[e].maj = true; marq[e].prenom = { actif: true, police: "Bebas Neue", hauteur: 3, couleur: "#ffffff" }; } });
+    const r = E.computeOrder({ pieces, marquages: marq, technique: "dtf" }, ctx);
+    assert.strictEqual(r.prix.groupes.length, 1, k.id + " : un seul article");
+    assert.ok(r.prix.marge <= 2 + 1e-9, k.id + " : marge " + r.prix.marge);
+    assert.ok(r.prix.groupes[0].pack, k.id);
+  });
+});
+test("catalogue : jogging homme et short de football 4,99 € ajoutés (version 3.1.0)", () => {
+  assert.strictEqual(produits["jogging-homme"].prixAchat, 9.99);
+  assert.strictEqual(produits["short-football-essentiel"].prixAchat, 4.99);
+  assert.deepStrictEqual(produits["jogging-homme"].tags.genre, ["homme"]);
 });
 test("sublimation : chaussettes et robe blanches en polyester oui, t-shirt coton non", () => {
   const ps = [piece2("a", "chaussettes-football"), piece2("b", "robe-hummel"), piece2("c", "tshirt-fitness-femme"), piece2("d", "thermique-femme")];
