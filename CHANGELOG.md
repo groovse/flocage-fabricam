@@ -5,6 +5,17 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 3.0.0 — 18/10/2026
+
+Nouveau fournisseur de planches (DTF Print) et marge plafonnée à 2 € par article. **Règle de prix modifiée : les prix du site changent.**
+
+- **Marge plafonnée** : toujours 20 % du coût, mais jamais plus de 2 € par article. Une pièce qui coûte 10 € reste vendue 12 €, une pièce à 30 € est vendue 32 € (36 € avant). Un pack compte pour un seul article : 2 € au maximum pour tout le pack. Réglage `regles.margeMax` dans `js/prix.js` (`null` = pas de plafond). L'espace atelier indique « marge plafonnée à 2,00 € » sur les lignes concernées.
+- **DTF Print à la place de Sprint Transfert** (Port-de-Bouc, 13, 4,9/5 sur 144 avis Google, fabrication en 1 jour). Prix TTC, une planche : DTF A4 5,50 € (Sprint 6,05 €), A3 8,00 € (9,79 €), A2 14,00 € (18,36 €), mètre 18,00 € (34,56 €) ; sublimation A4 3,90 € (6,30 €), A3 7,50 €, A2 13,00 €. Plus de planches A6 et A5 : une petite commande part sur une A4. Livraison offerte dès 100 € TTC ; en dessous, 4,90 € estimés.
+- Réglages de presse mis à jour : DTF sur polyester ou nylon 135 °C pendant 10 s, coton 150 °C pendant 10 à 15 s, mélange 145 °C pendant 12 s, sublimation 190 à 200 °C pendant 40 à 60 s. Les fichiers se préparent à l'endroit, aux dimensions exactes de la planche (PNG ou PDF sans fond, 300 dpi) : l'espace atelier le rappelle et le nom du fournisseur est lu dans `PRIX.fournisseur`.
+- Nouveau réglage `prixPlanchesHT` (remplace `sprintPrixHT`) : `false` car DTF Print affiche des prix TTC. Les fichiers de commande se lisent toujours, mais le total recalculé est plus bas que celui qu'un client avait vu avant : l'atelier le signale (« Les tarifs ont changé »).
+- Remises par quantité de DTF Print (dès 10 planches) non appliquées, voir le README.
+- Tests : 32 en tout, règles de marge réécrites (plafond, pack, sans plafond).
+
 ## 2.3.1 — 18/10/2026
 
 Les mails s'ouvrent dans Gmail.

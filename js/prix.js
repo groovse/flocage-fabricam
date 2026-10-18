@@ -1,19 +1,29 @@
 /*
  * TARIFS ET RÈGLES — c'est le seul fichier à modifier quand un prix change.
- * Mis à jour le 18/10/2026 d'après sprint-transfert.com (délai Standard 48/72h).
+ * Mis à jour le 18/10/2026 d'après dtfprint.fr (DTF Print, Port-de-Bouc, 13). Avant : Sprint Transfert (voir CHANGELOG, version 3.0.0).
  *
- * - Les prix des planches Sprint sont affichés HT sur leur site (sprintPrixHT: true).
- *   Le site les convertit en TTC avec la TVA ci-dessous. Si tu vois au panier que ce sont
- *   déjà des TTC, passe sprintPrixHT à false.
+ * - Les prix des planches DTF Print sont affichés TTC sur leur site (prixPlanchesHT: false).
+ *   Si tu passes à un fournisseur qui affiche des prix HT, mets prixPlanchesHT à true : le site ajoute la TVA ci-dessous.
  * - Prix d'achat des vêtements : dans data.js (champ prixAchat, TTC, retrait en magasin).
  */
 window.PRIX = {
   maj: "2026-10-18",
 
-  tva: 0.20,
-  sprintPrixHT: true,
+  // Fournisseur des planches de transfert (affiché dans l'espace atelier)
+  fournisseur: {
+    nom: "DTF Print",
+    ville: "Port-de-Bouc (13)",
+    url: "https://www.dtfprint.fr/",
+    tarifs: "https://www.dtfprint.fr/prix-impression-dtf/",
+    delai: "Fabrication en 1 jour ouvré (commande avant 12 h), livraison en 2 jours ouvrés. Retrait gratuit à l'atelier de Port-de-Bouc.",
+    fichier: "PNG ou PDF sans fond, aux dimensions exactes de la planche choisie, 300 dpi, à l'endroit (pas de miroir), sans ombre ni lueur."
+  },
 
-  // Livraison Sprint : Colissimo 4,90 € ; offerte dès 100 € de commande.
+  tva: 0.20,
+  prixPlanchesHT: false,
+
+  // Livraison : offerte dès 100 € TTC de transferts. En dessous, DTF Print affiche le prix au panier :
+  // 4,90 € est une ESTIMATION (colis postal). Corrige-le ici quand tu connais le montant réel.
   livraison: { seuilGratuit: 100, colissimo: 4.90 },
 
   // Articles vendus par un vendeur partenaire de la place de marché Decathlon (pas de retrait en magasin) :
@@ -30,12 +40,15 @@ window.PRIX = {
 
   // Règle de prix de vente : chaque produit a son propre prix unitaire, égal au coût moyen de ses pièces
   // (vêtement + part des planches + part de la livraison) augmenté de la marge, arrondi au supérieur de `pas`.
-  //   marge : 0.20 = 20 % du coût de la pièce (une pièce qui coûte 10 € est vendue 12 €)
-  //   pas   : 0.01 = on arrondit au centime supérieur (mets 0.5 pour arrondir de 50 centimes en 50 centimes)
-  // Un pack (maillot + short) est vendu comme un seul article : il ne porte que la marge d'une seule pièce,
-  // soit 20 % du coût moyen d'une pièce du pack (10 % du coût du pack pour deux pièces).
+  //   marge    : 0.20 = 20 % du coût de la pièce (une pièce qui coûte 10 € est vendue 12 €)
+  //   margeMax : 2.00 = la marge d'un article ne dépasse jamais 2 € (une pièce qui coûte 30 € est vendue 32 €, pas 36 €).
+  //              Un pack compte pour un seul article : 2 € au maximum pour tout le pack. Mets null pour supprimer le plafond.
+  //   pas      : 0.01 = on arrondit au centime supérieur (mets 0.5 pour arrondir de 50 centimes en 50 centimes)
+  // Un pack (maillot + short + chaussettes) est vendu comme un seul article : il ne porte que la marge d'une seule pièce,
+  // soit 20 % du coût moyen d'une pièce du pack (par exemple 6,7 % du coût du pack pour trois pièces), puis le plafond.
   regles: {
     marge: 0.20,
+    margeMax: 2.00,
     pas: 0.01
   },
 
@@ -48,43 +61,38 @@ window.PRIX = {
   // Plateau de ta presse : limite A4, aucun motif ne doit dépasser
   plateau: { w: 21, h: 28 },
 
-  // Dimensions des tailles de motif (identiques aux formats de planche Sprint)
+  // Dimensions des tailles de motif
   formatsMotif: {
     A6: { w: 10, h: 14, nom: "A6" },
     A5: { w: 14, h: 21, nom: "A5" },
     A4: { w: 21, h: 28, nom: "A4" }
   },
 
-  // Planches vendues par Sprint Transfert (prix HT, délai standard)
+  // Planches vendues par DTF Print (prix TTC, une planche, sans remise de quantité)
   planches: {
     dtf: {
       nom: "DTF",
       formats: [
-        { id: "A6", nom: "A6 (10 × 14 cm)", w: 10, h: 14, prix: 2.40 },
-        { id: "A5", nom: "A5 (14 × 21 cm)", w: 14, h: 21, prix: 3.60 },
-        { id: "A4", nom: "A4 (21 × 28 cm)", w: 21, h: 28, prix: 5.04 },
-        { id: "A3", nom: "A3 (28 × 42 cm)", w: 28, h: 42, prix: 8.16 },
-        { id: "A2", nom: "A2 (42 × 57 cm)", w: 42, h: 57, prix: 15.30 },
-        { id: "1m", nom: "1 mètre (57 × 100 cm)", w: 57, h: 100, prix: 28.80 },
-        { id: "2m", nom: "2 mètres (57 × 200 cm)", w: 57, h: 200, prix: 49.92 },
-        { id: "4m", nom: "4 mètres (57 × 400 cm)", w: 57, h: 400, prix: 91.20 }
+        { id: "A4", nom: "A4 (21 × 28 cm)", w: 21, h: 28, prix: 5.50 },
+        { id: "A3", nom: "A3 (28 × 42 cm)", w: 28, h: 42, prix: 8.00 },
+        { id: "A2", nom: "A2 (42 × 56 cm)", w: 42, h: 56, prix: 14.00 },
+        { id: "1m", nom: "1 mètre (56 × 100 cm)", w: 56, h: 100, prix: 18.00 }
       ]
     },
     sublimation: {
       nom: "Sublimation",
       formats: [
-        { id: "P7", nom: "Petit format (7 × 7 cm)", w: 7, h: 7, prix: 2.50 },
-        { id: "A4", nom: "A4 (21 × 28 cm)", w: 21, h: 28, prix: 5.25 },
-        { id: "A3", nom: "A3 (28 × 42 cm)", w: 28, h: 42, prix: 7.50 },
-        { id: "A2", nom: "A2 (42 × 57 cm)", w: 42, h: 57, prix: 13.90 },
-        { id: "1m", nom: "1 mètre (57 × 100 cm)", w: 57, h: 100, prix: 26.90 }
+        { id: "A4", nom: "A4 (20 × 28 cm)", w: 20, h: 28, prix: 3.90 },
+        { id: "A3", nom: "A3 (28 × 41 cm)", w: 28, h: 41, prix: 7.50 },
+        { id: "A2", nom: "A2 (42 × 56 cm)", w: 42, h: 56, prix: 13.00 }
       ]
     }
   },
 
-  // Remises de Sprint selon le nombre de planches identiques commandées.
-  // Format : { min: nombre de planches, pct: remise entre 0 et 1 }.
-  // À compléter avec le tableau « Quantité & prix » de leurs pages produit.
+  // Remises par quantité (nombre de planches commandées) : { min: nombre de planches, pct: remise entre 0 et 1 }.
+  // DTF Print baisse ses prix à partir de 10 planches (A4 : 4,00 € au lieu de 5,50 €, A3 : 6,00 € au lieu de 8,00 €,
+  // A2 : 10,00 € au lieu de 14,00 €, mètre : 16,80 € au lieu de 18,00 €). Une commande de flocage en compte rarement
+  // autant : on ne les applique pas, ce qui garde un prix prudent.
   remises: {
     dtf: [],
     sublimation: []
@@ -92,8 +100,8 @@ window.PRIX = {
 
   // Réglages de presse conseillés (affichés dans l'espace atelier)
   presse: {
-    dtf_polyester: "DTF sur polyester : environ 135 °C pendant 10 s, pression moyenne, pelage à froid. Teinture sensible (marine, noir, rouge) : fais d'abord un essai sur une chute ou un polo d'essai.",
-    dtf_autre: "DTF sur coton ou mélange : 150 °C pendant 15 s avec une feuille de protection, pelage à chaud ou à froid (protocole Sprint).",
-    sublimation: "Sublimation : polyester blanc ou très clair uniquement, visuel sans blanc. Sprint annonce 180 °C sur sa page ; valide durée et pression par un essai."
+    dtf_polyester: "DTF sur polyester ou nylon : 135 °C pendant 10 s, pression moyenne (DTF Print). Sportswear fin (lycra, softshell) : descends à 120-125 °C. Teinture sensible (marine, noir, rouge) : fais d'abord un essai sur une chute ou un polo d'essai.",
+    dtf_autre: "DTF sur coton : 150 °C pendant 10 à 15 s ; mélange coton et polyester : 145 °C pendant 12 s. Mets une feuille de protection sur le transfert.",
+    sublimation: "Sublimation : polyester blanc ou très clair uniquement (DTF Print admet dès 65 % de polyester, ce site exige 90 % pour un rendu net), visuel sans blanc. 190-200 °C pendant 40 à 60 s, pression moyenne à forte, face imprimée contre le vêtement. Envoie le fichier à l'endroit."
   }
 };
