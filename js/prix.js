@@ -16,18 +16,16 @@ window.PRIX = {
   // Livraison Sprint : Colissimo 4,90 € ; offerte dès 100 € de commande.
   livraison: { seuilGratuit: 100, colissimo: 4.90 },
 
-  // Règle de prix de vente (appliquée au prix unitaire de la commande)
+  // Règle de prix de vente : chaque produit a son propre prix unitaire, égal au coût moyen de ses pièces
+  // (vêtement + part des planches + part de la livraison) augmenté de la marge, arrondi au supérieur de `pas`.
+  //   marge : 0.20 = 20 % du coût de la pièce (une pièce qui coûte 10 € est vendue 12 €)
+  //   pas   : 0.01 = on arrondit au centime supérieur (mets 0.5 pour arrondir de 50 centimes en 50 centimes)
+  // Un pack (maillot + short) est vendu comme un seul article : il ne porte que la marge d'une seule pièce,
+  // soit 20 % du coût moyen d'une pièce du pack (10 % du coût du pack pour deux pièces).
   regles: {
-    pas: 2.5,       // on arrondit au supérieur de 2,50 € en 2,50 €
-    margeMin: 2,    // la marge totale de la commande doit dépasser 2 €
-    ajout: 1        // sinon on ajoute 1 € par pièce, et on revérifie
-    // Chaque produit a son propre prix unitaire : coût moyen de ses pièces (produit, part des planches
-    // et de la livraison), arrondi au supérieur de 2,50 €.
+    marge: 0.20,
+    pas: 0.01
   },
-
-  // Pack (plusieurs produits vendus ensemble) : remise en € retirée du prix par pack complet,
-  // après l'arrondi. La marge de la commande reste vérifiée.
-  packs: { remise: 2.5 },
 
   // Placement des motifs sur les planches.
   // ecart = marge de coupe entre deux motifs, en cm. À 0, quatre A6 tiennent exactement sur une A4

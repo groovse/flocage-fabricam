@@ -8,6 +8,7 @@
   var A = window.App, E = window.Engine, P = window.Preview;
   var esc = A.esc, fmtEUR = A.fmtEUR, fmtN = A.fmtN, $ = A.$, $$ = A.$$;
   var loaded = null;
+  function fmtPct(x) { return new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 }).format(x * 100) + " %"; }
 
   var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD", cuisse_g: "CG", cuisse_d: "CD", bas_jambe_g: "BJ" };
   var KIND = { image: "v", prenom: "p", numero: "n" };
@@ -119,12 +120,11 @@
       ["<b>Coût de revient</b>", "", "<b>" + fmtEUR(r.couts.total) + "</b>"]
     ];
     pv.groupes.forEach(function (g) {
-      var nom = A.byId[g.produitId].nomCourt;
-      rows.push([esc(nom) + " × " + g.n, "coût moyen " + fmtEUR(g.coutMoyen) + ", arrondi " + fmtEUR(g.arrondi) + (pv.ajouts ? ", +" + fmtEUR(pv.ajouts * A.PRIX.regles.ajout) : "") + ", soit " + fmtEUR(g.unitaire) + " l'unité", fmtEUR(g.total)]);
+      var detail = "coût moyen " + fmtEUR(g.coutMoyen) + ", marge " + fmtPct(g.taux) + (g.pack ? " (une seule pièce du pack)" : "") + ", soit " + fmtEUR(g.unitaire) + " l'unité";
+      rows.push([esc(A.groupName(g)) + " × " + g.n, detail, fmtEUR(g.total)]);
     });
-    if (pv.packs.n) rows.push(["Remise pack", pv.packs.n + " × -" + fmtEUR(pv.packs.remiseUnitaire), "-" + fmtEUR(pv.packs.remise)]);
     rows.push(["<b>Total à facturer</b>", pv.unitaire != null ? r.N + " × " + fmtEUR(pv.unitaire) : "", "<b>" + fmtEUR(pv.total) + "</b>"]);
-    rows.push(["<b>Marge</b>", pv.ajouts ? "ajustement : +" + pv.ajouts + " × " + fmtEUR(A.PRIX.regles.ajout) + " par pièce pour dépasser " + fmtEUR(A.PRIX.regles.margeMin) : "", "<b>" + fmtEUR(pv.marge) + "</b>"]);
+    rows.push(["<b>Marge</b>", pv.total > 0 ? fmtPct(pv.marge / r.couts.total) + " du coût de revient" : "", "<b>" + fmtEUR(pv.marge) + "</b>"]);
     html += '<section class="a-block"><h2>Coûts et prix</h2>' + table(["Ligne", "Détail", { t: "Montant", num: true }], rows.map(function (x) { return [x[0], x[1], x[2]]; }), "calc");
     if (loaded.prixAffiche && Math.abs(loaded.prixAffiche.total - pv.total) > 0.005) {
       html += '<p class="warn-line">Le client a vu un total de ' + fmtEUR(loaded.prixAffiche.total) + ". Avec les tarifs actuels, le calcul donne " + fmtEUR(pv.total) + ". Les tarifs ont changé entre-temps.</p>";

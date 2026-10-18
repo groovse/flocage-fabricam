@@ -2,7 +2,7 @@
  * MOTEUR DE CALCUL
  * - construit la liste des motifs à presser (un par pièce, par emplacement, par élément)
  * - les range sur les planches Sprint au moindre coût (rotation autorisée, écart entre motifs)
- * - calcule coûts TTC, prix unitaire (arrondi 2,50 €) et marge
+ * - calcule coûts TTC, prix unitaire (marge en pourcentage du coût) et marge
  * Fonctionne dans le navigateur (window.Engine) et sous Node (tests).
  */
 (function (root, factory) {
@@ -315,33 +315,28 @@
   /* ------------------------------------------------------------------ */
   /* Prix de vente                                                       */
   /* ------------------------------------------------------------------ */
-  // Fixe le prix unitaire de chaque produit (groupes : { n, cout } avec cout = coût total du groupe).
-  // Prix de chaque produit = coût moyen arrondi au supérieur du pas ; si la marge totale
-  // (après remise de pack) n'est pas supérieure au minimum, on ajoute 1 € par pièce et on revérifie.
-  function fixerPrix(groupes, coutTotal, remise, r) {
+  // Fixe le prix unitaire de chaque article (groupes : { n, cout, pieces } avec cout = coût total du groupe).
+  // Prix = coût moyen de l'article + marge (regles.marge, en pourcentage du coût), arrondi au supérieur de regles.pas.
+  // Un article de plusieurs pièces (pack) ne porte la marge que d'une seule pièce : le taux est divisé par le nombre de pièces.
+  function fixerPrix(groupes, coutTotal, r) {
+    var total = 0;
     groupes.forEach(function (g) {
       g.coutMoyen = g.cout / g.n;
-      g.arrondi = round2(Math.ceil(g.coutMoyen / r.pas - 1e-9) * r.pas);
-    });
-    var ajouts = 0, total, marge;
-    function calc() {
-      total = round2(groupes.reduce(function (s, g) { return s + round2(g.arrondi + ajouts * r.ajout) * g.n; }, 0) - remise);
-      marge = round2(total - coutTotal);
-    }
-    calc();
-    while (marge <= r.margeMin + 1e-9 && ajouts < 200) { ajouts++; calc(); }
-    groupes.forEach(function (g) {
-      g.unitaire = round2(g.arrondi + ajouts * r.ajout);
+      g.taux = r.marge / (g.pieces || 1);
+      g.brut = g.coutMoyen * (1 + g.taux);
+      g.unitaire = round2(Math.ceil(g.brut / r.pas - 1e-9) * r.pas);
       g.total = round2(g.unitaire * g.n);
+      total += g.total;
     });
-    return { ajouts: ajouts, total: total, marge: marge };
+    total = round2(total);
+    return { total: total, marge: round2(total - coutTotal) };
   }
 
   // Cas d'un seul produit : cout = coût total, N = nombre de pièces
   function calcPrix(cout, N, r) {
     var g = [{ n: N, cout: cout }];
-    var res = fixerPrix(g, cout, 0, r);
-    return { brut: round2(cout / N), arrondi: g[0].arrondi, unitaire: g[0].unitaire, total: res.total, marge: res.marge, ajouts: res.ajouts };
+    var res = fixerPrix(g, cout, r);
+    return { brut: round2(g[0].brut), unitaire: g[0].unitaire, total: res.total, marge: res.marge };
   }
 
   function computeOrder(order, ctx) {
@@ -395,34 +390,42 @@
       coutPieces[p.id] = { achat: prod.prixAchat, planches: pl, livraison: li, total: prod.prixAchat + pl + li };
     });
 
-    var groupes = [], gi = {};
+    // Un pack complet (au moins deux pièces avec le même identifiant de pack) est un seul article, avec un seul prix
+    // et une seule marge. Les autres pièces forment un groupe par produit.
+    var parPack = {};
+    order.pieces.forEach(function (p) { if (p.pack && coutPieces[p.id]) (parPack[p.pack] = parPack[p.pack] || []).push(p); });
+    var groupes = [], gi = {}, nbPacks = 0;
+    function groupe(cle, base) {
+      var g = gi[cle]; if (!g) { g = gi[cle] = Object.assign({ n: 0, cout: 0 }, base); groupes.push(g); } return g;
+    }
     order.pieces.forEach(function (p) {
       if (!coutPieces[p.id]) return;
-      var g = gi[p.produitId];
-      if (!g) { g = gi[p.produitId] = { produitId: p.produitId, n: 0, cout: 0 }; groupes.push(g); }
-      g.n++; g.cout += coutPieces[p.id].total;
+      var pk = p.pack && parPack[p.pack].length >= 2 ? parPack[p.pack] : null;
+      if (pk) {
+        if (pk[0] !== p) return;                  // le pack est ajouté une seule fois, avec toutes ses pièces
+        var ids = pk.map(function (x) { return x.produitId; });
+        var g = groupe("pack:" + (p.packType || ids.slice().sort().join("+")), { pack: true, packType: p.packType || null, produitIds: ids, pieces: pk.length });
+        g.n++; nbPacks++;
+        pk.forEach(function (x) { g.cout += coutPieces[x.id].total; });
+      } else {
+        var g2 = groupe("produit:" + p.produitId, { pack: false, produitId: p.produitId, pieces: 1 });
+        g2.n++; g2.cout += coutPieces[p.id].total;
+      }
     });
-
-    // packs : une remise par pack complet (au moins deux pièces portant le même identifiant de pack)
-    var parPack = {};
-    order.pieces.forEach(function (p) { if (p.pack) parPack[p.pack] = (parPack[p.pack] || 0) + 1; });
-    var nbPacks = Object.keys(parPack).filter(function (id) { return parPack[id] >= 2; }).length;
-    var remiseUnitaire = (prix.packs && prix.packs.remise) || 0;
-    var remisePacks = round2(nbPacks * remiseUnitaire);
 
     var vente = null;
     if (groupes.length) {
-      var fx = fixerPrix(groupes, cout, remisePacks, prix.regles);
-      var seul = groupes.length === 1 && nbPacks === 0;
+      var fx = fixerPrix(groupes, cout, prix.regles);
+      var seul = groupes.length === 1 && !groupes[0].pack;
       vente = {
         brut: round2(cout / N),
-        arrondi: groupes.length === 1 ? groupes[0].arrondi : null,
         unitaire: seul ? groupes[0].unitaire : null,   // un seul prix par pièce seulement s'il n'y a qu'un produit et pas de pack
         groupes: groupes.map(function (g) {
-          return { produitId: g.produitId, n: g.n, coutMoyen: round2(g.coutMoyen), arrondi: g.arrondi, unitaire: g.unitaire, total: g.total };
+          return { pack: g.pack, produitId: g.produitId || null, packType: g.packType || null, produitIds: g.produitIds || null, n: g.n, pieces: g.pieces,
+            coutMoyen: round2(g.coutMoyen), taux: g.taux, unitaire: g.unitaire, total: g.total };
         }),
-        packs: { n: nbPacks, remiseUnitaire: remiseUnitaire, remise: remisePacks },
-        total: fx.total, marge: fx.marge, ajouts: fx.ajouts
+        packs: { n: nbPacks },
+        total: fx.total, marge: fx.marge
       };
     }
 
@@ -445,7 +448,7 @@
       for (var i = 0; i < q; i++) ids.forEach(function (pid, j) {
         var prod = ctx.produits[pid];
         pieces.push({ id: "v" + i + "_" + j, produitId: pid, couleurId: prod.couleurs[0].id, taille: prod.tailles[1] || prod.tailles[0], prenom: "", numero: "",
-          pack: item.produits ? "pk" + i : undefined });
+          pack: item.produits ? "pk" + i : undefined, packType: item.produits ? item.id : undefined });
       });
       var r = computeOrder({ pieces: pieces, marquages: marq, technique: "dtf" }, ctx);
       var unit = r.prix.total / q;

@@ -55,9 +55,6 @@
   function sweatSegs(back) {
     return { start: [45, back ? 8.5 : 12], segs: [["Q", 51, back ? 8.5 : 12, 53.5, 5], ["L", 70, 9]].concat(SLEEVE_LONG, [["L", 69, 74], ["Q", 58, 76.5, 45, 76.5]]) };
   }
-  function polaireSegs(back) {
-    return { start: [45, back ? 5 : 7], segs: [["Q", 50, back ? 5 : 7, 53, 2.5], ["L", 55.5, 7.5], ["L", 70, 10.5]].concat(SLEEVE_LONG, [["L", 69, 74], ["Q", 58, 76.5, 45, 76.5]]) };
-  }
   function debardeurSegs(back) {
     return { start: [45, back ? 9 : 15], segs: [["Q", 50, back ? 9 : 15, 51, 4], ["L", 57.5, 4.5], ["C", 57, 15, 66.5, 19, 67, 30], ["L", 67.5, 74], ["Q", 58, 76, 45, 76]] };
   }
@@ -87,17 +84,6 @@
         var hem = line("M21 69.8 Q45 72.3 69 69.8", stroke, 0.3, 'opacity=".8"');
         var cuff = both(line("M72.4 61.4 L81.9 61", stroke, 0.3, 'opacity=".8"'));
         return band + hem + cuff;
-      }
-    },
-    polaire: {
-      path: function (vue) { var g = polaireSegs(vue === "dos"); return symPath(g.start, g.segs); },
-      details: function (vue, stroke, collar) {
-        var back = vue === "dos", y = back ? 5 : 7;
-        var band = both('<path d="M45 ' + y + ' Q50 ' + y + ' 53 2.5 L55.5 7.5 Q50 ' + (y + 5.5) + ' 45 ' + (y + 5.5) + ' Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>');
-        var zip = back ? "" : line("M45 " + y + " L45 36", stroke, 0.45) + '<rect x="44.3" y="33" width="1.4" height="3.4" rx=".5" fill="' + stroke + '"/>';
-        var hem = line("M21 70.3 Q45 72.6 69 70.3", stroke, 0.3, 'opacity=".8"');
-        var cuff = both(line("M72.4 61.4 L81.9 61", stroke, 0.3, 'opacity=".8"'));
-        return band + zip + hem + cuff;
       }
     },
     debardeur: {
