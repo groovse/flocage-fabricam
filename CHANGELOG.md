@@ -5,6 +5,14 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 2.3.1 — 18/10/2026
+
+Les mails s'ouvrent dans Gmail.
+
+- Le bouton « Écrire le mail à Fabr'Icam », la demande de vêtement hors catalogue, le lien du pied de page et le mail du client dans l'espace atelier ouvrent maintenant la rédaction de Gmail dans un nouvel onglet, au lieu de l'application de mail installée sur l'ordinateur. Le message reste pré-rempli ; le fichier de commande se joint toujours à la main.
+- Le bouton « Pas de Gmail ? Copier le texte du mail » reste là pour les autres messageries.
+- Aucun changement de prix ni de fichier de commande.
+
 ## 2.3.0 — 18/10/2026
 
 19 nouveaux vêtements, une catégorie Ensembles et la livraison des vendeurs de la place de marché Decathlon.

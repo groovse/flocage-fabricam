@@ -10,7 +10,7 @@ Double-clique sur `index.html`. Aucun serveur, aucune installation. Il faut just
 
 1. L'association configure : pièces (couleur, taille, prénom, numéro), marquages par emplacement (poitrine, dos, manches), technique.
 2. Le prix TTC par pièce se met à jour à chaque changement. L'aperçu montre le vêtement en dessin à la taille réelle, ou sur la photo du vêtement (bouton Dessin / Photo).
-3. Elle télécharge le fichier de commande, puis clique sur « Écrire le mail » : le message est pré-rempli vers fabricam.toulouse@icam.fr. Elle joint le fichier.
+3. Elle télécharge le fichier de commande, puis clique sur « Écrire le mail » : Gmail s'ouvre dans un nouvel onglet avec le message pré-rempli vers fabricam.toulouse@icam.fr. Elle joint le fichier.
 
 ## Utiliser côté atelier
 
@@ -31,7 +31,7 @@ Ouvre `index.html#/atelier` (lien « Espace atelier » en bas de page) et charge
 - **Robe** : robe Hummel à manches courtes. **Accessoire** : chaussettes de football (prénom ou numéro seulement).
 - **Ensembles** : survêtement Joma Eco Championship (vendu en un seul article, flocage sur la veste), pack basket (maillot + short), pack fitness femme (t-shirt + short slim), pack jogging femme (pantalon + t-shirt coton), pack football (sweat T100 + chaussettes). Un pack est fait de pièces achetées séparément et vendu comme un seul article.
 
-Le catalogue se filtre par genre (Homme, Femme), par style (Sport, Casual) et par type (Hauts, Bas, Robes, Ensembles, Accessoires) ; un vêtement mixte apparaît dans les deux genres. Un bandeau tout en haut du site invite à demander un vêtement qui n'est pas au catalogue : il ouvre un mail pré-rempli vers Fabr'Icam.
+Le catalogue se filtre par genre (Homme, Femme), par style (Sport, Casual) et par type (Hauts, Bas, Robes, Ensembles, Accessoires) ; un vêtement mixte apparaît dans les deux genres. Un bandeau tout en haut du site invite à demander un vêtement qui n'est pas au catalogue : il ouvre un message Gmail pré-rempli vers Fabr'Icam.
 
 Sur le catalogue, chaque photo a une loupe : un clic ouvre la visionneuse en grand (flèches du clavier pour changer de photo, Échap pour fermer). Pour le pack, la loupe de chaque pièce ouvre les photos de cette pièce.
 
@@ -121,4 +121,4 @@ node tests/engine.test.js
 Points d'attention :
 - Les photos Decathlon sont liées, pas copiées. Sur un site public, mieux vaut les remplacer par tes propres photos (dossier `img/`, champ `photos` dans `data.js`).
 - L'espace atelier n'est pas protégé : il ne contient aucune donnée, il lit seulement un fichier de commande que tu charges toi-même.
-- Les commandes passent uniquement par mail et fichier joint, rien n'est stocké sur le site.
+- Les commandes passent uniquement par mail (Gmail, pas l'application de mail de l'ordinateur) et fichier joint, rien n'est stocké sur le site. Les liens de mail sont construits par `gmailHref` dans `js/app.js` ; sans Gmail, le bouton « Copier le texte du mail » reste disponible.
