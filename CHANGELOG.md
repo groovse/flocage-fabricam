@@ -5,6 +5,16 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 2.2.0 — 18/10/2026
+
+Aperçu du logo, des prénoms et des numéros sur les vraies photos.
+
+- Configurateur : bouton Dessin / Photo au-dessus de l'aperçu. En mode Photo, les marquages se posent sur la photo du vêtement, en face et au dos (polo, sweat, maillot, short de basket, débardeur). Les positions sont indicatives, car les photos sont prises de trois quarts.
+- Disponible dans la couleur de la photo et pour les vues calibrées. Sinon la note sous l'aperçu explique pourquoi (autre couleur, pas de photo de dos, short de tennis sans photo exploitable) et le dessin reste affiché. Les manches ne sont pas montrées sur la photo. Si la photo ne charge pas, le dessin la remplace.
+- Catalogue : une loupe sur chaque photo ouvre une visionneuse en grand, avec flèches, compteur, touches clavier (flèches, Échap) et clic à côté pour fermer. Elle s'ouvre sur la photo choisie en vignette ; pour le pack, chaque pièce ouvre ses propres photos.
+- Nouveau champ `apercuPhoto` dans `js/data.js` (couleur de la photo, rang et calage de chaque vue). 3 tests de plus : 24 en tout.
+- Aucun changement de prix ni de fichier de commande.
+
 ## 2.1.0 — 18/10/2026
 
 Filtres du catalogue et demandes hors catalogue.

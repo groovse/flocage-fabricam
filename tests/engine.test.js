@@ -202,4 +202,41 @@ test("tableau vitrine : tous les produits et le pack ont un prix", () => {
   });
 });
 
+console.log("\nAperçu sur photo (données)");
+test("apercuPhoto : couleur, photo et réglages valides pour chaque vêtement concerné", () => {
+  let n = 0;
+  DATA.produits.forEach(p => {
+    const ap = p.apercuPhoto; if (!ap) return;
+    assert.ok(p.couleurs.some(c => c.id === ap.couleur), p.id + " : couleur de la photo inconnue");
+    ["face", "dos"].forEach(v => {
+      const c = ap[v]; if (!c) return;
+      n++;
+      assert.ok(Number.isInteger(c.photo) && c.photo >= 0 && c.photo < p.photos.length, p.id + " " + v + " : rang de photo hors liste");
+      ["u0", "v0", "kx", "ky"].forEach(k => assert.ok(typeof c[k] === "number" && isFinite(c[k]), p.id + " " + v + " : " + k));
+      assert.ok(c.kx > 0 && c.ky > 0, p.id + " " + v + " : échelle positive");
+    });
+  });
+  assert.strictEqual(n, 9);
+});
+test("apercuPhoto : les emplacements du dos n'existent que s'il y a une photo de dos", () => {
+  DATA.produits.forEach(p => {
+    if (!p.apercuPhoto) return;
+    const aDos = Object.keys(p.zones).some(k => p.zones[k].vue === "dos");
+    if (aDos) assert.ok(p.apercuPhoto.dos, p.id + " : zone au dos sans photo de dos");
+  });
+});
+test("apercuPhoto : les emplacements tombent dans la photo (hors manches)", () => {
+  DATA.produits.forEach(p => {
+    const ap = p.apercuPhoto; if (!ap) return;
+    Object.keys(p.zones).forEach(k => {
+      const z = p.zones[k]; if (z.cy != null) return;            // les manches ne sont pas montrées sur la photo
+      const c = ap[z.vue === "dos" ? "dos" : "face"]; if (!c) return;
+      [[z.cx - z.w / 2, z.top], [z.cx + z.w / 2, z.top + z.h]].forEach(([x, y]) => {
+        const u = c.u0 + c.kx * x, v = c.v0 + c.ky * y;
+        assert.ok(u > -0.02 && u < 1.02 && v > -0.05 && v < 1.02, p.id + " " + k + " sort de la photo (" + u.toFixed(2) + ", " + v.toFixed(2) + ")");
+      });
+    });
+  });
+});
+
 console.log("\n" + ok + " tests passés");

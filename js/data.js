@@ -60,6 +60,13 @@ window.DATA = {
         "https://contents.mediadecathlon.com/p2875937/k$86bcf58fffce18e0ee0b2b02098f1414/picture.jpg",
         "https://contents.mediadecathlon.com/p2996308/k$c6cfda141a3f9b036b7d98e7b2a0cdaa/picture.jpg"
       ],
+      // Aperçu sur photo : photo = rang dans « photos », couleur = couleur du vêtement sur la photo.
+      // u0, v0 = position de l'origine du dessin (en fraction de la photo carrée), kx, ky = fraction de photo par cm.
+      apercuPhoto: {
+        couleur: "marine",
+        face: { photo: 1, u0: 0.363, v0: 0.113, kx: 0.0039, ky: 0.00487 },
+        dos: { photo: 2, u0: 0.168, v0: 0.205, kx: 0.0065, ky: 0.0094 }
+      },
       vitrine: ["poitrine"],
       texteVitrine: "à la poitrine",
       zones: {
@@ -94,6 +101,13 @@ window.DATA = {
         "https://contents.mediadecathlon.com/p2731316/k$a6f10d77258cbd82a7353675def8674e/picture.jpg",
         "https://contents.mediadecathlon.com/p2731318/k$d641c0cdc58455775bfec220ddb8bb47/picture.jpg"
       ],
+      // Aperçu sur photo : photo = rang dans « photos », couleur = couleur du vêtement sur la photo.
+      // u0, v0 = position de l'origine du dessin (en fraction de la photo carrée), kx, ky = fraction de photo par cm.
+      apercuPhoto: {
+        couleur: "bleu-fonce",
+        face: { photo: 0, u0: 0.26, v0: 0.231, kx: 0.006, ky: 0.0074 },
+        dos: { photo: 3, u0: 0.125, v0: 0.158, kx: 0.0067, ky: 0.0083 }
+      },
       vitrine: ["poitrine"],
       texteVitrine: "à la poitrine",
       zones: {
@@ -129,6 +143,13 @@ window.DATA = {
         "https://contents.mediadecathlon.com/p2929375/k$67f50b8c908aca741bfbffb86ea438d3/picture.jpg",
         "https://contents.mediadecathlon.com/p2929349/k$2ec15fe68fc60f656a009e71f5c352d8/picture.jpg"
       ],
+      // Aperçu sur photo : photo = rang dans « photos », couleur = couleur du vêtement sur la photo.
+      // u0, v0 = position de l'origine du dessin (en fraction de la photo carrée), kx, ky = fraction de photo par cm.
+      apercuPhoto: {
+        couleur: "blanc",
+        face: { photo: 0, u0: 0.3, v0: 0.2425, kx: 0.0053, ky: 0.0071 },
+        dos: { photo: 3, u0: 0.3, v0: 0.225, kx: 0.00567, ky: 0.0074 }
+      },
       vitrine: ["poitrine"],
       texteVitrine: "à la poitrine",
       zones: {
@@ -163,6 +184,12 @@ window.DATA = {
         "https://contents.mediadecathlon.com/p2929375/k$67f50b8c908aca741bfbffb86ea438d3/picture.jpg",
         "https://contents.mediadecathlon.com/p2929349/k$2ec15fe68fc60f656a009e71f5c352d8/picture.jpg"
       ],
+      // Aperçu sur photo : photo = rang dans « photos », couleur = couleur du vêtement sur la photo.
+      // u0, v0 = position de l'origine du dessin (en fraction de la photo carrée), kx, ky = fraction de photo par cm.
+      apercuPhoto: {
+        couleur: "blanc",
+        face: { photo: 0, u0: 0.216, v0: -0.022, kx: 0.0072, ky: 0.0072 }
+      },
       vitrine: ["cuisse_g"],
       texteVitrine: "sur une cuisse",
       zones: {
@@ -225,6 +252,13 @@ window.DATA = {
         "https://contents.mediadecathlon.com/p2731075/k$9aa656cb6f1da9d76f98648a10c4589d/picture.jpg",
         "https://contents.mediadecathlon.com/p2731076/k$0f55a11d977ec9bee5cd9c76622cad88/picture.jpg"
       ],
+      // Aperçu sur photo : photo = rang dans « photos », couleur = couleur du vêtement sur la photo.
+      // u0, v0 = position de l'origine du dessin (en fraction de la photo carrée), kx, ky = fraction de photo par cm.
+      apercuPhoto: {
+        couleur: "blanc",
+        face: { photo: 0, u0: 0.1625, v0: 0.19, kx: 0.0077, ky: 0.00776 },
+        dos: { photo: 3, u0: 0.2, v0: 0.145, kx: 0.0075, ky: 0.00855 }
+      },
       vitrine: ["poitrine"],
       texteVitrine: "à la poitrine",
       zones: {
