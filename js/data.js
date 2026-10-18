@@ -1005,7 +1005,7 @@ window.DATA = {
       ],
       vitrine: ["gourde"],
       texteVitrine: "sur la face de la gourde",
-      avertissement: "Gourde : surface ronde et dure (métal ou verre), impossible à presser à plat comme un vêtement. Fabr'Icam confirme la technique de pose avant la série. Le prix affiché est celui d'un transfert DTF et peut changer.",
+      avertissement: "Gourde : le transfert DTF se pose sur la face, un petit visuel seulement (Mini 5 × 5 cm ou A7) car la surface est ronde. Fabr'Icam fait un essai (tenue, lavage) avant la série.",
       zones: {
         gourde: { vue: "face", cx: 20, top: 13, w: 7, h: 15, label: "Face de la gourde" }
       }
@@ -1036,7 +1036,7 @@ window.DATA = {
       ],
       vitrine: ["gourde"],
       texteVitrine: "sur la face de la gourde",
-      avertissement: "Gourde : surface ronde et dure (métal ou verre), impossible à presser à plat comme un vêtement. Fabr'Icam confirme la technique de pose avant la série. Le prix affiché est celui d'un transfert DTF et peut changer.",
+      avertissement: "Gourde : le transfert DTF se pose sur la face, un petit visuel seulement (Mini 5 × 5 cm ou A7) car la surface est ronde. Fabr'Icam fait un essai (tenue, lavage) avant la série.",
       zones: {
         gourde: { vue: "face", cx: 20, top: 13, w: 7, h: 15, label: "Face de la gourde" }
       }
@@ -1066,7 +1066,7 @@ window.DATA = {
       ],
       vitrine: ["gourde"],
       texteVitrine: "sur la face de la gourde",
-      avertissement: "Gourde en verre : fragile et ronde, pas de pressage à plat possible. Fabr'Icam confirme la technique de pose avant la série. Le prix affiché est celui d'un transfert DTF et peut changer.",
+      avertissement: "Gourde en verre : le transfert DTF se pose sur la face, un petit visuel seulement (Mini 5 × 5 cm ou A7) car la surface est ronde et le verre fragile. Fabr'Icam fait un essai (tenue, lavage) avant la série.",
       zones: {
         gourde: { vue: "face", cx: 20, top: 13, w: 7, h: 15, label: "Face de la gourde" }
       }

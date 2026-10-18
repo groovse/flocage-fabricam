@@ -5,6 +5,12 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 3.2.1 — 19/10/2026
+
+Gourdes : technique confirmée.
+
+- Les gourdes sont floquées en transfert DTF sur la face. L'avertissement ne parle plus d'une technique « à confirmer » : petit visuel seulement (Mini ou A7), essai de tenue et de lavage avant la série. Le prix ne change pas.
+
 ## 3.2.0 — 19/10/2026
 
 Catégorie Accessoires : 18 articles Decathlon.
