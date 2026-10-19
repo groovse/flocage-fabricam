@@ -5,6 +5,12 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.4.0 — 19/10/2026
+
+Atelier, vue « Paiement et facture » : option pour retirer la marge. **Aucun prix du site public ne change.**
+
+- **Case « Retirer la marge ».** Avant de générer la fiche de paiement ou la facture, elle remplit les lignes au prix coûtant (production pour Fabr'Icam) et affiche le total sans marge à côté du total avec marge. Décochée, les lignes reprennent les prix de vente.
+
 ## 6.3.1 — 19/10/2026
 
 La commande reprend la couleur choisie sur la carte du produit, et l'aperçu s'ouvre sur la photo avec son calque. **Version CORRECTIF : aucun prix ne change.**
