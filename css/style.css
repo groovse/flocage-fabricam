@@ -139,6 +139,18 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .swatches { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; margin: 0 0 .5rem; padding: 0; }
 .swatches li { display: inline-flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
 .sw { width: .95rem; height: .95rem; border-radius: 50%; border: 1px solid rgba(20, 33, 61, .35); display: inline-block; flex: none; }
+/* couleur cliquable : la photo du catalogue change avec elle */
+.sw-btn { display: inline-flex; align-items: center; gap: .45rem; padding: .25rem .5rem .25rem .35rem; margin: 0 0 0 -.35rem; font: inherit; color: inherit; background: none; border: 1px solid transparent; border-radius: var(--r); cursor: pointer; text-align: left; }
+.sw-btn:hover { background: var(--film); }
+.sw-btn[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); font-weight: 600; }
+/* raccourcis vers Decathlon ou le vendeur */
+.p-liens { display: flex; flex-wrap: wrap; gap: .3rem 1.2rem; margin: 0 0 .7rem; font-size: .93rem; }
+.p-liens:empty { display: none; }
+.lien-ext { color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+.lien-ext::after { content: " \2197"; text-decoration: none; display: inline-block; }
+.lien-ext:hover { color: var(--heat-strong); }
+.rupt-note { flex-basis: 100%; font-size: .88rem; color: var(--warn-ink); background: var(--warn-bg); border-left: 3px solid var(--warn-bar); padding: .3rem .6rem; border-radius: 2px; }
+.pv-lien { margin: 0; padding: .55rem .8rem .65rem; border-top: 1px solid var(--line); }
 .p-info h4 { margin: 1.2rem 0 .5rem; }
 .prices { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; border: 1px solid var(--ink); border-radius: var(--r); overflow: hidden; }
 .pc { padding: .7rem .6rem .75rem; border-left: 1px solid var(--line); }

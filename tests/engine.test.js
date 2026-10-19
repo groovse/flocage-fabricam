@@ -480,4 +480,68 @@ test("sublimation : chaussettes et ensemble Hummel blancs en polyester oui, t-sh
   assert.deepStrictEqual(ps.map(p => E.pieceTechno(order, p, ctx)), ["sublimation", "sublimation", "dtf", "dtf"]);
 });
 
+console.log("\nCouleurs, photos par couleur et liens vendeur");
+const URL_PHOTO = /^https:\/\/contents\.mediadecathlon\.com\/[pm]\d+\/k\$[0-9a-f]{32}\/picture\.jpg$/;
+test("couleurs : identifiants uniques, nom Decathlon, lien de la page Decathlon, photos valides et sans doublon", () => {
+  let avecPhotos = 0;
+  DATA.produits.forEach(p => {
+    const vus = {};
+    p.couleurs.forEach(c => {
+      assert.ok(!vus[c.id], p.id + " : couleur en double " + c.id); vus[c.id] = 1;
+      assert.ok(/^#[0-9a-f]{6}$/i.test(c.hex) && typeof c.clair === "boolean", p.id + " " + c.id + " : teinte");
+      if (c.nomDec != null) assert.ok(c.nomDec.length > 0, p.id + " " + c.id + " : nomDec vide");
+      if (c.photos) {
+        avecPhotos++;
+        assert.ok(c.photos.length >= 1, p.id + " " + c.id + " : série de photos vide");
+        c.photos.forEach(u => assert.ok(URL_PHOTO.test(u), p.id + " " + c.id + " : adresse de photo " + u));
+        assert.strictEqual(new Set(c.photos).size, c.photos.length, p.id + " " + c.id + " : photo en double");
+        assert.ok(/^https:\/\/www\.decathlon\.fr\/p\//.test(c.lien || ""), p.id + " " + c.id + " : une couleur avec photos a aussi son lien");
+      }
+      if (c.rupture != null) assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(c.rupture), p.id + " " + c.id + " : date de rupture");
+      if (c.prixAchat != null) assert.ok(c.prixAchat > 0, p.id + " " + c.id + " : prix d'achat de la couleur");
+    });
+    p.photos.forEach(u => assert.ok(URL_PHOTO.test(u), p.id + " : adresse de photo " + u));
+  });
+  assert.ok(avecPhotos >= 11, "couleurs avec leur série de photos : " + avecPhotos);
+});
+test("couleurs : la photo de calibrage (apercuPhoto) reste celle de la couleur de référence", () => {
+  DATA.produits.forEach(p => {
+    const ap = p.apercuPhoto, c = ap && p.couleurs.filter(x => x.id === ap.couleur)[0];
+    if (c && c.photos) assert.deepStrictEqual(c.photos, p.photos, p.id + " : les photos de l'article ne sont plus celles de la couleur " + ap.couleur);
+  });
+});
+test("relecture Decathlon : polo 2 couleurs, sweat 4 couleurs, maillot de basket 5 couleurs dont le rouge en rupture", () => {
+  const col = (id) => produits[id].couleurs.map(c => c.id);
+  assert.deepStrictEqual(col("polo-essential"), ["marine", "blanc"]);
+  assert.deepStrictEqual(col("sweat-molleton"), ["bleu-fonce", "kaki", "gris", "noir"]);
+  assert.deepStrictEqual(col("maillot-basket"), ["blanc", "marine", "bleu", "noir", "rouge"]);
+  const m = produits["maillot-basket"];
+  assert.ok(m.couleurs.every(c => c.photos && c.ref && /m\d+$/.test(c.lien)), "chaque couleur du maillot a ses photos, sa référence et sa page");
+  assert.deepStrictEqual(m.couleurs.filter(c => c.rupture).map(c => c.id), ["rouge"]);
+  assert.strictEqual(new Set(m.couleurs.map(c => c.photos[0])).size, 5, "une série de photos différente par couleur");
+});
+test("prix d'achat par couleur : la couleur au prix différent change le coût, les autres gardent le prix de l'article", () => {
+  const prod = JSON.parse(JSON.stringify(produits["polo-essential"]));
+  prod.couleurs[1].prixAchat = 10;
+  const ctx2 = Object.assign({}, ctx, { produits: Object.assign({}, produits, { "polo-essential": prod }) });
+  assert.strictEqual(E.prixAchatPiece(prod, "marine"), 7.99);
+  assert.strictEqual(E.prixAchatPiece(prod, "blanc"), 10);
+  assert.strictEqual(E.prixAchatPiece(prod, "inconnue"), 7.99);
+  const mix = [pieces(1, "marine")[0], Object.assign(pieces(1, "blanc")[0], { id: "p9" })];
+  const r = E.computeOrder({ pieces: mix, marquages: {}, technique: "dtf" }, ctx2);
+  assert.strictEqual(r.couts.achats, 17.99);
+  assert.strictEqual(r.coutPieces.p0.achat, 7.99);
+  assert.strictEqual(r.coutPieces.p9.achat, 10);
+  const r0 = E.computeOrder({ pieces: mix, marquages: {}, technique: "dtf" }, ctx);
+  assert.strictEqual(r0.couts.achats, 15.98, "sans prix de couleur, le prix de l'article s'applique");
+});
+test("vendeurs : chaque vendeur a un nom, et son lien (s'il est connu) est une page vendeur Decathlon", () => {
+  Object.keys(PRIX.livraisonVendeur.vendeurs).forEach(id => {
+    const v = PRIX.livraisonVendeur.vendeurs[id];
+    assert.ok(v.nom && v.frais > 0, id);
+    assert.ok(v.lien === "" || /^https:\/\/www\.decathlon\.fr\/mp\/seller\/[a-z0-9-]+\/[0-9a-f-]{36}$/.test(v.lien), id + " : lien du vendeur " + v.lien);
+  });
+  assert.ok(/sport-et-go-eu/.test(PRIX.livraisonVendeur.vendeurs["sport-et-go-eu"].lien), "le lien de Sport & Go EU est connu");
+});
+
 console.log("\n" + ok + " tests passés");

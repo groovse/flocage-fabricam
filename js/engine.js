@@ -353,6 +353,13 @@
     return { brut: round2(g[0].brut), unitaire: g[0].unitaire, total: res.total, marge: res.marge };
   }
 
+  // Prix d'achat d'une pièce : celui de sa couleur si elle en déclare un (prixAchat dans la couleur), sinon celui du produit.
+  function prixAchatPiece(prod, couleurId) {
+    if (!prod) return 0;
+    var col = (prod.couleurs || []).filter(function (c) { return c.id === couleurId; })[0];
+    return col && col.prixAchat != null ? col.prixAchat : prod.prixAchat;
+  }
+
   function computeOrder(order, ctx) {
     var prix = ctx.prix, N = order.pieces.length;
     var built = buildMotifs(order, ctx);
@@ -386,7 +393,7 @@
 
     var planchesTTC = prix.prixPlanchesHT ? round2(planchesHT * (1 + prix.tva)) : planchesHT;
     var achats = round2(order.pieces.reduce(function (s, p) {
-      var prod = ctx.produits[p.produitId]; return s + (prod ? prod.prixAchat : 0);
+      var prod = ctx.produits[p.produitId]; return s + (prod ? prixAchatPiece(prod, p.couleurId) : 0);
     }, 0));
     var baseSeuil = prix.prixPlanchesHT ? planchesHT : planchesTTC;
     var livraison = planchesHT > 0 && baseSeuil < prix.livraison.seuilGratuit ? prix.livraison.colissimo : 0;
@@ -418,7 +425,8 @@
       var pl = (plancheParPiece[p.id] || 0) * k;
       var li = planchesTTC > 0 ? livraison * pl / planchesTTC : 0;
       var lvp = prod.vendeur ? vendeurs[prod.vendeur].frais / vendeurs[prod.vendeur].pieces : 0;
-      coutPieces[p.id] = { achat: prod.prixAchat, planches: pl, livraison: li, livraisonVendeur: lvp, total: prod.prixAchat + pl + li + lvp };
+      var achat = prixAchatPiece(prod, p.couleurId);
+      coutPieces[p.id] = { achat: achat, planches: pl, livraison: li, livraisonVendeur: lvp, total: achat + pl + li + lvp };
     });
 
     // Un pack complet (au moins deux pièces avec le même identifiant de pack) est un seul article, avec un seul prix.
@@ -507,7 +515,7 @@
   return {
     round2: round2, packSheet: packSheet, planSheets: planSheets, costSheets: costSheets,
     elementsFor: elementsFor, layoutStack: layoutStack, buildMotifs: buildMotifs,
-    pieceTechno: pieceTechno, margePiece: margePiece, margePiecePack: margePiecePack, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
+    pieceTechno: pieceTechno, prixAchatPiece: prixAchatPiece, margePiece: margePiece, margePiecePack: margePiecePack, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
     approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP
   };
 });

@@ -78,7 +78,26 @@
   function vendeurInfo(prod) {
     if (!prod || !prod.vendeur) return null;
     var lv = PRIX.livraisonVendeur || {}, d = (lv.vendeurs || {})[prod.vendeur] || {};
-    return { id: prod.vendeur, nom: d.nom || prod.vendeur, frais: d.frais != null ? d.frais : (lv.defaut || 0), delai: d.delai || "" };
+    return { id: prod.vendeur, nom: d.nom || prod.vendeur, frais: d.frais != null ? d.frais : (lv.defaut || 0), delai: d.delai || "", lien: d.lien || "" };
+  }
+  // Photos d'une couleur (la série de photos de cette couleur sur Decathlon), à défaut celles de l'article
+  function photosOf(prod, col) { return col && col.photos && col.photos.length ? col.photos : (prod.photos || []); }
+  // Page Decathlon de l'article dans cette couleur
+  function lienOf(prod, col) { return (col && col.lien) || prod.lien || ""; }
+  // Raccourcis vers le vendeur de la pièce : la page de l'article dans cette couleur, et la boutique du vendeur si on la connaît.
+  // Un article en magasin n'a qu'un lien, vers Decathlon.
+  function liensVendeur(prod, col) {
+    var v = vendeurInfo(prod), art = lienOf(prod, col), out = [];
+    if (art) out.push({ href: art, texte: v ? "Voir l'article chez " + v.nom : "Voir l'article sur Decathlon", art: true });
+    if (v && v.lien) out.push({ href: v.lien, texte: "Boutique de " + v.nom, art: false });
+    return out;
+  }
+  function liensHTML(prod, col) {
+    var rupt = col && col.rupture && /^\d{4}-\d{2}-\d{2}$/.test(col.rupture)
+      ? '<span class="rupt-note">Cette couleur était en rupture de stock chez Decathlon le ' + esc(col.rupture.slice(8) + "/" + col.rupture.slice(5, 7)) + " : Fabr'Icam confirme sa disponibilité avant de commander.</span>" : "";
+    return liensVendeur(prod, col).map(function (l) {
+      return '<a class="lien-ext" href="' + esc(l.href) + '" target="_blank" rel="noopener noreferrer">' + esc(l.texte) + '<span class="sr"> (nouvelle fenêtre)</span></a>';
+    }).join("") + rupt;
   }
   // Texte d'information pour un ou plusieurs articles d'un même vendeur (noms : liste de noms à citer en tête, facultatif)
   function vendeurTexte(prod, noms) {
@@ -258,15 +277,18 @@
         return '<div class="cell" data-prod="' + pr.id + '">' + (ok ? photoImg(pr, pr.photos[0], 600) + zoomBtn(pr) : silhouette(pr)) + '</div>';
       }).join("") + '</div>';
     }
-    var ph = item.photos || [];
+    var ph = photosOf(item, item.couleurs[0]);
     if (!ph.length) return '<div class="p-photo">' + silhouette(item) + '</div>';
-    var thumbs = ph.length > 1
-      ? '<div class="p-thumbs" role="group" aria-label="Photos de ' + esc(item.nomCourt.toLowerCase()) + '">' + ph.map(function (u, i) {
-        return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === 0 ? "true" : "false") + '" aria-label="Photo ' + (i + 1) + ' sur ' + ph.length + '">' +
-          '<img src="' + esc(photoSrc(u, 120)) + '" alt="" loading="lazy" referrerpolicy="no-referrer"></button>';
-      }).join("") + '</div>'
-      : "";
-    return '<div class="p-media" data-prod="' + item.id + '" data-i="0"><div class="p-photo" data-prod="' + item.id + '">' + photoImg(item, ph[0], 800) + zoomBtn(item) + '</div>' + thumbs + '</div>';
+    return '<div class="p-media" data-prod="' + item.id + '" data-i="0" data-c="0"><div class="p-photo" data-prod="' + item.id + '">' + photoImg(item, ph[0], 800) + zoomBtn(item) + '</div>' + thumbsHTML(item, ph, item.couleurs[0]) + '</div>';
+  }
+
+  // Vignettes des photos de la couleur affichée (rien s'il n'y a qu'une photo)
+  function thumbsHTML(item, ph, col) {
+    if (ph.length < 2) return "";
+    return '<div class="p-thumbs" role="group" aria-label="Photos de ' + esc(item.nomCourt.toLowerCase()) + ", " + esc(col.nom.toLowerCase()) + '">' + ph.map(function (u, i) {
+      return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === 0 ? "true" : "false") + '" aria-label="Photo ' + (i + 1) + ' sur ' + ph.length + '">' +
+        '<img src="' + esc(photoSrc(u, 120)) + '" alt="" loading="lazy" referrerpolicy="no-referrer"></button>';
+    }).join("") + '</div>';
   }
 
   function valeurLabel(groupe, id) {
@@ -310,11 +332,23 @@
     return id === "A6" ? "A6" : id + " (" + d.w + " × " + d.h + " cm)";
   }
 
+  // Quand le vêtement ne coûte pas pareil selon la couleur, le prix de la vitrine est celui de la première couleur
+  function prixParCouleurTxt(prods) {
+    var pr = prods.filter(function (x) {
+      var p0 = E.prixAchatPiece(x, x.couleurs[0].id);
+      return x.couleurs.some(function (c) { return E.prixAchatPiece(x, c.id) !== p0; });
+    })[0];
+    return pr ? " Le prix affiché est celui de la couleur " + pr.couleurs[0].nom.toLowerCase() + " : le prix exact des autres couleurs apparaît quand tu personnalises l'article." : "";
+  }
+
   function cardHTML(item) {
     var isPack = !!item.produits, prods = isPack ? item.produits.map(function (id) { return byId[id]; }) : [item];
     var sw = isPack
       ? prods.map(function (pr) { return '<li><b>' + esc(pr.nomCourt) + '</b> ' + pr.couleurs.map(function (c) { return '<span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom); }).join(" ") + '</li>'; }).join("")
-      : item.couleurs.map(function (c) { return '<li><span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom) + '</li>'; }).join("");
+      : item.couleurs.map(function (c, i) {
+        return '<li><button type="button" class="sw-btn" data-c="' + i + '" aria-pressed="' + (i === 0 ? "true" : "false") + '" title="Voir cet article en ' + esc(c.nom.toLowerCase()) + '">' +
+          '<span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom) + '</button></li>';
+      }).join("");
     var pointures = prods.every(function (pr) { return /^\d/.test(pr.tailles[0]); });
     var tailles = prods.map(function (pr) { return (isPack ? esc(pr.nomCourt) + " " : "") + esc(taillesTxt(pr)); }).join(", ");
     var noms = prods.map(function (pr) { return esc(pr.nomCourt.toLowerCase()); });
@@ -327,20 +361,21 @@
     var mp = prods.filter(function (pr) { return pr.vendeur; })[0];
     var chips = labels.length || mp ? '<ul class="tags" aria-label="Étiquettes">' + labels.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") +
       (mp ? '<li class="mp">Livré par le vendeur</li>' : "") + "</ul>" : "";
-    return '<article class="produit" data-pack="' + (isPack ? "1" : "") + '"' + (matchFiltre(item) ? "" : " hidden") + '>' + cardPhoto(item) +
+    return '<article class="produit" data-prod="' + item.id + '" data-pack="' + (isPack ? "1" : "") + '"' + (matchFiltre(item) ? "" : " hidden") + '>' + cardPhoto(item) +
       '<div class="p-info">' + chips + '<h3>' + esc(item.nom) + '</h3>' +
       '<p class="p-meta">' + meta + '</p>' +
       '<ul class="swatches" aria-label="Couleurs">' + sw + '</ul>' +
+      (isPack ? "" : '<p class="p-liens">' + liensHTML(item, item.couleurs[0]) + '</p>') +
       '<p class="p-meta">' + (pointures ? "Pointures" : "Tailles") + ' : ' + tailles + '.</p>' +
       '<h4>Prix par ' + (isPack ? "pack" : "pièce") + '</h4>' + priceStrip(item) +
-      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : "article") + ', planche de transfert et livraison compris. Le prix baisse avec la quantité.</p>' +
+      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : "article") + ', planche de transfert et livraison compris. Le prix baisse avec la quantité.' + prixParCouleurTxt(prods) + '</p>' +
       prods.filter(function (pr) { return pr.vendeur; }).map(function (pr) { return '<p class="note note-vendeur">' + esc(vendeurTexte(pr)) + '</p>'; }).join("") +
       '<a class="btn btn-primary" href="#/configurer/' + item.id + '">Personnaliser ' + esc(item.demonstratif || "ce produit") + '</a>' +
       '</div></article>';
   }
 
   /* ---------- visionneuse de photos (catalogue) ---------- */
-  var LB = { prod: null, i: 0, dlg: null };
+  var LB = { prod: null, c: 0, i: 0, dlg: null };
   function lbEnsure() {
     if (LB.dlg) return LB.dlg;
     var d = document.createElement("dialog");
@@ -369,24 +404,60 @@
     return d;
   }
   function lbShow(i) {
-    var pr = byId[LB.prod], n = pr.photos.length, d = LB.dlg;
+    var pr = byId[LB.prod], col = pr.couleurs[LB.c] || pr.couleurs[0], ph = photosOf(pr, col), n = ph.length, d = LB.dlg;
     LB.i = ((i % n) + n) % n;
-    var img = $("#lb-img", d);
-    img.alt = pr.nom + ", photo " + (LB.i + 1) + " sur " + n;
-    img.src = photoSrc(pr.photos[LB.i], 1600);
-    $("#lb-title", d).textContent = pr.nom;
+    var img = $("#lb-img", d), titre = pr.nom + (pr.couleurs.length > 1 ? ", " + col.nom.toLowerCase() : "");
+    img.alt = titre + ", photo " + (LB.i + 1) + " sur " + n;
+    img.src = photoSrc(ph[LB.i], 1600);
+    $("#lb-title", d).textContent = titre;
     $("#lb-count", d).textContent = (LB.i + 1) + " / " + n;
     $$(".lb-nav", d).forEach(function (b) { b.hidden = n < 2; });
     // précharge la photo suivante pour que le passage soit rapide
-    if (n > 1) { var nx = new Image(); nx.referrerPolicy = "no-referrer"; nx.src = photoSrc(pr.photos[(LB.i + 1) % n], 1600); }
+    if (n > 1) { var nx = new Image(); nx.referrerPolicy = "no-referrer"; nx.src = photoSrc(ph[(LB.i + 1) % n], 1600); }
   }
-  function openLightbox(prodId, i) {
+  function openLightbox(prodId, i, ci) {
     var pr = byId[prodId];
-    if (!pr || !pr.photos || !pr.photos.length) return;
+    if (!pr || !photosOf(pr, pr.couleurs[ci || 0]).length) return;
     var d = lbEnsure();
-    LB.prod = prodId;
+    LB.prod = prodId; LB.c = ci || 0;
     lbShow(i || 0);
     if (!d.open) { if (d.showModal) d.showModal(); else d.setAttribute("open", ""); }
+  }
+
+  function bindPhotoErrors(root) {
+    $$(".p-photo > img, .p-photo .cell > img", root).forEach(function (img) {
+      img.addEventListener("error", function () {
+        var host = img.closest("[data-prod]"), media = img.closest(".p-media");
+        host.innerHTML = silhouette(byId[host.dataset.prod]);
+        var th = media && $(".p-thumbs", media); if (th) th.remove();
+      });
+    });
+  }
+
+  // Affiche la photo n° i de la couleur choisie dans la carte du catalogue
+  function montrePhoto(media, i) {
+    var prod = byId[media.dataset.prod], ph = photosOf(prod, prod.couleurs[Number(media.dataset.c) || 0]), host = $(".p-photo", media);
+    if (!ph[i]) return;
+    var main = $("img", host);
+    if (!main) {     // la photo précédente ne s'était pas chargée : on remet une image
+      host.innerHTML = photoImg(prod, ph[i], 800) + zoomBtn(prod);
+      bindPhotoErrors(media);
+    } else main.src = photoSrc(ph[i], 800);
+    media.dataset.i = String(i);
+    $$(".p-thumbs button", media).forEach(function (x) { x.setAttribute("aria-pressed", Number(x.dataset.i) === i ? "true" : "false"); });
+  }
+
+  // Un clic sur une couleur de la carte : sa série de photos et le lien vers sa page
+  function choisitCouleur(card, ci) {
+    var media = $(".p-media", card), prod = byId[card.dataset.prod], col = prod.couleurs[ci];
+    $$(".sw-btn", card).forEach(function (x) { x.setAttribute("aria-pressed", Number(x.dataset.c) === ci ? "true" : "false"); });
+    var liens = $(".p-liens", card); if (liens) liens.innerHTML = liensHTML(prod, col);
+    if (!media) return;
+    media.dataset.c = String(ci);
+    var th = $(".p-thumbs", media); if (th) th.remove();
+    var ph = photosOf(prod, col), html = thumbsHTML(prod, ph, col);
+    if (html) $(".p-photo", media).insertAdjacentHTML("afterend", html);
+    montrePhoto(media, 0);
   }
 
   function viewVitrine() {
@@ -416,31 +487,24 @@
       b.addEventListener("click", function () { FILTRE[b.dataset.filtre] = b.dataset.valeur; majFiltres(); });
     });
     // Photo introuvable (hors ligne, lien périmé) : on affiche le dessin du vêtement à la place
-    $$(".p-photo > img, .p-photo .cell > img").forEach(function (img) {
-      img.addEventListener("error", function () {
-        var host = img.closest("[data-prod]"), media = img.closest(".p-media");
-        host.innerHTML = silhouette(byId[host.dataset.prod]);
-        var th = media && $(".p-thumbs", media); if (th) th.remove();
-      });
-    });
+    bindPhotoErrors(app);
     // Agrandir : le bouton loupe ou un clic sur la photo ouvre la visionneuse
     $$(".p-photo").forEach(function (box) {
       box.addEventListener("click", function (e) {
         var cell = e.target.closest(".cell"), host = cell || box, z = $(".p-zoom", host);
         if (!z) return;
         var media = box.closest(".p-media");
-        openLightbox(z.dataset.zoom, media ? Number(media.dataset.i) || 0 : 0, z);
+        openLightbox(z.dataset.zoom, media ? Number(media.dataset.i) || 0 : 0, media ? Number(media.dataset.c) || 0 : 0);
       });
     });
-    // Vignettes : un clic affiche la photo choisie
-    $$(".p-thumbs button").forEach(function (b) {
-      b.addEventListener("click", function () {
-        var media = b.closest(".p-media"), prod = byId[media.dataset.prod], main = $(".p-photo > img", media);
-        if (!main) return;
-        main.src = photoSrc(prod.photos[Number(b.dataset.i)], 800);
-        media.dataset.i = b.dataset.i;
-        $$(".p-thumbs button", media).forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+    // Vignettes : un clic affiche la photo choisie. Couleurs : un clic affiche la série de photos de cette couleur.
+    $$(".p-media").forEach(function (media) {
+      media.addEventListener("click", function (e) {
+        var b = e.target.closest(".p-thumbs button"); if (b) montrePhoto(media, Number(b.dataset.i));
       });
+    });
+    $$(".sw-btn").forEach(function (b) {
+      b.addEventListener("click", function () { choisitCouleur(b.closest(".produit"), Number(b.dataset.c)); });
     });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
       var art = $(".hero-art"); if (art) art.outerHTML = heroArt();
@@ -468,7 +532,7 @@
       '<div class="pv-bar"><div class="seg" role="group" aria-label="Vue"><button type="button" data-vue="face">Face</button><button type="button" data-vue="dos">Dos</button></div>' +
       '<div class="seg" role="group" aria-label="Type d\'aperçu"><button type="button" data-mode="dessin" title="Dessin à la taille réelle">Dessin</button><button type="button" data-mode="photo">Photo</button></div>' +
       '<label class="pv-piece">Aperçu pour <select id="pv-piece"></select></label></div>' +
-      '<div id="pv"></div><p class="pv-note" id="pv-note" hidden></p></div>' +
+      '<div id="pv"></div><p class="pv-note" id="pv-note" hidden></p><p class="pv-lien p-liens" id="pv-lien" hidden></p></div>' +
       '<div class="total" id="total" aria-live="polite"></div></aside>' +
       '</div></div>';
     renderPieces(); renderMarquages(); renderTechnique(); renderDevis();
@@ -818,6 +882,9 @@
       if (manches) txt += " Les manches ne sont pas montrées sur la photo, elles restent visibles sur le dessin.";
     }
     note.textContent = txt; note.hidden = !txt;
+    // raccourci vers la page de la pièce (couleur comprise) chez Decathlon ou chez son vendeur
+    var lk = $("#pv-lien"), cle = prod.id + "/" + colorOf(piece).id;
+    if (lk && lk.dataset.k !== cle) { lk.dataset.k = cle; lk.innerHTML = liensHTML(prod, colorOf(piece)); lk.hidden = !lk.innerHTML; }
     $$(".seg button").forEach(function (b) {
       if (b.dataset.vue) {
         b.setAttribute("aria-pressed", b.dataset.vue === S.vue ? "true" : "false");
@@ -1033,7 +1100,7 @@
     CTX: CTX, S: S, DATA: DATA, PRIX: PRIX, esc: esc, fmtEUR: fmtEUR, fmtN: fmtN, $: $, $$: $$, byId: byId,
     EMP_ORDER: EMP_ORDER, toast: toast, download: download, slug: slug, measure: measure, ensureFont: ensureFont,
     orderOf: orderOf, start: start, colorOf: colorOf, pieceLine: pieceLine,
-    vendeurInfo: vendeurInfo, mailHref: mailHref, gmailHref: gmailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
+    vendeurInfo: vendeurInfo, photosOf: photosOf, lienOf: lienOf, liensVendeur: liensVendeur, liensHTML: liensHTML, mailHref: mailHref, gmailHref: gmailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
   };
   if (!window.ATELIER_PAGE) window.addEventListener("load", start);
 })();

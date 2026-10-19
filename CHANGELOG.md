@@ -5,6 +5,19 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 4.1.0 — 19/10/2026
+
+Photos par couleur, prix d'achat par couleur, raccourcis vers le vendeur. Les prix de vente ne changent pas.
+
+- **Catalogue : les couleurs se cliquent.** Un clic sur une couleur affiche la série de photos de cette couleur (vignettes, visionneuse en grand avec le nom de la couleur) et le lien vers sa page Decathlon. Un article dont la série n'est pas encore relue garde ses photos d'avant.
+- **Raccourci vers le vendeur, sur le site client et à l'atelier.** Sur chaque carte du catalogue et sous l'aperçu du configurateur : « Voir l'article sur Decathlon » pour un article en magasin, « Voir l'article chez <vendeur> » et « Boutique de <vendeur> » pour un article de la place de marché. À l'atelier : mêmes liens dans la liste à acheter, la fiche de chaque pièce et la base d'achats ; la page du vendeur est aussi dans sa carte et dans l'export CSV. Le lien de la boutique est le champ `lien` de chaque vendeur dans `js/prix.js` (connu pour Sport & Go EU ; à renseigner pour Pertemba FR et Atelier Katanga).
+- **Une couleur peut avoir son propre prix d'achat** (champ `prixAchat` de la couleur, repris par le moteur, la liste à acheter, le détail des coûts et le CSV). Sans ce champ, c'est le prix de l'article. Le catalogue précise quand le prix affiché n'est celui que d'une couleur.
+- **Rupture de stock signalée.** Une couleur que Decathlon donne en rupture porte `rupture: "AAAA-MM-JJ"` : pastille rouge à l'atelier, note au client (Fabr'Icam confirme la disponibilité avant de commander).
+- **Nom Decathlon de chaque couleur** (`nomDec`) : l'atelier l'affiche quand il diffère du nom du catalogue (« bleu acier » pour notre « Marine »), et la recherche de la base d'achats le trouve.
+- **Relecture des pages Decathlon, 3 articles sur 45** : polo Essential (2 couleurs confirmées, liens et photos de chaque couleur), sweat en molleton (**4 couleurs au lieu de 2** : gris et noir ajoutés), maillot de basket TANK 100 (**5 couleurs au lieu d'1** : marine, bleu, noir, rouge ajoutés ; le rouge est en rupture). Le prix d'achat du sweat n'est pas modifié : 14,99 € enregistré, alors que Decathlon l'affichait à 11,99 € ce jour, à confirmer.
+- **Les 42 autres articles restent à relire** : Decathlon a affiché une vérification anti-robot pendant la lecture et le site ne la contourne pas. Leurs couleurs, liens et photos sont ceux d'avant. Un article est relu quand chacune de ses couleurs porte `photos` dans `js/data.js`.
+- Tests : 58 en tout (50 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier), avec la validité des couleurs, des photos et des liens, le prix par couleur et les liens des vendeurs.
+
 ## 4.0.0 — 19/10/2026
 
 Nouvelle règle de marge, ensemble et pack Hummel. **Version MAJEURE : les prix changent.**
