@@ -583,6 +583,7 @@
       '<div class="tablewrap"><table class="pieces' + (S.pieces.some(function (p) { return prodOf(p).apporte; }) ? " has-matiere" : "") + (anyText("prenom") ? " has-prenom" : "") + (anyText("numero") ? " has-numero" : "") + '">' +
       '<thead><tr><th class="idx"><span class="sr">N°</span></th><th>Modèle</th><th>Couleur</th><th>Taille</th><th class="col-matiere">Matière</th><th class="col-prenom">Prénom</th><th class="col-numero">Numéro</th><th></th></tr></thead>' +
       '<tbody>' + S.pieces.map(pieceRow).join("") + '</tbody></table></div>' +
+      (S.pieces.some(function (p) { return prodOf(p).apporte; }) ? '<p class="hint hint-matiere">Fais glisser le tableau vers la gauche pour indiquer la matière de chaque vêtement.</p>' : "") +
       '<p class="hint hint-text" ' + (anyText("prenom") || anyText("numero") ? "hidden" : "") + '>Pour personnaliser chaque pièce, coche « Prénom » ou « Numéro » dans les marquages.</p>' +
       '<div class="toolbar">' +
       '<label class="sr" for="addmodel">Modèle à ajouter</label><select id="addmodel">' + modelOptions(S.addModel, true) + '</select>' +

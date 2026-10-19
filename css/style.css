@@ -184,6 +184,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .pieces .idx { width: 2rem; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pieces .col-prenom, .pieces .col-numero, .pieces .col-matiere { display: none; }
 .pieces.has-prenom .col-prenom, .pieces.has-numero .col-numero, .pieces.has-matiere .col-matiere { display: table-cell; }
+.hint-matiere { display: none; }
 .pieces .col-couleur { white-space: nowrap; }
 .pieces .col-couleur .sw { margin-right: .45rem; vertical-align: middle; }
 .pieces .col-couleur select { width: calc(100% - 1.6rem); }
@@ -274,6 +275,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
   .txt-opts { grid-template-columns: 1fr 1fr; padding-left: 0; }
   .seq { grid-template-columns: 1fr; }
   .site-header { flex-wrap: wrap; }
+  .hint-matiere { display: block; }
   .lb-stage { grid-template-columns: 1fr 1fr; }
   .lb-fig { grid-column: 1 / -1; order: -1; }
   .lb-nav[data-lb="next"] { justify-self: end; }
