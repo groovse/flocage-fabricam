@@ -5,6 +5,19 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 4.0.0 — 19/10/2026
+
+Nouvelle règle de marge, ensemble et pack Hummel. **Version MAJEURE : les prix changent.**
+
+- **Marge d'une pièce vendue seule : 1 € par motif à presser, 2 € au plus par pièce.** Elle remplace les 20 % du coût plafonnés à 2 €. Chaque élément posé compte pour un motif (un visuel, un prénom, un numéro) ; une pièce sans motif ne porte aucune marge. Un polo avec un visuel à la poitrine passe de 20,39 € à 19,39 € ; dix polos avec un visuel chacun, de 118 € à 108,30 € au total.
+- **Marge d'une pièce dans un pack : 1 € par pièce**, quel que soit son nombre de motifs, et **0 € pour les chaussettes**. Le pack basket porte 2 € (maillot et short), le pack entraîneur 3 €. Prix de la vitrine : pack basket 29,37 €, pack entraîneur 56,45 €.
+- Les prix restent un **prix moyen par produit** (coût moyen + marge moyenne, arrondi au centime supérieur). Les planches, la livraison, les frais de port des vendeurs, les prix d'achat et le format du fichier de commande ne changent pas.
+- **La « robe » Hummel n'était pas une robe** : c'est un t-shirt et un short vendus ensemble. Elle devient l'**ensemble t-shirt et short Hummel**, un seul article de deux pièces (23 € à l'achat), avec un nouveau dessin et les emplacements poitrine, dos, cuisse gauche et cuisse droite. Il compte pour une seule pièce dans la marge. Le filtre « Robes » disparaît du catalogue, il n'y a plus de robe.
+- **Nouveau pack Hummel** : ensemble Hummel, veste micropolaire Kariban et chaussettes (marge de 2 €). Le catalogue compte 27 vêtements, 18 accessoires et 6 packs.
+- Atelier : le détail des coûts indique la marge de chaque article (par motif, ou par pièce de pack). Un ancien fichier de commande qui contient la robe Hummel se recharge avec le nouvel ensemble (`anciensId` dans `js/data.js`).
+- Dans `js/prix.js`, `regles.marge` et `regles.margeMax` deviennent `regles.parMotif`, `regles.maxParPiece` et `regles.parPiecePack`. Les chaussettes portent `margePack: 0` dans `js/data.js`.
+- Tests : 53 en tout (45 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier), avec les cas chiffrés de la nouvelle règle.
+
 ## 3.3.0 — 19/10/2026
 
 Nouvelle page atelier : `atelier.html`.
