@@ -55,11 +55,18 @@ window.PRIX = {
   //   Les chaussettes ne portent aucune marge dans un pack : leur fiche produit (data.js) déclare `margePack: 0`.
   //   Un produit peut déclarer sa propre marge de pack avec `margePack` ; sans cette ligne, c'est parPiecePack.
   //
+  // Vêtements apportés par le client (« Ton vêtement ») : au-delà de `seuil` pièces apportées dans la commande (tous articles apportés
+  // confondus, les vêtements Decathlon ne comptent pas), la marge de TOUTES les pièces apportées est multipliée par `facteur`.
+  //   seuil : 5 = la règle joue à partir de 6 pièces apportées ; à 5 pièces ou moins, rien ne change.
+  //   facteur : 0.5 = la marge est divisée par 2 : 0,50 € par motif et 1 € au plus par pièce (parMotif et maxParPiece × facteur).
+  //   Mets facteur à 1 pour supprimer la règle. Elle ne touche ni les articles Decathlon ni les packs.
+  //
   //   pas : 0.01 = on arrondit au centime supérieur (mets 0.5 pour arrondir de 50 centimes en 50 centimes)
   regles: {
     parMotif: 1.00,
     maxParPiece: 2.00,
     parPiecePack: 1.00,
+    apporte: { seuil: 5, facteur: 0.5 },
     pas: 0.01
   },
 
