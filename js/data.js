@@ -70,6 +70,14 @@ window.DATA = {
     type: { label: "Type", valeurs: [{ id: "haut", label: "Hauts" }, { id: "bas", label: "Bas" }, { id: "ensemble", label: "Ensembles" }, { id: "accessoire", label: "Accessoires" }, { id: "apporte", label: "Ton vêtement" }] }
   },
 
+  // Matière d'un vêtement apporté par le client (elle se choisit sur chaque pièce, voir « Ton vêtement » plus bas). Seul « polyester »,
+  // avec une couleur blanche ou claire, ouvre la sublimation. Sans certitude (« inconnu »), on reste en DTF et l'atelier vérifie.
+  matieres: [
+    { id: "polyester", nom: "Polyester (90 % ou plus)", court: "polyester" },
+    { id: "coton", nom: "Coton ou mélange", court: "coton ou mélange" },
+    { id: "inconnu", nom: "Je ne sais pas", court: "matière inconnue" }
+  ],
+
   // Polices proposées pour les prénoms et numéros (Google Fonts, chargées en ligne)
   polices: [
     "Bebas Neue", "Anton", "Big Shoulders Display", "Oswald", "Teko", "Staatliches", "Russo One",

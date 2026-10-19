@@ -256,7 +256,7 @@
     html += '<section class="f-sec long"><h3><span class="f-n">1</span>Vêtements à réunir</h3>' + At.table([{ t: "" }, { t: "Quantité", num: true }, "Article", "Couleur", "Taille", "Source"],
       ach.map(function (a) {
         var v = A.vendeurInfo(a.prod);
-        return [box, '<b class="big">' + a.qty + "</b>", esc(a.prod.nom), At.sw(a.col.hex) + esc(a.col.nom), "<b>" + esc(a.taille) + "</b>", v ? esc(v.nom) : "Decathlon, magasin"];
+        return [box, '<b class="big">' + a.qty + "</b>", esc(a.prod.nom), At.sw(a.col.hex) + esc(a.col.nom) + (a.matiere ? " <small>(" + esc(a.matiere.court) + ")</small>" : ""), "<b>" + esc(a.taille) + "</b>", a.prod.apporte ? "Apporté par le client" : v ? esc(v.nom) : "Decathlon, magasin"];
       }), "f-tbl") + "</section>";
 
     // 2. planches

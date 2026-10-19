@@ -61,10 +61,19 @@
   // Filtres du catalogue : une valeur par groupe, "" = tous
   var FILTRE = { genre: "", style: "", type: "" };
   function tagsOf(item) { return item.tags || {}; }
+  // Ordre du catalogue : les vêtements Decathlon, les packs, puis les vêtements que le client apporte
+  function catalogueItems() {
+    return DATA.produits.filter(function (p) { return !p.apporte; }).concat(DATA.packs || [], DATA.produits.filter(function (p) { return p.apporte; }));
+  }
+  // Matière d'une pièce apportée (champ matiere de la pièce) : { id, nom, court }
+  function matiereDe(p) {
+    var l = DATA.matieres || [];
+    return l.filter(function (m) { return m.id === p.matiere; })[0] || l.filter(function (m) { return m.id === "inconnu"; })[0] || { id: "inconnu", nom: "Je ne sais pas", court: "matière inconnue" };
+  }
   function matchFiltre(item) {
     var t = tagsOf(item);
     if (FILTRE.genre && (t.genre || []).indexOf(FILTRE.genre) < 0) return false;
-    if (FILTRE.style && t.style !== FILTRE.style) return false;
+    if (FILTRE.style && t.style && t.style !== FILTRE.style) return false;
     if (FILTRE.type && t.type !== FILTRE.type) return false;
     return true;
   }
@@ -133,6 +142,7 @@
 
   function newPiece(prod, over) {
     var p = { id: "p" + (S.nextId++), produitId: prod.id, couleurId: prod.couleurs[0].id, taille: prod.tailles[Math.min(1, prod.tailles.length - 1)], prenom: "", numero: "" };
+    if (prod.apporte) p.matiere = "inconnu";   // vêtement apporté : la matière se choisit sur la pièce
     return Object.assign(p, over || {});
   }
 
@@ -309,7 +319,7 @@
   }
 
   function majFiltres() {
-    var all = DATA.produits.concat(DATA.packs || []), cards = $$(".catalogue .produit"), nV = 0, nP = 0;
+    var all = catalogueItems(), cards = $$(".catalogue .produit"), nV = 0, nP = 0;
     cards.forEach(function (c, i) {
       var ok = matchFiltre(all[i]);
       c.hidden = !ok;
@@ -343,16 +353,17 @@
 
   function cardHTML(item) {
     var isPack = !!item.produits, prods = isPack ? item.produits.map(function (id) { return byId[id]; }) : [item];
-    var sw = isPack
+    var app = !isPack && !!item.apporte;     // vêtement que le client apporte : ni couleurs de Decathlon, ni tailles, ni photo
+    var sw = app ? "" : isPack
       ? prods.map(function (pr) { return '<li><b>' + esc(pr.nomCourt) + '</b> ' + pr.couleurs.map(function (c) { return '<span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom); }).join(" ") + '</li>'; }).join("")
       : item.couleurs.map(function (c, i) {
         return '<li><button type="button" class="sw-btn" data-c="' + i + '" aria-pressed="' + (i === 0 ? "true" : "false") + '" title="Voir cet article en ' + esc(c.nom.toLowerCase()) + '">' +
           '<span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom) + '</button></li>';
       }).join("");
-    var pointures = prods.every(function (pr) { return /^\d/.test(pr.tailles[0]); });
+    var pointures = !app && prods.every(function (pr) { return /^\d/.test(pr.tailles[0]); });
     var tailles = prods.map(function (pr) { return (isPack ? esc(pr.nomCourt) + " " : "") + esc(taillesTxt(pr)); }).join(", ");
     var noms = prods.map(function (pr) { return esc(pr.nomCourt.toLowerCase()); });
-    var meta = isPack ? nombreEnLettres(prods.length) + " pièces : " + (noms.length > 1 ? noms.slice(0, -1).join(", ") + " et " + noms[noms.length - 1] : noms[0]) + ". Le pack coûte moins cher que les pièces prises séparément." : esc(item.marque) + ". " + esc(item.matiere) + ".";
+    var meta = isPack ? nombreEnLettres(prods.length) + " pièces : " + (noms.length > 1 ? noms.slice(0, -1).join(", ") + " et " + noms[noms.length - 1] : noms[0]) + ". Le pack coûte moins cher que les pièces prises séparément." : app ? "Tu apportes ton vêtement, Fabr'Icam le floque. Aucun vêtement n'est compté dans le prix." : esc(item.marque) + ". " + esc(item.matiere) + ".";
     var t = tagsOf(item), labels = [];
     (t.genre || []).forEach(function (g) { labels.push(valeurLabel("genre", g)); });
     if (t.style) labels.push(valeurLabel("style", t.style));
@@ -364,11 +375,11 @@
     return '<article class="produit" data-prod="' + item.id + '" data-pack="' + (isPack ? "1" : "") + '"' + (matchFiltre(item) ? "" : " hidden") + '>' + cardPhoto(item) +
       '<div class="p-info">' + chips + '<h3>' + esc(item.nom) + '</h3>' +
       '<p class="p-meta">' + meta + '</p>' +
-      '<ul class="swatches" aria-label="Couleurs">' + sw + '</ul>' +
-      (isPack ? "" : '<p class="p-liens">' + liensHTML(item, item.couleurs[0]) + '</p>') +
-      '<p class="p-meta">' + (pointures ? "Pointures" : "Tailles") + ' : ' + tailles + '.</p>' +
+      (app ? "" : '<ul class="swatches" aria-label="Couleurs">' + sw + '</ul>') +
+      (isPack || app ? "" : '<p class="p-liens">' + liensHTML(item, item.couleurs[0]) + '</p>') +
+      '<p class="p-meta">' + (app ? "Tu indiques la couleur, la taille et la matière de ton vêtement à l'étape suivante." : (pointures ? "Pointures" : "Tailles") + ' : ' + tailles + '.') + '</p>' +
       '<h4>Prix par ' + (isPack ? "pack" : "pièce") + '</h4>' + priceStrip(item) +
-      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : "article") + ', planche de transfert et livraison compris. Le prix baisse avec la quantité.' + prixParCouleurTxt(prods) + '</p>' +
+      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : app ? "marquage" : "article") + ', planche de transfert et livraison compris' + (app ? ", sans vêtement (c'est toi qui l'apportes)" : "") + '. Le prix baisse avec la quantité.' + prixParCouleurTxt(prods) + '</p>' +
       prods.filter(function (pr) { return pr.vendeur; }).map(function (pr) { return '<p class="note note-vendeur">' + esc(vendeurTexte(pr)) + '</p>'; }).join("") +
       '<a class="btn btn-primary" href="#/configurer/' + item.id + '">Personnaliser ' + esc(item.demonstratif || "ce produit") + '</a>' +
       '</div></article>';
@@ -461,7 +472,7 @@
   }
 
   function viewVitrine() {
-    var cards = DATA.produits.concat(DATA.packs || []).map(cardHTML).join("");
+    var cards = catalogueItems().map(cardHTML).join("");
 
     app.innerHTML =
       '<section class="hero">' +
@@ -479,6 +490,7 @@
       '<section class="block facts"><h2>Bon à savoir</h2><dl>' +
       '<div><dt>Aucun minimum</dt><dd>Une seule pièce ou toute l\'équipe, le calcul est le même. Tu peux mélanger plusieurs vêtements dans une commande.</dd></div>' +
       '<div><dt>Deux techniques</dt><dd>Le DTF convient à toutes les couleurs. La sublimation, plus lisse, ne marche que sur polyester blanc ou clair.</dd></div>' +
+      '<div><dt>Tu as déjà tes vêtements ?</dt><dd>Choisis « Ton vêtement » dans le catalogue : tu apportes tes vêtements et on les floque. Le prix compte les planches de transfert, la livraison et le flocage, sans vêtement. Fabr\'Icam t\'indique où et quand les déposer.</dd></div>' +
       '<div><dt>Des vêtements Decathlon</dt><dd>Fabr\'Icam les retire en magasin, il n\'y a donc pas de frais de livraison sur les vêtements. Les articles marqués « Livré par le vendeur » viennent de vendeurs partenaires de Decathlon : ils sont livrés à Fabr\'Icam, et leurs frais de port sont déjà dans le prix.</dd></div>' +
       '</dl></section>';
 
@@ -545,35 +557,39 @@
     var opts = function (arr, cur, lab) { return arr.map(function (v) { var val = v.id || v; return '<option value="' + esc(val) + '"' + (val === cur ? " selected" : "") + ">" + esc(lab ? lab(v) : v) + "</option>"; }).join(""); };
     var modele = inpack
       ? '<td class="col-modele"><span class="pk">Pack</span> ' + esc(prod.nomCourt) + '</td>'
-      : '<td class="col-modele"><select data-f="produitId" aria-label="Modèle, pièce ' + (i + 1) + '">' + opts(DATA.produits, p.produitId, function (x) { return x.nomCourt; }) + '</select></td>';
+      : '<td class="col-modele"><select data-f="produitId" aria-label="Modèle, pièce ' + (i + 1) + '">' + modelOptions(p.produitId, false) + '</select></td>';
     return '<tr data-pid="' + p.id + '"' + (inpack ? ' class="inpack"' : "") + '>' +
       '<td class="idx">' + (i + 1) + '</td>' + modele +
       '<td class="col-couleur"><span class="sw" style="background:' + colorOf(p).hex + '"></span><select data-f="couleurId" aria-label="Couleur, pièce ' + (i + 1) + '">' + opts(prod.couleurs, p.couleurId, function (c) { return c.nom; }) + '</select></td>' +
       '<td><select data-f="taille" aria-label="Taille, pièce ' + (i + 1) + '">' + opts(prod.tailles, p.taille) + '</select></td>' +
+      '<td class="col-matiere">' + (prod.apporte ? '<select data-f="matiere" aria-label="Matière, pièce ' + (i + 1) + '">' + opts(DATA.matieres, matiereDe(p).id, function (m) { return m.nom; }) + '</select>' : "") + '</td>' +
       '<td class="col-prenom"><input data-f="prenom" type="text" maxlength="24" value="' + esc(p.prenom) + '" aria-label="Prénom, pièce ' + (i + 1) + '" autocomplete="off"></td>' +
       '<td class="col-numero"><input data-f="numero" type="text" maxlength="4" value="' + esc(p.numero) + '" aria-label="Numéro, pièce ' + (i + 1) + '" autocomplete="off"></td>' +
       '<td class="act"><button type="button" class="ico" data-act="dup" title="' + (inpack ? "Dupliquer ce pack" : "Dupliquer cette pièce") + '" aria-label="Dupliquer la pièce ' + (i + 1) + '">+</button>' +
       '<button type="button" class="ico" data-act="del" title="' + (inpack ? "Retirer ce pack" : "Retirer cette pièce") + '" aria-label="Retirer la pièce ' + (i + 1) + '">×</button></td></tr>';
   }
 
-  function modelOptions() {
-    var o = function (id, lab) { return '<option value="' + esc(id) + '"' + (id === S.addModel ? " selected" : "") + ">" + esc(lab) + "</option>"; };
-    return '<optgroup label="Vêtements">' + DATA.produits.map(function (x) { return o(x.id, x.nomCourt); }).join("") + '</optgroup>' +
-      ((DATA.packs || []).length ? '<optgroup label="Packs (ensembles)">' + DATA.packs.map(function (x) { return o(x.id, x.nom); }).join("") + '</optgroup>' : "");
+  // Liste des modèles, par groupes : vêtements du catalogue, packs (seulement pour « Ajouter »), vêtements apportés par le client
+  function modelOptions(cur, avecPacks) {
+    var o = function (id, lab) { return '<option value="' + esc(id) + '"' + (id === cur ? " selected" : "") + ">" + esc(lab) + "</option>"; };
+    var cat = DATA.produits.filter(function (x) { return !x.apporte; }), app = DATA.produits.filter(function (x) { return x.apporte; });
+    return '<optgroup label="Vêtements">' + cat.map(function (x) { return o(x.id, x.nomCourt); }).join("") + '</optgroup>' +
+      (avecPacks && (DATA.packs || []).length ? '<optgroup label="Packs (ensembles)">' + DATA.packs.map(function (x) { return o(x.id, x.nom); }).join("") + '</optgroup>' : "") +
+      (app.length ? '<optgroup label="Ton vêtement (tu l\'apportes)">' + app.map(function (x) { return o(x.id, x.nomCourt); }).join("") + '</optgroup>' : "");
   }
 
   function renderPieces() {
     $("#pieces").innerHTML =
-      '<div class="tablewrap"><table class="pieces' + (anyText("prenom") ? " has-prenom" : "") + (anyText("numero") ? " has-numero" : "") + '">' +
-      '<thead><tr><th class="idx"><span class="sr">N°</span></th><th>Modèle</th><th>Couleur</th><th>Taille</th><th class="col-prenom">Prénom</th><th class="col-numero">Numéro</th><th></th></tr></thead>' +
+      '<div class="tablewrap"><table class="pieces' + (S.pieces.some(function (p) { return prodOf(p).apporte; }) ? " has-matiere" : "") + (anyText("prenom") ? " has-prenom" : "") + (anyText("numero") ? " has-numero" : "") + '">' +
+      '<thead><tr><th class="idx"><span class="sr">N°</span></th><th>Modèle</th><th>Couleur</th><th>Taille</th><th class="col-matiere">Matière</th><th class="col-prenom">Prénom</th><th class="col-numero">Numéro</th><th></th></tr></thead>' +
       '<tbody>' + S.pieces.map(pieceRow).join("") + '</tbody></table></div>' +
       '<p class="hint hint-text" ' + (anyText("prenom") || anyText("numero") ? "hidden" : "") + '>Pour personnaliser chaque pièce, coche « Prénom » ou « Numéro » dans les marquages.</p>' +
       '<div class="toolbar">' +
-      '<label class="sr" for="addmodel">Modèle à ajouter</label><select id="addmodel">' + modelOptions() + '</select>' +
+      '<label class="sr" for="addmodel">Modèle à ajouter</label><select id="addmodel">' + modelOptions(S.addModel, true) + '</select>' +
       '<button type="button" class="btn btn-quiet" data-act="add">Ajouter</button>' +
       '<span class="addn"><label class="sr" for="addn">Nombre de pièces à ajouter</label><input id="addn" type="number" min="1" max="200" value="5"><button type="button" class="btn btn-quiet" data-act="addn">identiques à la dernière</button></span>' +
       '<button type="button" class="btn btn-quiet" data-act="paste">Coller une liste</button></div>' +
-      '<div class="pastebox" id="pastebox" hidden><label for="pastetxt">Une ligne par pièce, pour le modèle choisi ci-dessus : prénom ; numéro ; taille ; couleur (la taille et la couleur sont facultatives)</label>' +
+      '<div class="pastebox" id="pastebox" hidden><label for="pastetxt">Une ligne par pièce, pour le modèle choisi ci-dessus : prénom ; numéro ; taille ; couleur ; matière (la taille, la couleur et, pour un vêtement apporté, la matière sont facultatives)</label>' +
       '<textarea id="pastetxt" rows="6" placeholder="Léo ; 7 ; M&#10;Inès ; 10 ; S ; Blanc&#10;Sam ; 4 ; L"></textarea>' +
       '<button type="button" class="btn btn-primary" data-act="pasteok">Ajouter ces pièces</button></div>';
     updatePieceSelect();
@@ -597,6 +613,7 @@
         p.prenom = (f[0] || "").slice(0, 24); p.numero = (f[1] || "").slice(0, 4);
         if (f[2]) { var t = prod.tailles.filter(function (x) { return x.toLowerCase() === f[2].toLowerCase(); })[0]; if (t) p.taille = t; }
         if (f[3]) { var c = prod.couleurs.filter(function (x) { return x.id === f[3].toLowerCase() || x.nom.toLowerCase() === f[3].toLowerCase(); })[0]; if (c) p.couleurId = c.id; }
+        if (f[4] && prod.apporte) { var v4 = f[4].toLowerCase(), mt = DATA.matieres.filter(function (x) { return x.id === v4 || x.court.indexOf(v4) === 0 || x.nom.toLowerCase().indexOf(v4) === 0; })[0]; if (mt) p.matiere = mt.id; }
         list.push(p);
       });
       added++;
@@ -784,7 +801,7 @@
   }
 
   function pieceLine(p, i) {
-    var parts = [prodOf(p).nomCourt + " " + colorOf(p).nom.toLowerCase() + " " + p.taille];
+    var parts = [prodOf(p).nomCourt + " " + colorOf(p).nom.toLowerCase() + " " + p.taille + (prodOf(p).apporte ? " (" + matiereDe(p).court + ")" : "")];
     if (p.prenom) parts.push(p.prenom);
     if (p.numero) parts.push("n° " + p.numero);
     return (i + 1) + ". " + parts.join(", ");
@@ -808,12 +825,14 @@
     t.push(S.pieces.length + (S.pieces.length > 1 ? " pièces" : " pièce") + " :");
     if (compact) {
       var g = {};
-      S.pieces.forEach(function (p) { var k = prodOf(p).nomCourt + " " + colorOf(p).nom.toLowerCase() + " " + p.taille; g[k] = (g[k] || 0) + 1; });
+      S.pieces.forEach(function (p) { var k = prodOf(p).nomCourt + " " + colorOf(p).nom.toLowerCase() + " " + p.taille + (prodOf(p).apporte ? " (" + matiereDe(p).court + ")" : ""); g[k] = (g[k] || 0) + 1; });
       Object.keys(g).forEach(function (k) { t.push("- " + g[k] + " × " + k); });
       t.push("(liste détaillée avec prénoms et numéros dans le fichier de commande joint)");
     } else {
       S.pieces.forEach(function (p, i) { t.push(pieceLine(p, i)); });
     }
+    var nApp = S.pieces.filter(function (p) { return prodOf(p).apporte; }).length;
+    if (nApp) t.push("", nApp + (nApp > 1 ? " pièces sont des vêtements que j'apporte" : " pièce est un vêtement que j'apporte") + " : merci de m'indiquer où et quand les déposer.");
     t.push("", "Marquages :");
     usedEmps().forEach(function (e) {
       var m = S.marquages[e]; if (!m.actif) return;
@@ -840,6 +859,7 @@
   var PHOTO_KO = {};
   function photoApercu(piece, vue) {
     var prod = prodOf(piece), ap = prod.apercuPhoto;
+    if (prod.apporte) return { ok: false, why: "Ton vêtement n'a pas de photo ici : l'aperçu montre un modèle type en dessin." };
     if (!ap) return { ok: false, why: "Pas de photo de face ou de dos exploitable pour ce vêtement." };
     var coul = prod.couleurs.filter(function (c) { return c.id === ap.couleur; })[0];
     if (colorOf(piece).id !== ap.couleur) return { ok: false, why: "Les photos montrent le vêtement en " + (coul ? coul.nom.toLowerCase() : ap.couleur) + ". Choisis cette couleur pour voir ton visuel dessus." };
@@ -926,6 +946,15 @@
     return ", ainsi que les frais de port " + (r.vendeurs.length > 1 ? "des vendeurs partenaires" : "du vendeur partenaire") + " (estimés à " + fmtEUR(tot) + ")";
   }
 
+  // Ce que le prix comprend, selon la part de vêtements que le client apporte
+  function inclusTxt() {
+    var nApp = S.pieces.filter(function (p) { return prodOf(p).apporte; }).length;
+    if (!nApp) return "vêtements, planches de transfert et livraison compris";
+    if (nApp === S.pieces.length) return "planches de transfert et livraison compris, sans vêtement (tu apportes les tiens)";
+    return "vêtements Decathlon, planches de transfert et livraison compris, sans les " + nApp + (nApp > 1 ? " vêtements" : " vêtement") + " que tu apportes";
+  }
+  function ucfirst(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
+
   function renderTotal(r) {
     var box = $("#total"); if (!box) return;
     var html;
@@ -933,12 +962,12 @@
     else if (r.prix.unitaire != null) {
       html = '<div class="t-main"><span class="t-big">' + fmtEUR(r.prix.unitaire) + '</span><span class="t-unit">par pièce, TTC</span></div>' +
         '<p class="t-sub">' + r.N + (r.N > 1 ? " pièces" : " pièce") + ' : <b>' + fmtEUR(r.prix.total) + '</b></p>' +
-        '<p class="t-note">Vêtements, planches de transfert et livraison compris' + fraisVendeurTxt(r) + '. Fabr\'Icam confirme le devis avant toute commande.</p>';
+        '<p class="t-note">' + ucfirst(inclusTxt()) + fraisVendeurTxt(r) + '. Fabr\'Icam confirme le devis avant toute commande.</p>';
     } else {
       var pv = r.prix;
       html = '<div class="t-main"><span class="t-big">' + fmtEUR(pv.total) + '</span><span class="t-unit">au total, TTC, pour ' + r.N + (r.N > 1 ? " pièces" : " pièce") + '</span></div>' +
         '<ul class="t-lines">' + pv.groupes.map(function (g) { return '<li><span>' + g.n + ' × ' + esc(groupName(g)) + '</span><b>' + fmtEUR(g.unitaire) + '</b></li>'; }).join("") + '</ul>' +
-        '<p class="t-note">Prix à l\'unité, vêtements, planches de transfert et livraison compris' + fraisVendeurTxt(r) + '. Fabr\'Icam confirme le devis avant toute commande.</p>';
+        '<p class="t-note">Prix à l\'unité, ' + inclusTxt() + fraisVendeurTxt(r) + '. Fabr\'Icam confirme le devis avant toute commande.</p>';
     }
     if (r.warnings.length) html += '<ul class="warn">' + r.warnings.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>";
     box.innerHTML = html;
@@ -988,7 +1017,7 @@
           var other = $('tr[data-pid="' + x.id + '"] [data-f="' + f + '"]'); if (other) other.value = p[f];
         });
       }
-      if (f === "produitId") { var pr = prodOf(p); p.couleurId = pr.couleurs[0].id; if (pr.tailles.indexOf(p.taille) < 0) p.taille = pr.tailles[0]; renderPieces(); renderMarquages(); }
+      if (f === "produitId") { var pr = prodOf(p); p.couleurId = pr.couleurs[0].id; if (pr.tailles.indexOf(p.taille) < 0) p.taille = pr.tailles[0]; if (pr.apporte) p.matiere = p.matiere || "inconnu"; else delete p.matiere; renderPieces(); renderMarquages(); }
       if (f === "couleurId") { var sw = $(".sw", tr); if (sw) sw.style.background = colorOf(p).hex; }
       S.previewId = p.id;
       scheduleRefresh(); return;
@@ -1100,7 +1129,7 @@
     CTX: CTX, S: S, DATA: DATA, PRIX: PRIX, esc: esc, fmtEUR: fmtEUR, fmtN: fmtN, $: $, $$: $$, byId: byId,
     EMP_ORDER: EMP_ORDER, toast: toast, download: download, slug: slug, measure: measure, ensureFont: ensureFont,
     orderOf: orderOf, start: start, colorOf: colorOf, pieceLine: pieceLine,
-    vendeurInfo: vendeurInfo, photosOf: photosOf, lienOf: lienOf, liensVendeur: liensVendeur, liensHTML: liensHTML, mailHref: mailHref, gmailHref: gmailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
+    vendeurInfo: vendeurInfo, matiereDe: matiereDe, photosOf: photosOf, lienOf: lienOf, liensVendeur: liensVendeur, liensHTML: liensHTML, mailHref: mailHref, gmailHref: gmailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
   };
   if (!window.ATELIER_PAGE) window.addEventListener("load", start);
 })();

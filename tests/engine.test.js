@@ -311,15 +311,15 @@ test("catalogue : identifiants uniques, emplacements, modèles de dessin et tags
   DATA.produits.concat(DATA.packs).forEach(it => {
     assert.ok(!ids[it.id], "identifiant en double : " + it.id); ids[it.id] = 1;
     assert.ok(types.indexOf(it.tags.type) >= 0, it.id + " : type inconnu " + it.tags.type);
-    assert.ok(styles.indexOf(it.tags.style) >= 0, it.id + " : style inconnu");
+    assert.ok(it.apporte || styles.indexOf(it.tags.style) >= 0, it.id + " : style inconnu");
     it.tags.genre.forEach(g => assert.ok(genres.indexOf(g) >= 0, it.id + " : genre inconnu"));
   });
   DATA.produits.forEach(p => {
     assert.ok(window.Preview.models[p.modele], p.id + " : modèle de dessin inconnu " + p.modele);
     Object.keys(p.zones).forEach(e => assert.ok(DATA.emplacements[e], p.id + " : emplacement inconnu " + e));
     p.vitrine.forEach(e => assert.ok(p.zones[e], p.id + " : la vitrine utilise un emplacement absent " + e));
-    assert.ok(p.couleurs.length && p.tailles.length && p.photos.length, p.id + " : couleurs, tailles ou photos manquantes");
-    assert.ok(p.prixAchat > 0 && p.polyesterPct >= 0 && p.polyesterPct <= 100, p.id + " : prix ou matière");
+    assert.ok(p.couleurs.length && p.tailles.length && (p.apporte || p.photos.length), p.id + " : couleurs, tailles ou photos manquantes");
+    assert.ok((p.apporte ? p.prixAchat === 0 : p.prixAchat > 0) && p.polyesterPct >= 0 && p.polyesterPct <= 100, p.id + " : prix ou matière");
     if (p.vendeur) assert.ok(PRIX.livraisonVendeur.vendeurs[p.vendeur], p.id + " : vendeur absent de prix.js");
   });
   DATA.packs.forEach(k => {
@@ -433,7 +433,8 @@ test("catalogue : plus de robe, chaque dessin existe dans l'aperçu", () => {
   assert.ok(!DATA.produits.some(p => p.id === "robe-hummel"));
   const modeles = window.Preview.models;
   DATA.produits.forEach(p => assert.ok(modeles[p.modele], p.id + " : dessin « " + p.modele + " » absent de preview.js"));
-  assert.strictEqual(DATA.produits.length, 45);
+  assert.strictEqual(DATA.produits.filter(p => !p.apporte).length, 45);
+  assert.strictEqual(DATA.produits.filter(p => p.apporte).length, 16);
   assert.strictEqual(DATA.packs.length, 6);
 });
 test("catalogue : jogging homme et short de football 4,99 € ajoutés (version 3.1.0)", () => {
@@ -500,7 +501,7 @@ test("couleurs : identifiants uniques, nom Decathlon, lien de la page Decathlon,
       if (c.rupture != null) assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(c.rupture), p.id + " " + c.id + " : date de rupture");
       if (c.prixAchat != null) assert.ok(c.prixAchat > 0, p.id + " " + c.id + " : prix d'achat de la couleur");
     });
-    p.photos.forEach(u => assert.ok(URL_PHOTO.test(u), p.id + " : adresse de photo " + u));
+    (p.photos || []).forEach(u => assert.ok(URL_PHOTO.test(u), p.id + " : adresse de photo " + u));
   });
   assert.ok(avecPhotos >= 11, "couleurs avec leur série de photos : " + avecPhotos);
 });
@@ -542,6 +543,65 @@ test("vendeurs : chaque vendeur a un nom, et son lien (s'il est connu) est une p
     assert.ok(v.lien === "" || /^https:\/\/www\.decathlon\.fr\/mp\/seller\/[a-z0-9-]+\/[0-9a-f-]{36}$/.test(v.lien), id + " : lien du vendeur " + v.lien);
   });
   assert.ok(/sport-et-go-eu/.test(PRIX.livraisonVendeur.vendeurs["sport-et-go-eu"].lien), "le lien de Sport & Go EU est connu");
+});
+
+console.log("\nTon vêtement : le client apporte son vêtement (version 4.2.0)");
+const apportes = DATA.produits.filter(p => p.apporte);
+const A6seul = { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" } };
+const pApp = (id, produitId, extra) => Object.assign({ id, produitId, couleurId: "blanc", taille: "M", matiere: "inconnu", prenom: "", numero: "" }, extra || {});
+test("Ton vêtement : 16 articles génériques, filtre dédié, sans prix d'achat, photo ni lien Decathlon", () => {
+  assert.ok(DATA.filtres.type.valeurs.some(v => v.id === "apporte" && v.label === "Ton vêtement"));
+  assert.strictEqual(apportes.length, 16);
+  apportes.forEach(p => {
+    assert.ok(/^apporte-/.test(p.id), p.id);
+    assert.strictEqual(p.tags.type, "apporte"); assert.deepStrictEqual(p.tags.genre, ["homme", "femme"]);
+    assert.strictEqual(p.prixAchat, 0); assert.ok(!p.photos && !p.lien && !p.vendeur && !p.apercuPhoto, p.id);
+    assert.ok(p.couleurs.length === 15 && p.couleurs.every(c => !c.lien && !c.photos), p.id + " : couleurs communes sans lien");
+    assert.ok(/^Tu apportes ton vêtement/.test(p.avertissement), p.id + " : avertissement");
+    assert.ok(Object.keys(p.zones).length > 0 && p.vitrine.every(e => p.zones[e]), p.id);
+  });
+  ["tshirt", "polo", "sweat", "manches-longues", "maillot", "veste", "sweat-zip", "gilet", "short-tennis", "pantalon", "casquette", "bonnet", "sac-a-dos", "sac-sport", "gourde", "tour-de-cou"]
+    .forEach(m => assert.ok(apportes.some(p => p.modele === m), "dessin absent : " + m));
+  assert.deepStrictEqual(DATA.matieres.map(m => m.id), ["polyester", "coton", "inconnu"]);
+});
+test("Ton vêtement : le prix ne compte ni vêtement ni livraison de vêtement (planche, livraison, 1 € par motif)", () => {
+  const un = E.computeOrder({ pieces: [pApp("a", "apporte-veste")], marquages: A6seul, technique: "dtf" }, ctx);
+  assert.strictEqual(un.couts.achats, 0);
+  assert.strictEqual(un.couts.planchesTTC, 5.50);
+  assert.strictEqual(un.couts.livraison, 4.90);
+  assert.strictEqual(un.couts.total, 10.40);
+  assert.strictEqual(un.prix.unitaire, 11.40);
+  assert.strictEqual(un.coutPieces.a.achat, 0);
+  const t = E.priceTable(produits["apporte-veste"], [1, 5, 10, 20, 50], ctx).map(x => x.unitaire);
+  assert.deepStrictEqual(t.slice(0, 2), [11.40, 3.58]);
+  assert.ok(t.every((x, i) => i === 0 || x < t[i - 1]), "le prix baisse avec la quantité : " + t);
+});
+test("Ton vêtement : mélangé à un vêtement Decathlon, seul celui-ci compte à l'achat", () => {
+  const mix = [pApp("a", "apporte-tshirt"), Object.assign(pieces(1, "marine")[0], { id: "b" })];
+  const r = E.computeOrder({ pieces: mix, marquages: A6seul, technique: "dtf" }, ctx);
+  assert.strictEqual(r.couts.achats, 7.99);
+  assert.strictEqual(r.coutPieces.a.achat, 0); assert.strictEqual(r.coutPieces.b.achat, 7.99);
+  assert.strictEqual(r.prix.groupes.length, 2);
+});
+test("Ton vêtement : la sublimation demande un vêtement blanc ou clair déclaré en polyester", () => {
+  const order = ps => ({ pieces: ps, marquages: A6seul, technique: "sublimation" });
+  const techno = p => E.pieceTechno(order([p]), p, ctx);
+  assert.strictEqual(techno(pApp("a", "apporte-tshirt", { matiere: "polyester" })), "sublimation");
+  assert.strictEqual(techno(pApp("a", "apporte-tshirt", { matiere: "polyester", couleurId: "gris-clair" })), "sublimation");
+  assert.strictEqual(techno(pApp("a", "apporte-tshirt", { matiere: "polyester", couleurId: "noir" })), "dtf");
+  assert.strictEqual(techno(pApp("a", "apporte-tshirt", { matiere: "coton" })), "dtf");
+  assert.strictEqual(techno(pApp("a", "apporte-tshirt", { matiere: "inconnu" })), "dtf");
+  assert.strictEqual(techno(pApp("a", "apporte-tshirt", { matiere: undefined })), "dtf");
+  assert.strictEqual(techno(pApp("a", "apporte-casquette", { matiere: "polyester" })), "dtf", "pas de sublimation sur une casquette");
+  assert.strictEqual(E.polyesterPiece(produits["apporte-polo"], { matiere: "polyester" }), 100);
+  assert.strictEqual(E.polyesterPiece(produits["apporte-polo"], { matiere: "coton" }), 0);
+  assert.strictEqual(E.polyesterPiece(produits["polo-essential"], { matiere: "coton" }), 100, "un article du catalogue garde sa propre matière");
+});
+test("Ton vêtement : une pièce sans motif ne coûte rien, deux motifs font 2 € de marge", () => {
+  const vide = E.computeOrder({ pieces: [pApp("a", "apporte-sweat")], marquages: {}, technique: "dtf" }, ctx);
+  assert.strictEqual(vide.couts.total, 0);
+  const deux = E.computeOrder({ pieces: [pApp("a", "apporte-sweat", { prenom: "Léo" })], marquages: Object.assign({}, A6seul, { dos: { actif: true, avecImage: true, format: "A5", orient: "portrait" } }), technique: "dtf" }, ctx);
+  assert.strictEqual(deux.prix.groupes[0].margeMoyenne, 2);
 });
 
 console.log("\n" + ok + " tests passés");
