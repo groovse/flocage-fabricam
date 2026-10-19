@@ -5,6 +5,20 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 5.1.1 — 19/10/2026
+
+Relecture des pages Decathlon des 42 articles restants : toutes les couleurs, tous les liens, toutes les photos. **Version CORRECTIF : les prix de vente ne changent pas, sauf celui du sweat Viralto Axton.**
+
+- **166 couleurs au lieu de 102** sur les 45 articles Decathlon. 20 articles gagnent des couleurs : polo de golf MW500 (1 → 12), bonnet Rider 500 (6 → 13), ensemble Hummel (1 → 10), survêtement Joma (1 → 8), doudoune Result (1 → 5), veste micropolaire Kariban (1 → 5), short de basket SHORT 100 (2 → 5), arpenaz 100 (4 → 7), sweat 1/2 zip Viralto (1 → 4), veste sans manches Regatta (1 → 4), puis 2 couleurs pour le short de tennis, le débardeur fitness, les chaussettes, le short 2 en 1 et le short slim femme, les hauts thermiques femme et homme, le sweat T100, le tee-shirt homme gris et le sac Arpenaz 500. Les 22 autres articles avaient déjà toutes leurs couleurs ; leurs liens, références et photos sont rafraîchis.
+- **Chaque couleur porte maintenant** son nom Decathlon, sa référence, le lien de sa page et, pour un article du magasin, sa série de photos. Les 6 articles de la place de marché ont le lien de chaque couleur ; ils gardent les photos de l'article (la page du vendeur n'en donne pas par couleur).
+- **Photos de l'article** : la série de photos d'un article dont l'aperçu sur photo n'est pas calibré devient celle de sa première couleur, pour que la carte et la fiche montrent le même article. Les articles à l'aperçu calibré gardent leurs photos : l'aperçu sur photo n'est pas touché.
+- **37 couleurs ont leur propre prix d'achat** (`prixAchat` de la couleur) : par exemple débardeur noir 7,99 € contre 9,99 € le blanc, short slim gris 3,99 € contre 7,99 €, polo de golf jaune, vieux violet et vert 9,99 € contre 14,99 €, doudoune rouge, grise ou bleue 25 € contre 18 €. Les prix de la place de marché varient beaucoup : survêtement Joma de 26,50 € à 89,77 €, ensemble Hummel de 18,50 € à 35,90 €. Le catalogue précise que le prix affiché est celui d'une couleur ; le prix exact de chaque couleur apparaît à la personnalisation.
+- **Couleurs en rupture** : deux de plus, le sac Arpenaz 100 vert cèdre et orange terracotta (avec le rouge du maillot de basket, déjà signalé). Le client est prévenu, Fabr'Icam confirme la disponibilité avant de commander.
+- **Sweat de football 1/2 zip Viralto Axton** : l'ancienne variante (noir et zip rose fluo, 12 €, une seule taille) n'existe plus sur Decathlon. Les 4 couleurs actuelles (gris et rouge, gris et noir, vert et gris, marine et bleu) coûtent 21,99 € et vont de la S à la 4XL (taille relevée sur la page de la couleur gris et noir). **Le prix d'achat passe de 12 € à 21,99 €** : un visuel A6 sur une pièce, 23,40 € → 33,39 € ; l'avertissement « fin de série, une seule taille » disparaît.
+- Les prix d'achat de base des autres articles ne changent pas ; le sweat en molleton (14,99 € enregistré, 11,99 € relevé le 19/10/2026) reste à confirmer.
+- Les teintes (`hex`) des couleurs ajoutées sont estimées d'après le nom Decathlon.
+- Tests : 95 en tout (63 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier, 24 sur les fiches de paiement et les factures), dont un test qui vérifie les 45 articles (lien, photos et référence de chaque couleur, nombre de couleurs de dix articles, ruptures, prix par couleur, sweat Viralto).
+
 ## 5.1.0 — 19/10/2026
 
 Fiches de paiement et factures en PDF, et le logo de Fabr'Icam sur tout le site. Les prix ne changent pas.
