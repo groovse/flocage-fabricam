@@ -5,6 +5,19 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 4.2.0 — 19/10/2026
+
+Nouvelle catégorie « Ton vêtement » : le client apporte son vêtement, Fabr'Icam ne fait que le flocage. Les prix des autres articles ne changent pas.
+
+- **Nouveau filtre « Ton vêtement » dans le catalogue** : 16 articles sans référence, en quatre familles. Hauts (t-shirt, polo, sweat, haut à manches longues, maillot ou débardeur), vestes et gilets (veste, sweat ou veste zippé, gilet), bas (short, pantalon) et accessoires (casquette, bonnet, sac à dos, sac de sport, gourde, tour de cou). Chacun a son dessin et ses emplacements, sans photo ni lien Decathlon.
+- **Prix : planches, livraison et marge, sans vêtement.** Même règle de marge que les autres pièces (1 € par motif, 2 € au plus par pièce). Une veste avec un visuel A6 à la poitrine : 11,40 € pour 1 pièce, 3,58 € pour 5, 2,84 € pour 10, 2,15 € pour 20, 1,73 € pour 50. Une pièce sans motif ne coûte rien. On peut mélanger vêtements apportés et articles Decathlon dans une même commande.
+- **Couleur et matière de chaque pièce.** 15 couleurs usuelles (dont « Autre couleur claire » et « Autre couleur foncée », comptée comme claire) et une colonne **Matière** dans le tableau des pièces : polyester (90 % ou plus), coton ou mélange, « Je ne sais pas » (par défaut). Sur téléphone, une phrase invite à faire glisser le tableau pour la voir.
+- **Technique** : la sublimation n'est proposée que pour une pièce blanche ou claire en polyester. Sinon, DTF.
+- **Avertissement au client** sur chaque article et dans le configurateur : le vêtement est contrôlé à la réception (matière, état, tenue à la chaleur), le dessin est un modèle type, la position exacte est confirmée sur le vêtement, et le polaire, le matelassé et le softshell se pressent à basse température. Le texte est une proposition de rédaction, à valider.
+- **Atelier** : tableau « Apportés par le client » (sans prix d'achat, sans bouton de copie quand il n'y a rien à acheter), carte de chaque pièce avec la matière déclarée, colonne « Source » de la fiche imprimée, ligne « Vêtements apportés par le client » à 0 € dans les coûts, deux points à vérifier (vêtements à réceptionner, matière inconnue). Les articles « Ton vêtement » ne figurent ni dans la base d'achats ni dans le CSV.
+- **Fichier de commande** : chaque pièce peut porter `matiere` (`polyester`, `coton` ou `inconnu`). Le champ est facultatif, les anciens fichiers se rechargent sans changement.
+- Tests : 63 en tout (55 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier), dont 5 sur les articles apportés.
+
 ## 4.1.0 — 19/10/2026
 
 Photos par couleur, prix d'achat par couleur, raccourcis vers le vendeur. Les prix de vente ne changent pas.

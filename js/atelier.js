@@ -171,6 +171,9 @@
       var dpi = dpiVisuel(e);
       if (dpi != null && dpi < 150) out.push(nom + " : le visuel est peu défini (" + info.nw + " × " + info.nh + " px, environ " + dpi + " dpi à la taille imprimée). Le rendu risque d'être flou, 300 dpi est l'idéal.");
     });
+    var apportes = o.pieces.filter(function (p) { return prodOf(p).apporte; }), inconnues = apportes.filter(function (p) { return A.matiereDe(p).id === "inconnu"; });
+    if (apportes.length) out.push(plur(apportes.length, "vêtement apporté", "vêtements apportés") + " par le client : à réceptionner et à contrôler (matière, état, tenue à la chaleur) avant de presser. Convenir avec lui du lieu et de la date de dépôt.");
+    if (inconnues.length) out.push(plur(inconnues.length, "pièce apportée dont la matière est inconnue", "pièces apportées dont la matière est inconnue") + " : lis l'étiquette avant de régler la presse. Le DTF est prévu par défaut.");
     fontsFor(o).forEach(function (f) {
       if (document.fonts && document.fonts.check && !document.fonts.check('200px "' + f + '"', "AÉHg0")) out.push("La police " + f + " n'est pas chargée (connexion ?). Les planches utiliseraient une police de remplacement : reconnecte-toi et recharge la page avant de les télécharger.");
     });
@@ -246,8 +249,9 @@
     var g = {}, list = [];
     order.pieces.forEach(function (p) {
       var prod = prodOf(p), col = colorOf(p);
-      var k = prod.id + "|" + col.id + "|" + p.taille;
-      if (!g[k]) { g[k] = { prod: prod, col: col, taille: p.taille, qty: 0 }; list.push(g[k]); }
+      var mat = prod.apporte ? A.matiereDe(p) : null;     // vêtement apporté par le client : sa matière compte pour le réglage
+      var k = prod.id + "|" + col.id + "|" + p.taille + "|" + (mat ? mat.id : "");
+      if (!g[k]) { g[k] = { prod: prod, col: col, taille: p.taille, matiere: mat, qty: 0 }; list.push(g[k]); }
       g[k].qty++;
     });
     list.sort(function (a, b) { return a.prod.nom.localeCompare(b.prod.nom) || a.col.nom.localeCompare(b.col.nom) || a.prod.tailles.indexOf(a.taille) - b.prod.tailles.indexOf(b.taille); });
@@ -259,7 +263,7 @@
     var usesPoly = false, usesOther = false, usesSub = r.motifs.some(function (m) { return m.techno === "sublimation"; });
     order.pieces.forEach(function (p) {
       var prod = prodOf(p), tech = E.pieceTechno(order, p, A.CTX);
-      if (tech === "dtf") { if ((prod.polyesterPct || 0) >= 50) usesPoly = true; else usesOther = true; }
+      if (tech === "dtf") { if (E.polyesterPiece(prod, p) >= 50) usesPoly = true; else usesOther = true; }
     });
     if (usesPoly) notes.push(pr.dtf_polyester);
     if (usesOther) notes.push(pr.dtf_autre);
@@ -274,7 +278,7 @@
   function presseDe(piece) {
     var pr = A.PRIX.presse, prod = prodOf(piece), tech = E.pieceTechno(st.order, piece, A.CTX);
     if (tech === "sublimation") return { tech: "sublimation", texte: pr.sublimation };
-    return { tech: "dtf", texte: (prod.polyesterPct || 0) >= 50 ? pr.dtf_polyester : pr.dtf_autre };
+    return { tech: "dtf", texte: E.polyesterPiece(prod, piece) >= 50 ? pr.dtf_polyester : pr.dtf_autre };
   }
 
   // Éléments à poser sur une pièce, dans l'ordre des emplacements : { emp, label, items:[motif] }
@@ -423,9 +427,11 @@
   }
 
   function achatsHtml() {
-    var o = st.order, ach = achats(o), r = st.res;
+    var o = st.order, tous = achats(o), r = st.res;
+    var apportes = tous.filter(function (a) { return a.prod.apporte; }), ach = tous.filter(function (a) { return !a.prod.apporte; });
     var magasin = ach.filter(function (a) { return !a.prod.vendeur; }), enligne = ach.filter(function (a) { return a.prod.vendeur; });
-    var html = '<div class="h-row"><h2>À acheter chez Decathlon</h2><button type="button" class="btn btn-quiet" id="a-copy">Copier la liste</button></div>';
+    var html = '<div class="h-row"><h2>À acheter chez Decathlon</h2>' + (ach.length ? '<button type="button" class="btn btn-quiet" id="a-copy">Copier la liste</button>' : "") + '</div>';
+    if (!ach.length) html += '<p class="empty">Rien à acheter : tous les vêtements sont apportés par le client.</p>';
     var photo = function (a) { var u = photoDe(a.prod, a.col); return u ? '<img class="thumb" src="' + esc(photoSrc(u, 120)) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<span class="thumb"></span>'; };
     var nom = function (a) {
       var liens = liensAchat(a.prod, a.col);
@@ -446,11 +452,17 @@
         }).join("") + "<li>Pas de retrait en magasin. Vérifie le stock de la taille avant de commander : il est souvent très limité. Une fois floqué, l'article n'est ni repris ni échangé.</li></ul>" +
         '<p class="hint">Prix d\'achat enregistré : ' + prixConnus(enligne) + ".</p>";
     }
+    if (apportes.length) {
+      html += "<h3>Apportés par le client</h3>" + table(["Article", "Couleur", "Matière", "Taille", { t: "Quantité", num: true }],
+        apportes.map(function (a) { return ["<b>" + esc(a.prod.nom) + "</b>", coul(a), esc(a.matiere.court), esc(a.taille), '<b class="qty">' + a.qty + "</b>"]; }), "achats") +
+        '<ul class="notes"><li>À réceptionner avant de presser : matière (étiquette), état, tenue à la chaleur. Convenir avec le client du lieu et de la date de dépôt.</li>' +
+        "<li>Pas de prix d'achat : seuls les planches, la livraison et le flocage sont facturés.</li></ul>";
+    }
     return html;
   }
 
   function copierAchats() {
-    var lignes = achats(st.order).map(function (a) {
+    var lignes = achats(st.order).filter(function (a) { return !a.prod.apporte; }).map(function (a) {
       return a.qty + " × " + a.prod.nom + ", " + a.col.nom + ", taille " + a.taille + (a.col.ref ? " (réf. " + a.col.ref + ")" : "") + (a.prod.vendeur ? " (vendeur : " + A.vendeurInfo(a.prod).nom + ")" : "") + " : " + lienDe(a.prod, a.col);
     });
     var txt = "À acheter pour " + (st.contact.asso || "la commande") + "\n" + lignes.join("\n");
@@ -474,9 +486,10 @@
   function coutsHtml() {
     var o = st.order, r = st.res, pv = r.prix;
     if (!pv) return '<p class="empty">Cette commande ne contient aucune pièce.</p>';
-    var nMag = 0, nMp = 0, eurMag = 0, eurMp = 0;
-    o.pieces.forEach(function (p) { var pr = prodOf(p), px = achatDe(pr, colorOf(p)); if (pr.vendeur) { nMp++; eurMp += px; } else { nMag++; eurMag += px; } });
+    var nMag = 0, nMp = 0, nApp = 0, eurMag = 0, eurMp = 0;
+    o.pieces.forEach(function (p) { var pr = prodOf(p), px = achatDe(pr, colorOf(p)); if (pr.apporte) nApp++; else if (pr.vendeur) { nMp++; eurMp += px; } else { nMag++; eurMag += px; } });
     var rows = [];
+    if (nApp) rows.push(["Vêtements apportés par le client (aucun achat)", plur(nApp, "pièce", "pièces"), fmtEUR(0)]);
     if (nMag) rows.push(["Articles Decathlon (retrait en magasin)", plur(nMag, "pièce", "pièces"), fmtEUR(eurMag)]);
     if (nMp) rows.push(["Articles de la place de marché Decathlon (livrés par le vendeur)", plur(nMp, "pièce", "pièces"), fmtEUR(eurMp)]);
     if (r.couts.livraisonVendeurs) rows.push(["Frais de port des vendeurs (estimation)", r.vendeurs.map(function (v) { return v.nom + " " + fmtEUR(v.frais); }).join(", "), fmtEUR(r.couts.livraisonVendeurs)]);
@@ -595,7 +608,8 @@
     var src = v ? "Place de marché : " + v.nom : "Decathlon, retrait en magasin";
     var photoPropre = col.photos && col.photos.length;
     var apercuCouleur = !photoPropre && prod.apercuPhoto && prod.apercuPhoto.couleur && prod.apercuPhoto.couleur !== col.id ? " Photo de référence : la couleur peut différer." : "";
-    var carte = '<div class="art-card">' + (photo ? '<img src="' + esc(photoSrc(photo, 220)) + '" alt="' + esc(prod.nom) + '" loading="lazy" referrerpolicy="no-referrer">' : "") +
+    var carteApporte = '<div class="art-card"><div><b>L\'article</b><p>Vêtement apporté par le client.<br>Matière déclarée : <b>' + esc(A.matiereDe(p).court) + "</b>. À contrôler à la réception avant de presser.</p></div></div>";
+    var carte = prod.apporte ? carteApporte : '<div class="art-card">' + (photo ? '<img src="' + esc(photoSrc(photo, 220)) + '" alt="' + esc(prod.nom) + '" loading="lazy" referrerpolicy="no-referrer">' : "") +
       '<div><b>L\'article</b><p>' + esc(prod.marque) + ". " + esc(prod.matiere) + ".<br>" + esc(src) + ", " + fmtEUR(achatDe(prod, col)) + (col.ref ? ", réf. " + esc(col.ref) : "") + "." + esc(apercuCouleur) + ruptureTag(col) + "</p>" +
       (liens.length ? "<p>" + liens.join(" · ") + "</p>" : "") + "</div></div>";
     return '<article class="slide">' +
@@ -637,7 +651,7 @@
         (d.lien ? "<p>" + lien(d.lien, "Boutique de " + esc(d.nom) + " sur Decathlon") + "</p>" : "") +
         "<p><b>Articles</b></p><ul class=\"notes\">" + arts.map(function (a) { return "<li>" + lien(a.lien, esc(a.nom)) + "</li>"; }).join("") + "</ul></article>";
     }).join("");
-    var typeChips = '<button type="button" class="chip" data-type="" aria-pressed="' + (baseFiltre.type === "") + '">Tout</button>' + A.DATA.filtres.type.valeurs.map(function (t) {
+    var typeChips = '<button type="button" class="chip" data-type="" aria-pressed="' + (baseFiltre.type === "") + '">Tout</button>' + A.DATA.filtres.type.valeurs.filter(function (t) { return t.id !== "apporte"; }).map(function (t) {
       return '<button type="button" class="chip" data-type="' + t.id + '" aria-pressed="' + (baseFiltre.type === t.id) + '">' + esc(t.label) + "</button>";
     }).join("");
 
@@ -651,7 +665,7 @@
       '<table class="tbl mini-tbl"><thead><tr><th>Technique</th><th>Format</th><th class="num">Prix TTC</th></tr></thead><tbody>' + fmts("dtf") + fmts("sublimation") + "</tbody></table>" +
       '<p class="hint">Livraison offerte dès ' + fmtEUR(PRIX.livraison.seuilGratuit) + " de transferts, sinon environ " + fmtEUR(PRIX.livraison.colissimo) + " (estimation). Les remises à partir de 10 planches ne sont pas appliquées ici.</p></article>" +
       '<article class="four"><h3>Decathlon</h3><p class="muted">Vêtements et accessoires, retrait en magasin</p><p>' + lien("https://www.decathlon.fr/", "decathlon.fr") + "</p>" +
-      "<p>" + A.DATA.produits.filter(function (p) { return !p.vendeur; }).length + " articles du catalogue s'achètent en magasin. Les prix d'achat (TTC) sont enregistrés dans le catalogue ; vérifie-les à l'achat.</p></article>" +
+      "<p>" + A.DATA.produits.filter(function (p) { return !p.vendeur && !p.apporte; }).length + " articles du catalogue s'achètent en magasin. Les prix d'achat (TTC) sont enregistrés dans le catalogue ; vérifie-les à l'achat.</p></article>" +
       vendeurs + "</div>" +
       '<h2 class="b-h">Articles</h2>' +
       '<div class="b-tools"><label class="b-search">Chercher un article, une couleur, une référence<input id="b-q" type="search" value="' + esc(baseFiltre.q) + '" placeholder="polo, noir, 8336032…"></label><div class="f-group" id="b-types" role="group" aria-label="Catégorie">' + typeChips + "</div></div>" +
@@ -667,8 +681,9 @@
   };
 
   function baseRows() {
-    var list = A.DATA.produits.filter(baseMatch);
-    $("#b-count").textContent = list.length === A.DATA.produits.length ? plur(list.length, "article", "articles") : plur(list.length, "article", "articles") + " sur " + A.DATA.produits.length;
+    var achetables = A.DATA.produits.filter(function (p) { return !p.apporte; });      // les vêtements apportés par le client ne s'achètent pas
+    var list = achetables.filter(baseMatch);
+    $("#b-count").textContent = list.length === achetables.length ? plur(list.length, "article", "articles") : plur(list.length, "article", "articles") + " sur " + achetables.length;
     if (!list.length) { $("#b-rows").innerHTML = '<p class="empty">Aucun article ne correspond. Efface la recherche ou change de catégorie.</p>'; return; }
     $("#b-rows").innerHTML = table(["Article", "Achat", "Tailles", "Couleurs et liens"], list.map(function (prod) {
       var photo = photoDe(prod, prod.couleurs[0]), v = A.vendeurInfo(prod);
@@ -691,7 +706,7 @@
 
   function exportCsv() {
     var rows = [["Article", "Identifiant", "Catégorie", "Marque", "Source", "Prix d'achat TTC (€)", "Tailles", "Matière", "Couleur", "Référence", "Lien", "Boutique du vendeur", "Stock Decathlon"]];
-    A.DATA.produits.forEach(function (prod) {
+    A.DATA.produits.filter(function (p) { return !p.apporte; }).forEach(function (prod) {
       var v = A.vendeurInfo(prod);
       prod.couleurs.forEach(function (c) {
         rows.push([prod.nom, prod.id, typeNom(prod), prod.marque, v ? "Place de marché : " + v.nom : "Decathlon, magasin", String(achatDe(prod, c)).replace(".", ","), prod.tailles.join(" "), prod.matiere, c.nom, c.ref || "", lienDe(prod, c), v && v.lien ? v.lien : "", c.rupture ? "Rupture signalée le " + c.rupture : ""]);
