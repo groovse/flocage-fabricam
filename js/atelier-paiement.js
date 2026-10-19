@@ -150,7 +150,7 @@
       '<p class="pay-file">Nom du fichier : <b id="pay-fichier"></b></p>' +
       '<div class="toolbar"><button type="button" class="btn btn-primary" id="pay-dl">Télécharger ' + (fiche ? "la fiche de paiement" : "la facture") + " (PDF)</button>" +
       '<button type="button" class="btn btn-quiet" id="pay-view">Aperçu</button></div>' +
-      (fiche ? '<p class="hint">La fiche indique l\'IBAN de ' + esc(Fa.CONFIG.titulaire) + " (" + esc(Fa.ibanFormate(Fa.CONFIG.iban)) + "), le montant et la référence à mettre dans le virement. Le travail commence dès réception du paiement.</p>" :
+      (fiche ? '<p class="hint">La fiche indique le titulaire du compte (' + esc(Fa.CONFIG.titulaire) + "), l'IBAN (" + esc(Fa.ibanFormate(Fa.CONFIG.iban)) + ")" + (Fa.CONFIG.bic ? ", le BIC (" + esc(Fa.CONFIG.bic) + ")" : "") + ", le montant et la référence à mettre dans le virement. Le travail commence dès réception du paiement.</p>" :
         '<p class="hint">La facture est marquée « acquittée » : elle indique la date du paiement et que les vêtements sont remis.</p>') +
       "</div></section>";
 

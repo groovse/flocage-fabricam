@@ -15,10 +15,11 @@
   /* ---------- coordonnées de l'asso ---------- */
   var CONFIG = {
     nom: "Fabr'Icam",
-    titulaire: "Fablab Icam 26-29",                       // nom du titulaire du compte, tel qu'il doit figurer sur le virement
+    titulaire: "Antton GARY et Martin ERNST",              // titulaires du compte (compte commun), tels que sur le RIB : le nom à saisir pour le virement
     adresse: ["75 avenue de Grande-Bretagne", "31300 Toulouse"],
     email: "fabricam.toulouse@icam.fr",
     iban: "FR7617598000010003321323381",
+    bic: "LYDIFRP2XXX",
     phrasePaiement: "Le travail commence dès réception du paiement."
   };
 
@@ -162,7 +163,7 @@
     });
 
     /* total */
-    var hTot = 44, hBloc = d.type === "fiche" ? 160 : 100;
+    var hTot = 44, hBloc = d.type === "fiche" ? 182 : 100;
     if (y + 16 + hTot + 22 + hBloc > BAS) { p = nouvellePage(); y = 50; } else y += 16;
     var bx = W - M - 230;
     p.rect(bx, y, 230, hTot, { fill: FOND });
@@ -177,7 +178,7 @@
       p.rect(M, y, TW, hBloc, { stroke: ORANGE, lw: 1.2 });
       p.text("Comment payer ?", M + 16, y + 24, { size: 12.5, bold: true, color: ENCRE });
       p.text("Par virement bancaire, vers le compte de l'association :", M + 16, y + 40, { size: 10, color: GRIS });
-      var rows = [["Titulaire du compte", cfg.titulaire, false], ["IBAN", ibanFormate(cfg.iban), true], ["Montant", eur(tot), true], ["Référence à indiquer", ref, false]], yy = y + 62;
+      var rows = [["Titulaire du compte", cfg.titulaire, false], ["IBAN", ibanFormate(cfg.iban), true]].concat(cfg.bic ? [["BIC", cfg.bic, true]] : [], [["Montant", eur(tot), true], ["Référence à indiquer", ref, false]]), yy = y + 62;
       rows.forEach(function (r) {
         p.text(r[0], M + 16, yy, { size: 9.5, color: GRIS });
         p.paragraph(r[1], M + 150, yy, TW - 166, { size: r[2] ? 12 : 10.5, bold: r[2], color: ENCRE });
