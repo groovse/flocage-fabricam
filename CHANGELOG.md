@@ -19,6 +19,14 @@ L'en-tête du site client et la navigation du catalogue sont refaits. **Version 
 - **À vérifier.** Les catégories ont été choisies d'après le modèle de dessin de chaque article : relis le rangement (par exemple le haut thermique dans « T-shirts et maillots », le bandeau dans « Casquettes et bonnets » et « Équipement ») et dis-moi ce que tu veux déplacer.
 - Tests : 116 en tout (84 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier, 24 sur les fiches de paiement et les factures), dont 1 nouveau : catégories valides, sans doublon, aucune catégorie vide, « Ton vêtement » réservé aux vêtements apportés, packs rangés dans « Packs ».
 
+## 6.2.1 — 19/10/2026
+
+Titulaire du compte de la fiche de paiement remis à « Fablab Icam 26-29 ». **Version CORRECTIF : aucun prix ne change.**
+
+- Le bloc « Comment payer ? » affiche de nouveau **« Fablab Icam 26-29 »** comme titulaire du compte (choix de Fabr'Icam). Le **BIC `LYDIFRP2XXX`** ajouté en 6.0.1 reste en place, avec l'IBAN.
+- Le RIB Lydia est au nom des deux titulaires du compte commun : si une banque contrôle le nom du bénéficiaire avant le virement, le nom saisi doit être celui du RIB. Le réglage est `titulaire` dans le bloc `CONFIG` de `js/facturation.js`.
+- Tests : la fiche doit contenir « Fablab Icam 26-29 », l'IBAN et le BIC.
+
 ## 6.2.0 — 19/10/2026
 
 Le visuel se règle comme un texte : taille libre, rotation et position. **Version MINEURE : un ancien fichier de commande garde son format, sa case et son prix.**

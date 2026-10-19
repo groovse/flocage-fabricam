@@ -15,7 +15,7 @@
   /* ---------- coordonnées de l'asso ---------- */
   var CONFIG = {
     nom: "Fabr'Icam",
-    titulaire: "Antton GARY et Martin ERNST",              // titulaires du compte (compte commun), tels que sur le RIB : le nom à saisir pour le virement
+    titulaire: "Fablab Icam 26-29",                       // nom du titulaire du compte, tel qu'il doit figurer sur le virement
     adresse: ["75 avenue de Grande-Bretagne", "31300 Toulouse"],
     email: "fabricam.toulouse@icam.fr",
     iban: "FR7617598000010003321323381",
