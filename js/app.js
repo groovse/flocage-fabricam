@@ -1130,7 +1130,7 @@
     document.addEventListener("change", onChange);
     document.addEventListener("click", onClick);
     window.addEventListener("hashchange", route);
-    $("#brand-name").textContent = DATA.service.nom;
+    $("#brand-name").textContent = DATA.service.nom.replace(/^Fabr'Icam\s+/i, "") || DATA.service.nom;   // le logo porte déjà « Fabr'Icam »
     var cfgLink = $(".nav a[data-cfg]"); if (cfgLink) cfgLink.href = "#/configurer";
     gmailLink($("#foot-mail"), gmailHref(DATA.service.email));
     gmailLink($("#top-note-mail"), autreVetementHref());

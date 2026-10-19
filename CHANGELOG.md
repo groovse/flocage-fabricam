@@ -5,7 +5,7 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
-## 5.0.1 — 19/10/2026
+## 5.1.1 — 19/10/2026
 
 Relecture des pages Decathlon des 42 articles restants : toutes les couleurs, tous les liens, toutes les photos. **Version CORRECTIF : les prix de vente ne changent pas, sauf celui du sweat Viralto Axton.**
 
@@ -17,7 +17,24 @@ Relecture des pages Decathlon des 42 articles restants : toutes les couleurs, to
 - **Sweat de football 1/2 zip Viralto Axton** : l'ancienne variante (noir et zip rose fluo, 12 €, une seule taille) n'existe plus sur Decathlon. Les 4 couleurs actuelles (gris et rouge, gris et noir, vert et gris, marine et bleu) coûtent 21,99 € et vont de la S à la 4XL (taille relevée sur la page de la couleur gris et noir). **Le prix d'achat passe de 12 € à 21,99 €** : un visuel A6 sur une pièce, 23,40 € → 33,39 € ; l'avertissement « fin de série, une seule taille » disparaît.
 - Les prix d'achat de base des autres articles ne changent pas ; le sweat en molleton (14,99 € enregistré, 11,99 € relevé le 19/10/2026) reste à confirmer.
 - Les teintes (`hex`) des couleurs ajoutées sont estimées d'après le nom Decathlon.
-- Tests : 71 en tout (63 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier), dont un test qui vérifie les 45 articles (lien, photos et référence de chaque couleur, nombre de couleurs de dix articles, ruptures, prix par couleur, sweat Viralto).
+- Tests : 95 en tout (63 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier, 24 sur les fiches de paiement et les factures), dont un test qui vérifie les 45 articles (lien, photos et référence de chaque couleur, nombre de couleurs de dix articles, ruptures, prix par couleur, sweat Viralto).
+
+## 5.1.0 — 19/10/2026
+
+Fiches de paiement et factures en PDF, et le logo de Fabr'Icam sur tout le site. Les prix ne changent pas.
+
+- **Nouvel onglet « Paiement et facture » à l'atelier.** Deux documents PDF, fabriqués dans le navigateur (aucun serveur) :
+  - la **fiche de paiement**, à créer une fois le devis validé : lignes de la commande, total à payer, titulaire du compte, **IBAN**, montant, référence à mettre dans le virement, et « Le travail commence dès réception du paiement » ;
+  - la **facture**, à créer à la remise des vêtements : « Facture acquittée », avec la date du paiement et celle de la remise.
+  Ni TVA, ni SIRET, ni mention du BDE sur les documents.
+- **Qui crée le document** : le prénom et le nom sont obligatoires et figurent sur le PDF ; le navigateur s'en souvient.
+- **Lignes** préremplies d'après la commande chargée et modifiables (désignation, quantité, prix, ajout, suppression). Boutons « Remplir depuis la commande » et, si les tarifs ont changé depuis ce que le client a vu, « Reprendre les prix vus par le client ». Sans commande chargée, tout se saisit à la main.
+- **Numéros** `FP-2026-001` (fiches) et `FAC-2026-001` (factures), une série par année, proposés d'après les documents déjà créés dans ce navigateur et modifiables.
+- **Nom du fichier** : date, titre, asso et numéro, par exemple `2026-10-19_Fiche-paiement_Nom-de-l-asso_FP-2026-001.pdf`. Bouton « Télécharger » et bouton « Aperçu ».
+- **Logo Fabr'Icam** : en-tête du site et de l'atelier, pied de page, porte de l'atelier, fiche de fabrication imprimée, icône de l'onglet du navigateur, et en haut des PDF. L'en-tête affiche maintenant le logo suivi de « Flocage ».
+- **Coordonnées de l'asso** dans `js/facturation.js` (`CONFIG`) : titulaire « Fablab Icam 26-29 », 75 avenue de Grande-Bretagne, 31300 Toulouse, IBAN. Le dépôt étant public, l'IBAN y est lisible.
+- Nouveaux fichiers : `js/pdf.js` (petit générateur de PDF sans dépendance : texte Helvetica, traits, image), `js/facturation.js`, `js/atelier-paiement.js`, `js/logo-pdf.js` (logo embarqué, généré par `outils/logo-pdf.py`), dossier `img/`.
+- Tests : 94 en tout (62 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier, 24 sur les fiches de paiement et les factures).
 
 ## 5.0.0 — 19/10/2026
 

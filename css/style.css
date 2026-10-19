@@ -322,3 +322,10 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .pieces .col-modele select { min-width: 7rem; }
 .pieces .col-couleur select { min-width: 5.8rem; }
 .pieces .col-prenom input { width: 100%; min-width: 6.5rem; }
+
+/* ---------- logo Fabr'Icam ---------- */
+.brand-logo { height: 3.1rem; width: auto; display: block; }
+.brand #brand-name { font-size: 1.5rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.foot-brand { display: flex; align-items: center; gap: .8rem; }
+.foot-brand img { height: 2.4rem; width: auto; display: block; }
+@media (max-width: 560px) { .brand-logo { height: 2.5rem; } .brand #brand-name { font-size: 1.25rem; } }
