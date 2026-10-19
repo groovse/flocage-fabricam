@@ -239,4 +239,41 @@
   .tablewrap { overflow: visible; }
   a { color: inherit; text-decoration: none; }
   .sl-fig svg { max-height: 90mm; }
+  .f-logo { width: 32mm; }
+}
+
+/* ---------- logo Fabr'Icam ---------- */
+.at-header .brand-logo { background: #fff; border-radius: 4px; padding: .2rem .6rem; height: 3rem; }
+.at-header .brand #brand-name { color: #fff; }
+.gate-logo { width: 11rem; max-width: 70%; height: auto; display: block; }
+.f-logo { display: block; width: 8.5rem; height: auto; margin: 0 0 .5rem; }
+
+/* ---------- paiement et facture ---------- */
+.pay { padding-top: 1.4rem; max-width: 64rem; }
+.pay-type { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.pay-type .chip { padding: .7rem 1.1rem; font-size: 1.05rem; }
+.pay-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .8rem 1.2rem; }
+.pay-tbl td { vertical-align: middle; padding: .4rem .5rem; }
+.pay-tbl th { padding: .45rem .5rem; }
+.pay-tbl .pl-des { min-width: 16rem; }
+.pay-tbl .pl-qty { width: 5.5rem; text-align: right; }
+.pay-tbl .pl-unit { width: 7.5rem; text-align: right; }
+.pay-tbl .pl-tot { white-space: nowrap; font-weight: 700; min-width: 6rem; }
+.pay-del, .pl-del { padding: .4rem .7rem; font-size: 1.1rem; line-height: 1; }
+.pay-total { text-align: right; margin: .9rem .2rem 0; font-size: 1.15rem; }
+.pay-total b { font: 800 2.2rem/1 var(--display); margin-left: .5rem; font-variant-numeric: tabular-nums; }
+.pay-file { margin: 0 0 .6rem; color: var(--muted); font-size: .92rem; word-break: break-all; }
+.pay-file b { color: var(--ink); }
+#pay-err:empty { display: none; }
+@media (max-width: 640px) {
+  .pay-tbl thead { display: none; }
+  .pay-tbl, .pay-tbl tbody { display: block; }
+  .pay-tbl tr { display: grid; grid-template-columns: .8fr 1.2fr 1fr auto; align-items: end; gap: .5rem .6rem; padding: .8rem .7rem; border-bottom: 1px solid #e6ece9; }
+  .pay-tbl tbody tr:last-child { border-bottom: 0; }
+  .pay-tbl td { display: block; padding: 0; border: 0; min-width: 0; }
+  .pay-tbl td:first-child { grid-column: 1 / -1; }
+  .pay-tbl td[data-l]::before { content: attr(data-l); display: block; font-size: .8rem; color: var(--muted); font-weight: 500; margin-bottom: .2rem; }
+  .pay-tbl .pl-des { min-width: 0; }
+  .pay-tbl .pl-qty, .pay-tbl .pl-unit { width: 100%; }
+  .pay-tbl .pl-tot { text-align: right; min-width: 0; padding-bottom: .55rem; }
 }

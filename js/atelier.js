@@ -4,6 +4,7 @@
  *   Pièces       : diaporama, une pièce à la fois (visuel, descriptif, emplacements, planche)
  *   Fabrication  : fiche imprimable avec les quantités          (atelier-impression.js)
  *   Planches     : les PNG prêts à envoyer au fournisseur        (atelier-impression.js)
+ *   Paiement     : fiche de paiement et facture en PDF           (atelier-paiement.js)
  *   Base d'achats: tous les articles, leurs liens et les fournisseurs
  *
  * Le mot de passe n'est qu'une porte pour les curieux : le site est statique, tout le code est lisible dans le navigateur.
@@ -17,7 +18,7 @@
 
   var MDP = "2024";
   var CLE_OK = "fabricam-atelier-ok", CLE_CMD = "fabricam-atelier-commande";
-  var VUES = ["commande", "pieces", "fabrication", "planches", "base"];
+  var VUES = ["commande", "pieces", "fabrication", "planches", "paiement", "base"];
   var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD", cuisse_g: "CG", cuisse_d: "CD", bas_jambe_g: "BJ", chaussette_g: "SG", chaussette_d: "SD", sac: "SA", gourde: "GO", casquette: "CA", bonnet: "BO", tour_de_cou: "TC", bandeau: "BA", ceinture: "CE" };
   var KIND = { image: "v", prenom: "p", numero: "n" };
   var KIND_NOM = { image: "visuel", prenom: "prénom", numero: "numéro" };
@@ -317,8 +318,8 @@
   function showGate() {
     $("#at-nav").hidden = true; $("#at-tools").hidden = true;
     $("#app").innerHTML =
-      '<section class="gate"><form id="gate-form" class="gate-card" autocomplete="off"><h1>Atelier</h1>' +
-      "<p>Cet espace est réservé à l'équipe Fabr'Icam : fiche de fabrication, planches prêtes à envoyer et base d'achats.</p>" +
+      '<section class="gate"><form id="gate-form" class="gate-card" autocomplete="off"><img class="gate-logo" src="img/logo-fabricam.png" alt="Fabr\'Icam" width="782" height="414"><h1>Atelier</h1>' +
+      "<p>Cet espace est réservé à l'équipe Fabr'Icam : fiche de fabrication, planches prêtes à envoyer, fiches de paiement, factures et base d'achats.</p>" +
       '<label>Mot de passe<input id="gate-pw" type="password" inputmode="numeric" autocomplete="off" required></label>' +
       '<p class="gate-err" id="gate-err" role="alert" hidden>Mot de passe incorrect. Réessaie.</p>' +
       '<div class="toolbar"><button class="btn btn-primary" type="submit">Ouvrir l\'atelier</button><a href="index.html">Retour au catalogue</a></div></form></section>';
@@ -348,7 +349,7 @@
   /* =================================================================== */
   /* NAVIGATION                                                          */
   /* =================================================================== */
-  var LABELS = { commande: "Commande", pieces: "Pièces", fabrication: "Fiche de fabrication", planches: "Planches à envoyer", base: "Base d'achats" };
+  var LABELS = { commande: "Commande", pieces: "Pièces", fabrication: "Fiche de fabrication", planches: "Planches à envoyer", paiement: "Paiement et facture", base: "Base d'achats" };
   function renderNav(v) {
     var n = st.order ? st.order.pieces.length : 0, s = st.sheets.length;
     var count = { pieces: n ? n : "", planches: s ? s : "" };
@@ -734,7 +735,7 @@
   };
 
   function start() {
-    $("#brand-name").textContent = A.DATA.service.nom;
+    $("#brand-name").textContent = A.DATA.service.nom.replace(/^Fabr'Icam\s+/i, "") || A.DATA.service.nom;   // le logo porte déjà « Fabr'Icam »
     $("#at-lock").addEventListener("click", lock);
     window.addEventListener("hashchange", route);
     document.addEventListener("keydown", function (e) { if (At.onKey && st.vue === "pieces" && !e.ctrlKey && !e.metaKey && !e.altKey) At.onKey(e); });

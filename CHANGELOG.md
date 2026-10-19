@@ -5,6 +5,23 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 5.1.0 — 19/10/2026
+
+Fiches de paiement et factures en PDF, et le logo de Fabr'Icam sur tout le site. Les prix ne changent pas.
+
+- **Nouvel onglet « Paiement et facture » à l'atelier.** Deux documents PDF, fabriqués dans le navigateur (aucun serveur) :
+  - la **fiche de paiement**, à créer une fois le devis validé : lignes de la commande, total à payer, titulaire du compte, **IBAN**, montant, référence à mettre dans le virement, et « Le travail commence dès réception du paiement » ;
+  - la **facture**, à créer à la remise des vêtements : « Facture acquittée », avec la date du paiement et celle de la remise.
+  Ni TVA, ni SIRET, ni mention du BDE sur les documents.
+- **Qui crée le document** : le prénom et le nom sont obligatoires et figurent sur le PDF ; le navigateur s'en souvient.
+- **Lignes** préremplies d'après la commande chargée et modifiables (désignation, quantité, prix, ajout, suppression). Boutons « Remplir depuis la commande » et, si les tarifs ont changé depuis ce que le client a vu, « Reprendre les prix vus par le client ». Sans commande chargée, tout se saisit à la main.
+- **Numéros** `FP-2026-001` (fiches) et `FAC-2026-001` (factures), une série par année, proposés d'après les documents déjà créés dans ce navigateur et modifiables.
+- **Nom du fichier** : date, titre, asso et numéro, par exemple `2026-10-19_Fiche-paiement_Nom-de-l-asso_FP-2026-001.pdf`. Bouton « Télécharger » et bouton « Aperçu ».
+- **Logo Fabr'Icam** : en-tête du site et de l'atelier, pied de page, porte de l'atelier, fiche de fabrication imprimée, icône de l'onglet du navigateur, et en haut des PDF. L'en-tête affiche maintenant le logo suivi de « Flocage ».
+- **Coordonnées de l'asso** dans `js/facturation.js` (`CONFIG`) : titulaire « Fablab Icam 26-29 », 75 avenue de Grande-Bretagne, 31300 Toulouse, IBAN. Le dépôt étant public, l'IBAN y est lisible.
+- Nouveaux fichiers : `js/pdf.js` (petit générateur de PDF sans dépendance : texte Helvetica, traits, image), `js/facturation.js`, `js/atelier-paiement.js`, `js/logo-pdf.js` (logo embarqué, généré par `outils/logo-pdf.py`), dossier `img/`.
+- Tests : 94 en tout (62 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier, 24 sur les fiches de paiement et les factures).
+
 ## 5.0.0 — 19/10/2026
 
 Prénom et numéro collés au visuel, pour poser les trois d'un coup à la presse. **Version MAJEURE : la règle de prix et le fichier de commande changent.**
