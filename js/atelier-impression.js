@@ -292,7 +292,7 @@
       var k = m.emp; rec[k] = rec[k] || { image: 0, prenom: 0, numero: 0, bloc: 0, fmt: {}, compo: {} };
       rec[k][m.kind]++;
       if (m.avecImage) rec[k].fmt[(o.marquages[m.emp] || {}).format || ""] = 1;
-      if (m.kind === "bloc") rec[k].compo[m.el.items.map(function (i) { return NOM_ELEMENT[i.kind]; }).join(" + ")] = 1;
+      if (m.kind === "bloc") rec[k].compo[m.el.items.map(function (i) { return i.kind === "image" ? "visuel " + ((o.marquages[m.emp] || {}).format || "") : NOM_ELEMENT[i.kind]; }).join(" + ")] = 1;
     });
     var avecBlocs = r.motifs.some(function (m) { return m.kind === "bloc"; });
     var empRows = A.EMP_ORDER.filter(function (e) { return rec[e]; }).map(function (e) {

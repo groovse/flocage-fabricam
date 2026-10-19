@@ -5,6 +5,17 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 5.0.0 — 19/10/2026
+
+Prénom et numéro collés au visuel, pour poser les trois d'un coup à la presse. **Version MAJEURE : la règle de prix et le fichier de commande changent.**
+
+- **Option « collés au visuel » sur chaque emplacement, cochée par défaut.** Le visuel, le prénom et le numéro d'un même emplacement sont imprimés sur un seul transfert, à 0,5 cm les uns des autres (`placement.ecartBloc` dans `js/prix.js`), et pressés en une fois. L'aperçu les montre ainsi. La case apparaît dès qu'un emplacement porte au moins deux éléments ; un emplacement de texte seul (dos sans visuel) colle le prénom et le numéro ensemble. Décochée, les éléments redeviennent séparés.
+- **Prix : un bloc compte pour un seul motif, 1 € de marge au lieu de 2 €.** En contrepartie, un bloc entier tient moins bien sur les planches que des petits motifs séparés. Polo, visuel A6, prénom de 2,5 cm et numéro de 4 cm : 19,39 € pour 1 pièce (20,39 € avant), 11,28 € pour 10 (11,88 €), 10,36 € pour 30 (10,94 €). Les planches coûtent 18 € au lieu de 14 € pour 10 pièces. Un pack garde sa marge fixe par pièce.
+- **Bloc trop grand pour la presse** (visuel A4 avec du texte, plus de 21 × 28 cm) : le bloc n'est pas fait, les éléments restent séparés et le site l'indique.
+- **Atelier** : les planches PNG (fichier à envoyer et plan de coupe) et leur aperçu dessinent le bloc en un seul rectangle ; repère à plusieurs lettres (`3·Pvpn`) ; le diaporama écrit « Bloc collé, à presser d'un coup » avec le détail de chaque élément ; la fiche imprimée gagne une colonne « Blocs collés » et la légende des repères ; la résolution du visuel est calculée sur le visuel du bloc.
+- **Fichier de commande** : chaque marquage porte `bloc` (`true` ou `false`). Un ancien fichier, sans ce champ, garde les éléments séparés et le même prix qu'avant. Le mail de commande précise « collés en un seul bloc ».
+- Tests : 70 en tout (62 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier), dont 7 sur le bloc collé.
+
 ## 4.2.0 — 19/10/2026
 
 Nouvelle catégorie « Ton vêtement » : le client apporte son vêtement, Fabr'Icam ne fait que le flocage. Les prix des autres articles ne changent pas.

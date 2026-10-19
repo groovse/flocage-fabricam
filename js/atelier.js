@@ -605,7 +605,7 @@
         var imgEl = E.motifImage(m), txtEl = m.kind === "bloc" ? m.el.items.filter(function (i) { return i.kind !== "image"; })[0] : (m.kind !== "image" ? m.el : null);
         if (imgEl && cfg.image && cfg.image.dataUrl) vis = '<img class="mini" src="' + esc(cfg.image.dataUrl) + '" alt="">';
         if (txtEl) vis += '<span class="chip-c" style="background:' + esc(txtEl.couleur) + '"></span>';
-        return '<div class="mo">' + vis + "<div>" + motifTexte(m) + "</div></div>";
+        return '<div class="mo' + (m.kind === "bloc" ? " mo-bloc" : "") + '">' + vis + "<div>" + motifTexte(m) + "</div></div>";
       }).join("") + "</td><td>" + g.items.map(function (m) {
         var sh = st.motifSheet[m.id];
         return '<div class="mo">' + (sh ? "<b>" + esc(sh.code) + "</b> <span class=\"muted\">case " + esc(codeMotif(m)) + "</span>" : "–") + "</div>";
