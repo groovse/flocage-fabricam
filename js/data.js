@@ -247,8 +247,21 @@ window.DATA = {
       polyesterPct: 100,
       tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL"],
       couleurs: [
-        { id: "blanc", nom: "Blanc", hex: "#f3f3f0", clair: true, ref: "8941327" },
-        { id: "marine", nom: "Marine", hex: "#1f2b4a", clair: false, ref: "8946323" }
+        { id: "blanc", nom: "Blanc", nomDec: "blanc ultra / noir fumé", hex: "#f3f3f0", clair: true, ref: "8941327",
+          lien: "https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-blanc/362074/c227c382m8941327",
+          photos: dec(["p2938583/k$76581616f663d16be8af6c25364c278c", "p2938800/k$2f2c0c7764ce6bba4b9f4e4da829d8d0", "p2938755/k$1425f123b7f535f07da3decbab601885", "p2938666/k$36b0f9900a2fae6044766b8299e03cf2", "p2938901/k$28aa72e7df5a161e28184a34e9946c7a", "p2938618/k$e0e39fd469f2cb8c8a713d30396affe9", "p2929375/k$67f50b8c908aca741bfbffb86ea438d3", "p2929349/k$2ec15fe68fc60f656a009e71f5c352d8"]) },
+        { id: "marine", nom: "Marine", nomDec: "indigo nuit. / blanc ultra", hex: "#1f2b4a", clair: false, ref: "8946323",
+          lien: "https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-navy/362074/c188c227m8946323",
+          photos: dec(["p2938641/k$ea29b30a88b589dd03f796dd309140ca", "p2938609/k$585d32cadf4dce27e8651f3ab994f443", "p2938791/k$892fdbaddd75dd31fb031f06e4fdfbee", "p2938651/k$5ddc85a614fa2524203d65f4884c8b2f", "p2938716/k$cc9590f325308dc7cf0f8c51130ddd55", "p2938895/k$bc3f206cbead1e6006f3c7095f73fec5"]) },
+        { id: "rouge", nom: "Rouge", nomDec: "rouge piment / blanc ultra", hex: "#c4252b", clair: false, ref: "8941329",
+          lien: "https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-rouge/362074/c221c227m8941329",
+          photos: dec(["p2938668/k$8827e3a54ec70bf348f91b9202de58b2", "p2938873/k$529b9acf883619e92bda2ccf6ffb9d1c", "p2938782/k$1701057f3a69cbf1d28ac7b64e9a188f", "p2938745/k$fbb3827f73a3c1f1c8ef09d895dda318", "p2938872/k$e033dbc171cb115d5b70ec48fb6cade8", "p2938760/k$3623cc4e28f870c5343380455c1cba23"]) },
+        { id: "noir", nom: "Noir", nomDec: "noir fumé / blanc ultra", hex: "#1c1c1f", clair: false, ref: "8941326",
+          lien: "https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-noir/362074/c382c227m8941326",
+          photos: dec(["p2938594/k$b3da292f2a951c176743027b780c60d4", "p2938775/k$2184adf9c0238dc71bca694a0d96ecb1", "p2938762/k$e5d8aa6eb983e732414e3b4101cc1645", "p2938736/k$ee00a36875c13b38bd85da02fa742fe4", "p2938781/k$cfee714f46afe6e12a037642f6a61799", "p2938692/k$465100b6925e10fb24bb6d3937dbe51c"]) },
+        { id: "bleu", nom: "Bleu", nomDec: "bleu indigo / blanc ultra", hex: "#2d4f9e", clair: false, ref: "8941328",
+          lien: "https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-bleu/362074/c59c227m8941328",
+          photos: dec(["p2938837/k$ee584fa5e017def8960b6a93524a24de", "p2938864/k$023e1a5b033fcce4dce99fd570bc55c9", "p2938617/k$c26623b75acc5d6c06e61a9a946d26e9", "p2938731/k$6f035eecd3abe0e890e44538fd8996ba", "p2938867/k$7f6915127ef81eb8da086a6a27743afc", "p2938580/k$fddedcccdacfeaf3e2f290311606ab7e", "p2929375/k$67f50b8c908aca741bfbffb86ea438d3", "p2929365/k$e032e59b0d26a0288d8d0ea09aed9b98"]) }
       ],
       lien: "https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-blanc/362074/c227c382m8941327",
       photos: [
@@ -288,7 +301,12 @@ window.DATA = {
       polyesterPct: 100,
       tailles: ["S", "M", "L", "XL", "2XL", "3XL"],
       couleurs: [
-        { id: "marine", nom: "Marine", hex: "#243b5e", clair: false, ref: "962194" }
+        { id: "marine", nom: "Marine", nomDec: "bleu acier / -", hex: "#243b5e", clair: false, ref: "962194",
+          lien: "https://www.decathlon.fr/p/short-de-tennis-homme-essential-marine/300096/c364c344m962194",
+          photos: dec(["p2875053/k$4e8f06bf8a684d9ac7f74e5ffc48c4b1", "p2946197/k$076fbd3d7789efd04ecd305051dc0e6b", "p2454823/k$f5f94a291d8588549b16eeef600f7d8c", "p2875943/k$e4d46a5451e79ab0163a482444de278a"]) },
+        { id: "noir", nom: "Noir", nomDec: "noir fumé", hex: "#1c1c1f", clair: false, ref: "962201",
+          lien: "https://www.decathlon.fr/p/short-de-tennis-homme-essential-noir/300096/c382m962201",
+          photos: dec(["p2875056/k$6da1206e1220c44425c3495beda8a512", "p2946129/k$f38c5c99db2ded57824cae69a2eec47f", "p2454820/k$93d493be0045fa12bb25e2034622e652", "p2946080/k$96044c0612be470675b1064c6e0e2a7d"]) }
       ],
       lien: "https://www.decathlon.fr/p/short-de-tennis-homme-essential-marine/300096/c364c344m962194",
       photos: [
@@ -318,7 +336,12 @@ window.DATA = {
       polyesterPct: 0,
       tailles: ["S", "M", "L", "XL", "2XL", "3XL", "4XL"],
       couleurs: [
-        { id: "blanc", nom: "Blanc", hex: "#f3f3f0", clair: true, ref: "8667062" }
+        { id: "blanc", nom: "Blanc", nomDec: "blanc ultra / -", hex: "#f3f3f0", clair: true, ref: "8667062",
+          lien: "https://www.decathlon.fr/p/debardeur-extensible-fitness-homme-500-blanc/335335/c227c344m8667062",
+          photos: dec(["p2731077/k$1e73eea8d727c1e768e61aafa0edc800", "p2731078/k$b5d65d7775e85ceddbb17a8b7659d623", "p2731073/k$d85b477b3d42aa39f9fc9d592eae009e", "p2731074/k$e0cde3879d377ef95d0792d472b2e2ae", "p2731075/k$9aa656cb6f1da9d76f98648a10c4589d", "p2731076/k$0f55a11d977ec9bee5cd9c76622cad88"]) },
+        { id: "noir", nom: "Noir", nomDec: "noir ultra / -", hex: "#1c1c1f", clair: false, ref: "8667061", prixAchat: 7.99,
+          lien: "https://www.decathlon.fr/p/debardeur-extensible-fitness-homme-500-noir/335335/c378c344m8667061",
+          photos: dec(["p2731079/k$e1deae35ed8d5ed243d6d9799969ddc6", "p2731080/k$2023235e4ad2dd7ece20853440fb92b7", "p2731081/k$cb0fc303af95aeda93016618e7a72024", "p2731082/k$cd09e5cafc58f9014fa4774ffe0fab14", "p2731083/k$dfc43325f84e4cf6922db9b64e7efae7", "p2731084/k$8d9734f0d07e05732c5ed49a62026052"]) }
       ],
       lien: "https://www.decathlon.fr/p/debardeur-extensible-fitness-homme-500-blanc/335335/c227c344m8667062",
       photos: [
