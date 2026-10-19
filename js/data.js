@@ -2,13 +2,17 @@
  * CATALOGUE — pour ajouter un vêtement, copie un bloc de « produits » et change :
  * id, nom, prixAchat (TTC), tailles, couleurs, modele (le dessin : polo, sweat, debardeur,
  * maillot, short-basket, short-tennis, short-slim, tshirt, manches-longues, veste, sweat-zip, gilet, gilet-matelasse, ensemble-short,
- * pantalon, chaussette, gourde, casquette, bonnet, tour-de-cou, bandeau, sac-tube, sac-sport, sac-a-dos, ceinture), tags (genre, style, type : haut, bas,
- * ensemble ou accessoire), vendeur (seulement pour un article de la place de marché Decathlon, voir prix.js), sublimation: false
- * (article qui ne se sublime pas), margePack: 0 (pièce sans marge dans un pack, comme les chaussettes, voir prix.js), vitrine (emplacements du prix affiché) et zones.
+ * pantalon, chaussette, chasuble, gourde, casquette, bonnet, tour-de-cou, bandeau, sac-tube, sac-sport, sac-a-dos, ceinture, serviette,
+ * ouvre-bouteille, porte-cles), tags (genre, style, type : haut, bas, ensemble ou accessoire), vendeur (seulement pour un article vendu en ligne :
+ * place de marché Decathlon ou AliExpress, voir prix.js), sublimation: false (article qui ne se sublime pas),
+ * technique: "gravure" (article gravé au laser ou marqué en vinyle thermocollant : ni planche DTF ni coût de planche, voir engine.js),
+ * margePack: 0 (pièce sans marge dans un pack, comme les chaussettes, voir prix.js), vitrine (emplacements du prix affiché) et zones.
  * Un article « apporte: true » est un vêtement que le client apporte (voir plus bas, « Ton vêtement ») : prixAchat 0, couleurs = COULEURS_APPORTE.
  * Chaque couleur porte : nomDec (son nom sur Decathlon), ref (référence Decathlon), lien (la page de cette couleur), photos (sa série de
  * photos, avec dec([...])), et si besoin prixAchat (quand cette couleur ne coûte pas le prix de l'article) et rupture (date AAAA-MM-JJ
  * à laquelle Decathlon l'a signalée en rupture de stock). « photos » de l'article : les photos de la couleur de référence de apercuPhoto.
+ * Sur AliExpress, la variante se choisit sur la page de l'article : nomDec est le nom de la variante chez le vendeur, lien la page de l'article,
+ * photos l'adresse complète de l'image de la variante (pas de dec([...])), prixAchat le prix de la variante affiché sur la page.
  * Les zones sont en cm sur le dessin du vêtement (90 cm de large) : cx = centre horizontal,
  * top = haut de la zone (ou cy = centre), w/h = taille max de la zone.
  */
@@ -51,7 +55,10 @@ window.DATA = {
     bas_jambe_g: { label: "Bas de la jambe gauche", formats: [], texteSeul: true },
     chaussette_g: { label: "Chaussette gauche", formats: [], texteSeul: true },
     chaussette_d: { label: "Chaussette droite", formats: [], texteSeul: true },
-    // Accessoires : petits formats (Mini 5 x 5 cm, A7 7 x 10 cm, voir formatsMotif dans prix.js)
+    // Accessoires : petits formats (Mini 5 x 5 cm, A7 7 x 10 cm, Micro 1,5 x 3 cm pour le porte-clés, voir formatsMotif dans prix.js)
+    serviette:   { label: "Bas de la serviette", formats: ["A6", "A5", "A4"] },
+    ouvre_bouteille: { label: "Face de l'ouvre-bouteille", formats: ["Mini"] },
+    porte_cles:  { label: "Face du porte-clés", formats: ["Micro"] },
     sac:         { label: "Face du sac", formats: ["A6", "A5"] },
     gourde:      { label: "Face de la gourde", formats: ["Mini", "A7"] },
     casquette:   { label: "Devant de la casquette", formats: ["Mini"] },
@@ -1224,6 +1231,50 @@ window.DATA = {
       }
     },
     {
+      id: "chasuble-football",
+      nomCourt: "Chasuble",
+      nom: "Chasuble de football adulte",
+      marque: "Kipsta, Decathlon",
+      modele: "chasuble",
+      demonstratif: "ce chasuble",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Football", type: "haut" },
+      prixAchat: 3.49,
+      matiere: "100 % polyester",
+      polyesterPct: 100,
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "jaune-fluo", nom: "Jaune fluo", nomDec: "jaune acide fluo", hex: "#dff21b", clair: false, ref: "8526946",
+          lien: "https://www.decathlon.fr/p/chasuble-adulte-jaune-fluo/2856/c132m8526946",
+          photos: dec(["p2635139/k$298f86347c6519c17764489394ec9ea6"]) },
+        { id: "orange-fluo", nom: "Orange fluo", nomDec: "orange flamme fluo", hex: "#ff6a13", clair: false, ref: "8526947",
+          lien: "https://www.decathlon.fr/p/chasuble-adulte-orange-fluo/2856/c125m8526947",
+          photos: dec(["p2635136/k$e357924381e0fb4d1aaead7f392a186d"]) },
+        { id: "rouge", nom: "Rouge", nomDec: "rouge piment", hex: "#c4252b", clair: false, ref: "8526950",
+          lien: "https://www.decathlon.fr/p/chasuble-adulte-rouge/2856/c221m8526950",
+          photos: dec(["p2635228/k$ae74026c51a8a3fae005e2f23d70e934"]) },
+        { id: "blanc", nom: "Blanc", nomDec: "non teint", hex: "#f3f3f0", clair: true, ref: "8526948",
+          lien: "https://www.decathlon.fr/p/chasuble-adulte-blanc/2856/c335m8526948",
+          photos: dec(["p2635237/k$c8d5e9bac29c45d2e23d1cdd9fb73081"]) },
+        { id: "bleu-acier", nom: "Bleu acier", nomDec: "bleu acier", hex: "#55708f", clair: false, ref: "8526949",
+          lien: "https://www.decathlon.fr/p/chasuble-adulte-bleu-fonce/2856/c364m8526949",
+          photos: dec(["p2635226/k$b35f4548170e15f90b70e0a1632942d7"]) },
+        { id: "turquoise", nom: "Turquoise", nomDec: "vert caraïbes", hex: "#14a6a0", clair: false, ref: "8526951",
+          lien: "https://www.decathlon.fr/p/chasuble-adulte-turquoise/2856/c74m8526951",
+          photos: dec(["p2635225/k$ee2fa518bed3cf8a3ca644ccdcbff688"]) }
+      ],
+      lien: "https://www.decathlon.fr/p/chasuble-adulte-jaune-fluo/2856/c132m8526946",
+      photos: [
+        "https://contents.mediadecathlon.com/p2635139/k$298f86347c6519c17764489394ec9ea6/picture.jpg"
+      ],
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Chasuble en maille aérée : le transfert DTF tient sur les mailles pleines, Fabr'Icam fait un essai (tenue, lavage, chaleur de la presse) avant la série.",
+      zones: {
+        poitrine: { vue: "face", cx: 45, top: 24, w: 26, h: 32, label: "Poitrine" },
+        dos:      { vue: "dos",  cx: 45, top: 16, w: 40, h: 54, label: "Dos" }
+      }
+    },
+    {
       id: "gourde-alu-1l",
       nomCourt: "Gourde alu 1 L",
       nom: "Gourde alu 1 L avec bouchon instantané",
@@ -1990,6 +2041,145 @@ window.DATA = {
       avertissement: "Ceinture en tissu technique extensible : petit visuel, essai de pressage avant la série.",
       zones: {
         ceinture: { vue: "face", cx: 20, top: 11, w: 16, h: 9, label: "Face de la ceinture" }
+      }
+    },
+
+    {
+      id: "serviette-microfibre-l",
+      nomCourt: "Serviette",
+      nom: "Serviette de bain microfibre 80 × 130 cm",
+      marque: "Nabaiji, Decathlon",
+      modele: "serviette",
+      demonstratif: "cette serviette",
+      tags: { genre: ["homme", "femme"], style: "sport", sport: "Natation", type: "accessoire" },
+      prixAchat: 7.99,
+      matiere: "88 % polyester, 12 % polyamide",
+      polyesterPct: 88,
+      sublimation: false,   // pas de sublimation sur cet article (microfibre à poils courts)
+      tailles: ["80 × 130 cm"],
+      couleurs: [
+        { id: "noir", nom: "Noir", nomDec: "noir fumé / bleu cobalt", hex: "#25262b", clair: false, ref: "8926376",
+          lien: "https://www.decathlon.fr/p/serviette-de-bain-microfibre-taille-l-80-x-130-cm-noir/158325/c382c108m8926376",
+          photos: dec(["p2865388/k$eddb725abb3671d1ba575bf8d6594599", "p2865425/k$7814c34ca268fd6877aaf070f44de378", "p2865553/k$c7b9514f3649390a0f64e74b293df2ec", "p2865452/k$135e14f1f1f6dfcd6bc9d19f74e2b72e"]) },
+        { id: "rose", nom: "Rose", nomDec: "rose fuchsia / bleu de prusse", hex: "#d9488a", clair: false, ref: "8982010",
+          lien: "https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-rose/158325/c144c209m8982010",
+          photos: dec(["p3034957/k$f20fdab6450d1979bc6da7c9cfe109ef", "p3035034/k$72f607b6a344de0f21085e0ab35517f9", "p3034970/k$1e2416b176dcbfcc43ad3991e6a9287f", "p3034992/k$a686cdc81fed6ccb3a63d0efce9093cd"]) },
+        { id: "bleu", nom: "Bleu", nomDec: "bleu de prusse / orange flamme fluo", hex: "#1d5b86", clair: false, ref: "8584433",
+          lien: "https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-bleu/158325/c209c125m8584433",
+          photos: dec(["p2865409/k$ad7d4b62e6bba4e4e105ea23c1a92de2", "p2865334/k$88afda3771cbc262a1f7c23ee7e78817", "p2865260/k$b8931f00bc8119497c321ba752b0643a", "p2865495/k$336f5a76367325628fe903937284cef6"]) },
+        { id: "vert", nom: "Vert", nomDec: "vert cèdre / vert aquamarine", hex: "#2f6f58", clair: false, ref: "8543246",
+          lien: "https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-vert/158325/c273c192m8543246",
+          photos: dec(["p2865253/k$2547504643f656e62baed9b5d5b34a58", "p2865378/k$b985270d91ba6bc97b213399baddc868", "p2865438/k$15ccfa00548955e936a836daef8bb88a", "p2865459/k$75c1236fce369d2ff392e7ff68b8e02d", "p2786824/k$8bd0e85a2d557d3f6907a9cae876346e"]) },
+        { id: "violet-lilas", nom: "Violet lilas", nomDec: "violet lilas / violet nuit", hex: "#a78bd0", clair: false, ref: "8797394",
+          lien: "https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-lila/158325/c338c190m8797394",
+          photos: dec(["p2865337/k$56fc1d130fe618eba601613410dc2119", "p2865397/k$865116dbf538c4f550ad57ace1c83570", "p2865486/k$a7fb198bb0156cf6613eed9cf9360f87", "p2865259/k$cd035036ce33083d0c01cc6ec6304f75"]) },
+        { id: "orange", nom: "Orange", nomDec: "orange kumquat / orange pastel corail", hex: "#f08a1c", clair: false, ref: "8982011",
+          lien: "https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-orange/158325/c353c199m8982011",
+          photos: dec(["p3034950/k$2a364f9cb0f3eb48bf25e9e00ff71bec", "p3035003/k$a8f3e8cc08cea03053a4b006a03c04cf", "p3034945/k$adfc051049883e3ca17e4f1cfe6f7497", "p3034966/k$952046f0179cd1ff283f89b62f4630f1", "p3100397/k$776e1702540a84686a75fb49b1d91a89", "p3051102/k$9c573f563148b139b103c6f7d966f1b5", "p3051119/k$063dad81a111395cb93bc138855dbc0b"]) }
+      ],
+      lien: "https://www.decathlon.fr/p/serviette-de-bain-microfibre-taille-l-80-x-130-cm-noir/158325/c382c108m8926376",
+      photos: [
+        "https://contents.mediadecathlon.com/p2865388/k$eddb725abb3671d1ba575bf8d6594599/picture.jpg",
+        "https://contents.mediadecathlon.com/p2865425/k$7814c34ca268fd6877aaf070f44de378/picture.jpg",
+        "https://contents.mediadecathlon.com/p2865553/k$c7b9514f3649390a0f64e74b293df2ec/picture.jpg",
+        "https://contents.mediadecathlon.com/p2865452/k$135e14f1f1f6dfcd6bc9d19f74e2b72e/picture.jpg"
+      ],
+      vitrine: ["serviette"],
+      texteVitrine: "en bas de la serviette",
+      avertissement: "Serviette microfibre : le transfert DTF se pose sur le tissu à poils courts, avec une chaleur modérée. Fabr'Icam fait un essai (tenue, lavage) avant la série.",
+      zones: {
+        serviette: { vue: "face", cx: 45, top: 98, w: 40, h: 32, label: "Bas de la serviette" }
+      }
+    },
+    {
+      id: "ouvre-bouteille-carte",
+      nomCourt: "Ouvre-bouteille carte",
+      nom: "Ouvre-bouteille format carte de crédit",
+      marque: "Sans marque, AliExpress",
+      modele: "ouvre-bouteille",
+      demonstratif: "cet ouvre-bouteille",
+      tags: { genre: ["homme", "femme"], style: "casual", type: "accessoire" },
+      vendeur: "qst-express-02",   // vendeur AliExpress : livré à Fabr'Icam, port et délai dans prix.js (livraisonVendeur)
+      technique: "gravure",        // gravé au laser ou marqué en vinyle thermocollant : ni planche DTF ni coût de planche
+      prixAchat: 1.81,
+      matiere: "Acier inoxydable",
+      polyesterPct: 0,
+      sublimation: false,
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "noir-pique", nom: "Noir, pique", nomDec: "Black", hex: "#1c1c1f", clair: false,
+          lien: "https://fr.aliexpress.com/item/1005005906667194.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/Sa59fecac61864b1ba3543c12bc20dbf0I.jpg"] },
+        { id: "argent-pique", nom: "Argent, pique", nomDec: "Silver", hex: "#c9ccd1", clair: true, prixAchat: 1.91,
+          lien: "https://fr.aliexpress.com/item/1005005906667194.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/Sa2e1b4d3de294304ba0cdc7bad7d8ea42.jpg"] },
+        { id: "anthracite-decapsuleur", nom: "Anthracite, décapsuleur", nomDec: "A", hex: "#2e3035", clair: false, prixAchat: 2.08,
+          lien: "https://fr.aliexpress.com/item/1005005906667194.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/S7b3c3556ccc4446eb2fe56b6c672c63fk.jpg"] },
+        { id: "argent-trefle", nom: "Argent, trèfle", nomDec: "B", hex: "#c9ccd1", clair: true, prixAchat: 2.12,
+          lien: "https://fr.aliexpress.com/item/1005005906667194.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/Sab3627d0289e4b928d8432477e71f848r.jpg"] },
+        { id: "noir-trefle", nom: "Noir, trèfle", nomDec: "C", hex: "#1c1c1f", clair: false, prixAchat: 2.12,
+          lien: "https://fr.aliexpress.com/item/1005005906667194.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/S4d520e709e6f4e94844a6b995d3f9731x.jpg"] }
+      ],
+      lien: "https://fr.aliexpress.com/item/1005005906667194.html",
+      photos: ["https://ae-pic-a1.aliexpress-media.com/kf/Sa59fecac61864b1ba3543c12bc20dbf0I.jpg"],
+      vitrine: ["ouvre_bouteille"],
+      texteVitrine: "sur la face de l'ouvre-bouteille",
+      avertissement: "Ouvre-bouteille en métal : pas de transfert DTF, le visuel est gravé au laser ou posé en vinyle thermocollant (visuel simple, en une couleur, en vecteur de préférence). La fiche annonce 13 × 11 × 2 cm, une carte de crédit mesure d'ordinaire 8,5 × 5,4 cm : Fabr'Icam confirme la place du motif à la réception et fait un essai avant la série.",
+      zones: {
+        ouvre_bouteille: { vue: "face", cx: 12, top: 7.8, w: 5.2, h: 5.2, label: "Face de l'ouvre-bouteille" }
+      }
+    },
+    {
+      id: "porte-cles-decapsuleur",
+      nomCourt: "Porte-clés décapsuleur",
+      nom: "Porte-clés décapsuleur 4 en 1 en aluminium",
+      marque: "Sans marque, AliExpress",
+      modele: "porte-cles",
+      demonstratif: "ce porte-clés",
+      tags: { genre: ["homme", "femme"], style: "casual", type: "accessoire" },
+      vendeur: "shop4293023",      // vendeur AliExpress : livré à Fabr'Icam, port et délai dans prix.js (livraisonVendeur)
+      technique: "gravure",        // gravé au laser ou marqué en vinyle thermocollant : ni planche DTF ni coût de planche
+      prixAchat: 1.46,
+      matiere: "Aluminium",
+      polyesterPct: 0,
+      sublimation: false,
+      tailles: ["Taille unique"],
+      couleurs: [
+        { id: "argent", nom: "Argent", nomDec: "SL", hex: "#c8ccd2", clair: true,
+          lien: "https://fr.aliexpress.com/item/1005001781443550.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/S3b53d36c92e74c35a1b8dbc46cf819b4f.jpg"] },
+        { id: "noir", nom: "Noir", nomDec: "BK", hex: "#1c1c1f", clair: false, prixAchat: 1.66,
+          lien: "https://fr.aliexpress.com/item/1005001781443550.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/Sf5443a094fb7459abae268bfa68a0682v.jpg"] },
+        { id: "rose-fuchsia", nom: "Rose fuchsia", nomDec: "rose rouge", hex: "#d6246e", clair: false, prixAchat: 1.64,
+          lien: "https://fr.aliexpress.com/item/1005001781443550.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/S1e30740c5f5848b9a280a1f11dc085edv.jpg"] },
+        { id: "jaune-dore", nom: "Jaune doré", nomDec: "YE", hex: "#f0a81c", clair: false, prixAchat: 1.61,
+          lien: "https://fr.aliexpress.com/item/1005001781443550.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/S42997bf2c2da4301a61a15efb504c1e0R.jpg"] },
+        { id: "violet", nom: "Violet", nomDec: "PR", hex: "#8a2fc0", clair: false, prixAchat: 1.62,
+          lien: "https://fr.aliexpress.com/item/1005001781443550.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/S27afbeeb8df54fce8ddd9ed97cfa6449k.jpg"] },
+        { id: "rouge", nom: "Rouge", nomDec: "RE", hex: "#c4252b", clair: false, prixAchat: 1.59,
+          lien: "https://fr.aliexpress.com/item/1005001781443550.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/S0cea43c8f46a4766a4e05ef8490690e2V.jpg"] },
+        { id: "vert", nom: "Vert", nomDec: "GR", hex: "#1f9e4a", clair: false, prixAchat: 1.56,
+          lien: "https://fr.aliexpress.com/item/1005001781443550.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/Sd2aad626109c4a9b8003086cf2deca3cp.jpg"] },
+        { id: "bleu", nom: "Bleu", nomDec: "BL", hex: "#2447c4", clair: false, prixAchat: 1.66,
+          lien: "https://fr.aliexpress.com/item/1005001781443550.html",
+          photos: ["https://ae-pic-a1.aliexpress-media.com/kf/S8c4a25ff0e284482985d3bf29cf6a2692.jpg"] }
+      ],
+      lien: "https://fr.aliexpress.com/item/1005001781443550.html",
+      photos: ["https://ae-pic-a1.aliexpress-media.com/kf/S3b53d36c92e74c35a1b8dbc46cf819b4f.jpg"],
+      vitrine: ["porte_cles"],
+      texteVitrine: "sur la face du porte-clés",
+      avertissement: "Porte-clés en aluminium : pas de transfert DTF, le visuel est gravé au laser ou posé en vinyle thermocollant. La barre ne mesure qu'environ 2 cm de large : un tout petit visuel seulement (Micro, 1,5 × 3 cm). La fiche annonce 5 × 5 × 5 cm, ce sont les dimensions du colis : Fabr'Icam confirme la place du motif à la réception et fait un essai avant la série.",
+      zones: {
+        porte_cles: { vue: "face", cx: 7, top: 5.5, w: 1.7, h: 3.2, label: "Face du porte-clés" }
       }
     },
 

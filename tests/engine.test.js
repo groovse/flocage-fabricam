@@ -433,7 +433,7 @@ test("catalogue : plus de robe, chaque dessin existe dans l'aperçu", () => {
   assert.ok(!DATA.produits.some(p => p.id === "robe-hummel"));
   const modeles = window.Preview.models;
   DATA.produits.forEach(p => assert.ok(modeles[p.modele], p.id + " : dessin « " + p.modele + " » absent de preview.js"));
-  assert.strictEqual(DATA.produits.filter(p => !p.apporte).length, 45);
+  assert.strictEqual(DATA.produits.filter(p => !p.apporte).length, 49);
   assert.strictEqual(DATA.produits.filter(p => p.apporte).length, 16);
   assert.strictEqual(DATA.packs.length, 6);
 });
@@ -455,8 +455,10 @@ test("accessoires : formats, zones, vitrine et prix valides pour chaque article 
       });
     });
     const t = E.priceTable(p, [1, 10], ctx);
-    assert.ok(t[0].unitaire > t[1].unitaire && t[1].unitaire > p.prixAchat, p.id + " : prix " + t.map(x => x.unitaire));
-    p.couleurs.forEach(c => assert.ok(/^https:\/\/www\.decathlon\.fr\/p\//.test(c.lien || p.lien), p.id + " : lien de la couleur " + c.id));
+    // une pièce gravée ou en vinyle n'a ni planche ni livraison à partager : son prix ne baisse pas avec la quantité (achat + 1 €)
+    if (p.technique === "gravure") assert.ok(t[0].unitaire === t[1].unitaire && t[1].unitaire > p.prixAchat, p.id + " : prix " + t.map(x => x.unitaire));
+    else assert.ok(t[0].unitaire > t[1].unitaire && t[1].unitaire > p.prixAchat, p.id + " : prix " + t.map(x => x.unitaire));
+    p.couleurs.forEach(c => assert.ok(/^https:\/\/(www\.decathlon\.fr\/p|fr\.aliexpress\.com\/item)\//.test(c.lien || p.lien), p.id + " : lien de la couleur " + c.id));
   });
   // le prix de la vitrine d'un petit accessoire compte un visuel Mini (5 x 5 cm), pas un A6
   const marq = { casquette: { actif: true, avecImage: true, format: "Mini", orient: "portrait" } };
@@ -482,7 +484,7 @@ test("sublimation : chaussettes et ensemble Hummel blancs en polyester oui, t-sh
 });
 
 console.log("\nCouleurs, photos par couleur et liens vendeur");
-const URL_PHOTO = /^https:\/\/contents\.mediadecathlon\.com\/[pm]\d+\/k\$[0-9a-f]{32}\/picture\.jpg$/;
+const URL_PHOTO = /^https:\/\/(contents\.mediadecathlon\.com\/[pm]\d+\/k\$[0-9a-f]{32}\/picture\.jpg|ae-pic-a1\.aliexpress-media\.com\/kf\/[A-Za-z0-9_]+\.jpg)$/;
 test("couleurs : identifiants uniques, nom Decathlon, lien de la page Decathlon, photos valides et sans doublon", () => {
   let avecPhotos = 0;
   DATA.produits.forEach(p => {
@@ -496,7 +498,7 @@ test("couleurs : identifiants uniques, nom Decathlon, lien de la page Decathlon,
         assert.ok(c.photos.length >= 1, p.id + " " + c.id + " : série de photos vide");
         c.photos.forEach(u => assert.ok(URL_PHOTO.test(u), p.id + " " + c.id + " : adresse de photo " + u));
         assert.strictEqual(new Set(c.photos).size, c.photos.length, p.id + " " + c.id + " : photo en double");
-        assert.ok(/^https:\/\/www\.decathlon\.fr\/p\//.test(c.lien || ""), p.id + " " + c.id + " : une couleur avec photos a aussi son lien");
+        assert.ok(/^https:\/\/(www\.decathlon\.fr\/p|fr\.aliexpress\.com\/item)\//.test(c.lien || ""), p.id + " " + c.id + " : une couleur avec photos a aussi son lien");
       }
       if (c.rupture != null) assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(c.rupture), p.id + " " + c.id + " : date de rupture");
       if (c.prixAchat != null) assert.ok(c.prixAchat > 0, p.id + " " + c.id + " : prix d'achat de la couleur");
@@ -521,9 +523,9 @@ test("relecture Decathlon : polo 2 couleurs, sweat 4 couleurs, maillot de basket
   assert.deepStrictEqual(m.couleurs.filter(c => c.rupture).map(c => c.id), ["rouge"]);
   assert.strictEqual(new Set(m.couleurs.map(c => c.photos[0])).size, 5, "une série de photos différente par couleur");
 });
-test("relecture Decathlon des 45 articles : un lien pour chaque couleur ; en magasin, sa série de photos et sa référence", () => {
-  const dec = DATA.produits.filter(p => !p.apporte);
-  assert.strictEqual(dec.length, 45);
+test("relecture Decathlon des 47 articles : un lien pour chaque couleur ; en magasin, sa série de photos et sa référence", () => {
+  const dec = DATA.produits.filter(p => !p.apporte && (!p.vendeur || (PRIX.livraisonVendeur.vendeurs[p.vendeur].plateforme || "Decathlon") === "Decathlon"));
+  assert.strictEqual(dec.length, 47);
   dec.forEach(p => p.couleurs.forEach(c => {
     assert.ok(/^https:\/\/www\.decathlon\.fr\/p\//.test(c.lien || ""), p.id + " " + c.id + " : lien de la couleur");
     if (!p.vendeur) assert.ok(c.photos && c.ref && c.lien.endsWith("m" + c.ref), p.id + " " + c.id + " : photos, référence et page de la couleur");
@@ -552,11 +554,19 @@ test("prix d'achat par couleur : la couleur au prix différent change le coût, 
   const r0 = E.computeOrder({ pieces: mix, marquages: {}, technique: "dtf" }, ctx);
   assert.strictEqual(r0.couts.achats, 15.98, "sans prix de couleur, le prix de l'article s'applique");
 });
-test("vendeurs : chaque vendeur a un nom, et son lien (s'il est connu) est une page vendeur Decathlon", () => {
+test("vendeurs : chaque vendeur a un nom, et son lien (s'il est connu) est une page vendeur Decathlon ou une boutique AliExpress", () => {
   Object.keys(PRIX.livraisonVendeur.vendeurs).forEach(id => {
     const v = PRIX.livraisonVendeur.vendeurs[id];
-    assert.ok(v.nom && v.frais > 0, id);
-    assert.ok(v.lien === "" || /^https:\/\/www\.decathlon\.fr\/mp\/seller\/[a-z0-9-]+\/[0-9a-f-]{36}$/.test(v.lien), id + " : lien du vendeur " + v.lien);
+    assert.ok(v.nom, id);
+    if ((v.plateforme || "Decathlon") === "Decathlon") {
+      assert.ok(v.frais > 0, id + " : un vendeur Decathlon a des frais de port");
+      assert.ok(v.lien === "" || /^https:\/\/www\.decathlon\.fr\/mp\/seller\/[a-z0-9-]+\/[0-9a-f-]{36}$/.test(v.lien), id + " : lien du vendeur " + v.lien);
+    } else {
+      assert.strictEqual(v.plateforme, "AliExpress", id);
+      assert.strictEqual(v.frais, 0, id + " : port compté à 0 € (offert dès 10 € d'achat)");
+      assert.ok(v.delai && v.note, id + " : délai et note de livraison");
+      assert.ok(/^https:\/\/fr\.aliexpress\.com\/store\/\d+$/.test(v.lien), id + " : lien de la boutique " + v.lien);
+    }
   });
   assert.ok(/sport-et-go-eu/.test(PRIX.livraisonVendeur.vendeurs["sport-et-go-eu"].lien), "le lien de Sport & Go EU est connu");
 });
@@ -745,6 +755,81 @@ test("vêtements apportés : un pack et les articles Decathlon ne sont pas touch
   const t = E.priceTable(produits["apporte-veste"], [5, 6, 10], ctx).map(x => x.unitaire), t0 = E.priceTable(produits["apporte-veste"], [5, 6, 10], ctxSans).map(x => x.unitaire);
   assert.strictEqual(t[0], t0[0]);
   assert.strictEqual(t[1], E.round2(t0[1] - 0.5)); assert.strictEqual(t[2], E.round2(t0[2] - 0.5));
+});
+
+console.log("\nOuvre-bouteilles, porte-clés, serviette et chasuble (version 6.1.0)");
+const mqOB = { ouvre_bouteille: { actif: true, avecImage: true, format: "Mini", orient: "portrait" } };
+const mqPC = { porte_cles: { actif: true, avecImage: true, format: "Micro", orient: "portrait" } };
+test("6.1.0 : le format Micro (3 × 1,5 cm) existe, et son emplacement n'accepte que lui", () => {
+  assert.deepStrictEqual([PRIX.formatsMotif.Micro.w, PRIX.formatsMotif.Micro.h], [1.5, 3]);
+  assert.deepStrictEqual(DATA.emplacements.porte_cles.formats, ["Micro"]);
+  assert.deepStrictEqual(DATA.emplacements.ouvre_bouteille.formats, ["Mini"]);
+  const z = produits["porte-cles-decapsuleur"].zones.porte_cles;
+  assert.ok(PRIX.formatsMotif.Micro.w <= z.w && PRIX.formatsMotif.Micro.h <= z.h, "le Micro tient dans la zone du porte-clés");
+  const r = E.computeOrder({ pieces: [piece2("k", "porte-cles-decapsuleur")], marquages: mqPC, technique: "dtf" }, ctx);
+  assert.deepStrictEqual(r.motifs.map(m => [m.w, m.h]), [[1.5, 3]]);
+  assert.deepStrictEqual(r.warnings, []);
+});
+test("6.1.0 : gravure ou vinyle, une pièce en métal n'a ni planche, ni livraison DTF, même en sublimation : achat + 1 € de marge", () => {
+  const prods = ["ouvre-bouteille-carte", "porte-cles-decapsuleur"];
+  prods.forEach(id => assert.strictEqual(produits[id].technique, "gravure", id));
+  ["dtf", "sublimation"].forEach(technique => {
+    const r = E.computeOrder({ pieces: [piece2("a", "ouvre-bouteille-carte")], marquages: mqOB, technique }, ctx);
+    assert.strictEqual(E.pieceTechno({ technique }, piece2("a", "ouvre-bouteille-carte"), ctx), "gravure");
+    assert.deepStrictEqual(Object.keys(r.plans), [], "aucune planche");
+    assert.deepStrictEqual(r.motifs.map(m => m.techno), ["gravure"]);
+    assert.strictEqual(r.couts.planchesTTC, 0); assert.strictEqual(r.couts.livraison, 0);
+    assert.strictEqual(r.couts.total, 1.81);
+    assert.strictEqual(r.prix.unitaire, 2.81);
+    assert.strictEqual(r.prix.marge, 1);
+  });
+  const r = E.computeOrder({ pieces: [piece2("b", "porte-cles-decapsuleur")], marquages: mqPC, technique: "dtf" }, ctx);
+  assert.strictEqual(r.couts.total, 1.46); assert.strictEqual(r.prix.unitaire, 2.46);
+  // 50 pièces : le prix ne bouge pas (rien à partager)
+  const t = E.priceTable(produits["ouvre-bouteille-carte"], [1, 50], ctx).map(x => x.unitaire);
+  assert.deepStrictEqual(t, [2.81, 2.81]);
+});
+test("6.1.0 : le prix d'achat suit la variante AliExpress choisie (couleur et motif)", () => {
+  const ob = produits["ouvre-bouteille-carte"], pc = produits["porte-cles-decapsuleur"];
+  assert.deepStrictEqual(ob.couleurs.map(c => E.prixAchatPiece(ob, c.id)), [1.81, 1.91, 2.08, 2.12, 2.12]);
+  assert.deepStrictEqual(pc.couleurs.map(c => E.prixAchatPiece(pc, c.id)), [1.46, 1.66, 1.64, 1.61, 1.62, 1.59, 1.56, 1.66]);
+  const r = E.computeOrder({ pieces: [piece2("a", "ouvre-bouteille-carte", { couleurId: ob.couleurs[3].id })], marquages: mqOB, technique: "dtf" }, ctx);
+  assert.strictEqual(r.prix.unitaire, 3.12);
+});
+test("6.1.0 : un motif gravé ne prend pas de place sur la planche DTF et ne coûte rien à la pièce voisine", () => {
+  const mix = { pieces: [piece2("p", "polo-essential"), piece2("a", "ouvre-bouteille-carte"), piece2("b", "porte-cles-decapsuleur")], marquages: Object.assign({}, A6poitrine, mqOB, mqPC), technique: "dtf" };
+  const seul = E.computeOrder({ pieces: [piece2("p", "polo-essential")], marquages: A6poitrine, technique: "dtf" }, ctx);
+  const r = E.computeOrder(mix, ctx);
+  assert.strictEqual(r.plans.dtf.sheets.reduce((n, s) => n + s.placed.length, 0), 1, "un seul motif sur les planches : celui du polo");
+  assert.strictEqual(r.couts.planchesTTC, seul.couts.planchesTTC); assert.strictEqual(r.couts.livraison, seul.couts.livraison);
+  assert.strictEqual(r.coutPieces.p.total, seul.coutPieces.p.total);
+  assert.deepStrictEqual([r.coutPieces.a.planches, r.coutPieces.a.livraison, r.coutPieces.b.planches, r.coutPieces.b.livraison], [0, 0, 0, 0]);
+  assert.strictEqual(r.couts.total, E.round2(seul.couts.total + 1.81 + 1.46));
+  assert.strictEqual(r.prix.total, E.round2(19.39 + 2.81 + 2.46));
+  assert.strictEqual(r.motifs.length, 3);
+});
+test("6.1.0 : AliExpress, port compté à 0 € et délai de 5 à 10 jours, boutique et note repris dans la commande", () => {
+  const r = E.computeOrder({ pieces: [piece2("a", "ouvre-bouteille-carte"), piece2("b", "porte-cles-decapsuleur"), piece2("c", "tour-de-cou-morf")], marquages: {}, technique: "dtf" }, ctx);
+  const ali = r.vendeurs.filter(v => v.plateforme === "AliExpress");
+  assert.deepStrictEqual(ali.map(v => v.id).sort(), ["qst-express-02", "shop4293023"]);
+  ali.forEach(v => { assert.strictEqual(v.frais, 0); assert.strictEqual(v.delai, "5 à 10 jours"); assert.ok(/offerte dès 10 €/.test(v.note)); });
+  assert.strictEqual(r.vendeurs.filter(v => v.plateforme === "Decathlon").length, 1, "le tour de cou reste chez son vendeur Decathlon");
+  assert.strictEqual(r.couts.livraisonVendeurs, 4.99, "seul le vendeur Decathlon facture un port");
+});
+test("6.1.0 : chasuble Kipsta en polyester (sublimation si blanc), serviette Nabaiji toujours en DTF", () => {
+  const ch = produits["chasuble-football"], se = produits["serviette-microfibre-l"];
+  assert.strictEqual(ch.prixAchat, 3.49); assert.strictEqual(se.prixAchat, 7.99);
+  assert.strictEqual(ch.couleurs.length, 6); assert.strictEqual(se.couleurs.length, 6);
+  assert.strictEqual(se.sublimation, false);
+  const o = { technique: "sublimation" };
+  const techno = (prod, couleurId) => E.pieceTechno(o, piece2("x", prod.id, { couleurId }), ctx);
+  assert.strictEqual(techno(ch, "blanc"), "sublimation");
+  assert.strictEqual(techno(ch, "rouge"), "dtf");
+  se.couleurs.forEach(c => assert.strictEqual(techno(se, c.id), "dtf", "serviette " + c.id));
+  assert.deepStrictEqual(E.priceTable(ch, [1, 5, 10, 20, 50], ctx).map(x => x.unitaire), [14.89, 7.07, 6.33, 5.64, 5.22]);
+  assert.deepStrictEqual(E.priceTable(se, [1, 5, 10, 20, 50], ctx).map(x => x.unitaire), [19.39, 11.57, 10.83, 10.14, 9.72]);
+  assert.ok(se.zones.serviette && DATA.emplacements.serviette.formats.every(f => PRIX.formatsMotif[f].w <= se.zones.serviette.w && PRIX.formatsMotif[f].h <= se.zones.serviette.h));
+  assert.ok(ch.zones.poitrine && ch.zones.dos);
 });
 
 console.log("\n" + ok + " tests passés");

@@ -304,8 +304,12 @@
     return prod.polyesterPct || 0;
   }
 
+  // Procédé de pose d'une pièce. Un article qui déclare `technique: "gravure"` (ouvre-bouteilles en métal) est gravé au laser ou
+  // marqué en vinyle thermocollant : ses motifs ne vont sur aucune planche et n'en coûtent aucune (ni DTF, ni sublimation),
+  // quel que soit le choix du client. Les autres articles sont en sublimation (polyester blanc ou clair, si la commande la demande) ou en DTF.
   function pieceTechno(order, piece, ctx) {
     var prod = ctx.produits[piece.produitId];
+    if (prod && prod.technique === "gravure") return "gravure";
     if (order.technique === "sublimation" && prod && prod.sublimation !== false) {
       var col = prod.couleurs.filter(function (c) { return c.id === piece.couleurId; })[0];
       if (col && col.clair && polyesterPiece(prod, piece) >= 90) return "sublimation";
@@ -450,7 +454,7 @@
     var baseSeuil = prix.prixPlanchesHT ? planchesHT : planchesTTC;
     var livraison = planchesHT > 0 && baseSeuil < prix.livraison.seuilGratuit ? prix.livraison.colissimo : 0;
 
-    // Articles d'un vendeur de la place de marché Decathlon : le vendeur livre et facture des frais de port,
+    // Articles d'un vendeur en ligne (place de marché Decathlon ou AliExpress) : le vendeur livre et peut facturer des frais de port,
     // une seule fois par vendeur et par commande (prix.livraisonVendeur). Ils sont répartis sur les pièces de ce vendeur.
     var lv = prix.livraisonVendeur || {}, vendeurs = {};
     order.pieces.forEach(function (p) {
@@ -459,7 +463,7 @@
       var v = vendeurs[prod.vendeur];
       if (!v) {
         var def = (lv.vendeurs && lv.vendeurs[prod.vendeur]) || {};
-        v = vendeurs[prod.vendeur] = { id: prod.vendeur, nom: def.nom || prod.vendeur, frais: def.frais != null ? def.frais : (lv.defaut || 0), delai: def.delai || "", pieces: 0 };
+        v = vendeurs[prod.vendeur] = { id: prod.vendeur, nom: def.nom || prod.vendeur, frais: def.frais != null ? def.frais : (lv.defaut || 0), delai: def.delai || "", plateforme: def.plateforme || "Decathlon", note: def.note || "", pieces: 0 };
       }
       v.pieces++;
     });
