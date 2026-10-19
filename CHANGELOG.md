@@ -5,6 +5,21 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.2.0 — 19/10/2026
+
+Le visuel se règle comme un texte : taille libre, rotation et position. **Version MINEURE : un ancien fichier de commande garde son format, sa case et son prix.**
+
+- **Taille libre.** Le choix « A4 / A6 / orientation » est remplacé par une **largeur en cm** (champ précis, curseur) ; la hauteur suit les proportions de l'image. Les boutons A7, A6, A5 et A4 restent comme raccourcis : ils font tenir l'image dans ce format, dans son sens. On peut agrandir l'image au-delà du cadre prévu.
+- **Rotation par quarts de tour** (0, 90, 180, 270°) : bouton rond sur l'aperçu, boutons dans le formulaire. Une fois tournée, l'image occupe son rectangle tourné (« Une fois tourné, il occupe 7 × 14 cm »).
+- **Position.** On glisse l'image sur l'aperçu, ou on tape un décalage en cm (vers la droite et vers le bas, à partir du centre de la zone). Avec un bloc collé, le décalage déplace tout le bloc. Les champs précis suivent l'aperçu, et inversement.
+- **Poignées sur l'aperçu** (mode Dessin) : cadre en pointillés, poignée verte du coin pour redimensionner, bouton rond pour tourner, déplacement par glisser. Le clavier suit : les champs reçoivent le focus et sélectionnent l'image. Pas de poignées en mode Photo.
+- **Limites.** Le visuel peut dépasser la zone prévue sur le vêtement (le site affiche « le visuel déborde de la zone prévue » et l'atelier vérifie la place), mais pas le plateau de la presse, 21 × 28 cm : la largeur maximale se calcule d'après les proportions de l'image et sa rotation.
+- **Prix.** La case réservée sur la planche est le rectangle réel du visuel (tourné si besoin), plus la marge de découpe. **Un visuel plus étroit que son format coûte donc moins cher qu'avant**, un visuel plus grand coûte plus. La position ne change pas le prix. Les prix de la vitrine (visuel A6 à l'emplacement de référence) sont inchangés.
+- **Fichier de commande.** Nouveaux champs facultatifs par marquage : `largeur`, `libre`, `rot`, `dx`, `dy`, et `image.ratio`. Sans `largeur`, le comportement est celui de la 6.1.0 (format et sens).
+- **Atelier.** Texte du diaporama, de réglage et du mail : « 8 × 4 cm, tourné de 90°, décalé de 2 cm vers la droite et 1,5 cm vers le bas ». Les planches (aperçu SVG et export PNG) dessinent le visuel tourné ; la fiche de fabrication regroupe les visuels par dimensions ; le contrôle de résolution (dpi) part de la largeur réelle du visuel.
+- **À vérifier.** Un client qui agrandit beaucoup l'image avec une résolution faible : l'alerte dpi de l'atelier le signale, mais le site client ne bloque pas. La rotation est limitée aux quarts de tour (pas d'angle libre).
+- Tests : 115 en tout (83 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier, 24 sur les fiches de paiement et les factures), dont 8 nouveaux pour la taille libre, la rotation, la position, le débordement et le plateau.
+
 ## 6.1.0 — 19/10/2026
 
 Quatre nouveaux produits : un chasuble de football, une serviette de bain et deux accessoires en métal (ouvre-bouteille, porte-clés décapsuleur) achetés sur AliExpress. **Version MINEURE : les prix des articles existants ne changent pas.**

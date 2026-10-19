@@ -27,7 +27,11 @@
         var el = c.el;
         if (el.kind === "image") {
           var img = order.marquages[mo.emp] && order.marquages[mo.emp].image;
-          if (img && img.dataUrl) out += '<image href="' + esc(img.dataUrl) + '" x="' + c.x + '" y="' + c.y + '" width="' + el.w + '" height="' + el.h + '" preserveAspectRatio="xMidYMid meet"/>';
+          if (img && img.dataUrl) {
+            // le visuel tourné d'un quart de tour : sa case (w × h) est le rectangle qui l'englobe, on le tourne autour de son centre
+            var w0 = el.w0 != null ? el.w0 : el.w, h0 = el.h0 != null ? el.h0 : el.h, cx = c.x + el.w / 2, cy = c.y + el.h / 2;
+            out += '<image href="' + esc(img.dataUrl) + '" x="' + (cx - w0 / 2) + '" y="' + (cy - h0 / 2) + '" width="' + w0 + '" height="' + h0 + '" preserveAspectRatio="xMidYMid meet"' + (el.rot ? ' transform="rotate(' + el.rot + " " + cx + " " + cy + ')"' : "") + "/>";
+          }
         } else {
           out += '<text x="' + (c.x + el.w / 2) + '" y="' + (c.y + el.asc) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
             '" fill="' + esc(el.couleur) + '" style="paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.08px">' + esc(el.text) + "</text>";
@@ -69,9 +73,13 @@
         if (el.kind === "image") {
           var info = st.imgs[mo.emp];
           if (info && info.img && info.nw && info.nh) {
-            var k = Math.min(el.w / info.nw, el.h / info.nh), dw = info.nw * k, dh = info.nh * k;
+            var w0 = el.w0 != null ? el.w0 : el.w, h0 = el.h0 != null ? el.h0 : el.h;
+            var k = Math.min(w0 / info.nw, h0 / info.nh), dw = info.nw * k, dh = info.nh * k;
             ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
-            ctx.drawImage(info.img, (c.x + (el.w - dw) / 2) * ppcm, (c.y + (el.h - dh) / 2) * ppcm, dw * ppcm, dh * ppcm);
+            ctx.save(); ctx.translate((c.x + el.w / 2) * ppcm, (c.y + el.h / 2) * ppcm);
+            if (el.rot) ctx.rotate(el.rot * Math.PI / 180);
+            ctx.drawImage(info.img, -dw / 2 * ppcm, -dh / 2 * ppcm, dw * ppcm, dh * ppcm);
+            ctx.restore();
           }
         } else {
           ctx.font = (el.fontCm * ppcm) + 'px "' + el.police + '", Impact, sans-serif';
@@ -210,7 +218,8 @@
         if (!/^image\/(png|jpeg|svg\+xml|webp)$/.test(f.type)) { A.toast("Il faut un PNG, un JPEG, un SVG ou un WebP."); return; }
         var rd = new FileReader();
         rd.onload = function () {
-          st.order.marquages[inp.dataset.replace].image = { nom: f.name, dataUrl: rd.result };
+          var ancien = st.order.marquages[inp.dataset.replace].image;
+          st.order.marquages[inp.dataset.replace].image = { nom: f.name, dataUrl: rd.result, ratio: ancien && ancien.ratio };   // les proportions choisies par le client restent celles de la case
           At.prepare().then(function () { At.save(); At.route(); A.toast("Visuel remplacé : " + f.name + "."); });
         };
         rd.readAsDataURL(f);
@@ -291,7 +300,11 @@
     r.motifs.forEach(function (m) {
       var k = m.emp; rec[k] = rec[k] || { image: 0, prenom: 0, numero: 0, bloc: 0, fmt: {}, compo: {} };
       rec[k][m.kind]++;
-      if (m.avecImage) rec[k].fmt[(o.marquages[m.emp] || {}).format || ""] = 1;
+      if (m.avecImage) {
+        var cfgM = o.marquages[m.emp] || {}, vis = A.CTX && window.Engine.motifImage(m);
+        // un visuel de taille libre se compte par ses dimensions (« 8 × 4 cm »), un visuel au format par le nom du format (« A6 »)
+        rec[k].fmt[cfgM.largeur > 0 && vis ? fmtN(vis.w0 != null ? vis.w0 : vis.w) + " × " + fmtN(vis.h0 != null ? vis.h0 : vis.h) + " cm" + (vis.rot ? ", tourné de " + vis.rot + "°" : "") : (cfgM.format || "")] = 1;
+      }
       if (m.kind === "bloc") rec[k].compo[m.el.items.map(function (i) { return i.kind === "image" ? "visuel " + ((o.marquages[m.emp] || {}).format || "") : NOM_ELEMENT[i.kind]; }).join(" + ")] = 1;
     });
     var avecBlocs = r.motifs.some(function (m) { return m.kind === "bloc"; });

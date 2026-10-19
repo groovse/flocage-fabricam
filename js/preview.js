@@ -408,24 +408,44 @@
       '</defs>';
   }
 
+  // Un élément d'un emplacement, en cm dans le repère de la zone : y = haut de l'élément dans la pile, centré en x.
+  // ux, uy : position choisie par le client (décalage). Un visuel porte aussi w0 × h0 (sa taille avant rotation) et rot (quart de tour).
   function elementSVG(el, y, sample) {
-    var x = -el.w / 2;
+    var ux = el.ux || 0, uy = el.uy || 0;
     if (el.kind === "image") {
+      var w0 = el.w0 != null ? el.w0 : el.w, h0 = el.h0 != null ? el.h0 : el.h, rot = el.rot || 0;
+      var cx = ux, cy = y + uy + el.h / 2, x = cx - w0 / 2, top = cy - h0 / 2;
+      var tf = rot ? ' transform="rotate(' + rot + ' ' + cx + ' ' + cy + ')"' : "";
       if (el.src) {
-        return '<image href="' + esc(el.src) + '" x="' + x + '" y="' + y + '" width="' + el.w + '" height="' + el.h + '" preserveAspectRatio="xMidYMid meet"/>';
+        return '<image href="' + esc(el.src) + '" x="' + x + '" y="' + top + '" width="' + w0 + '" height="' + h0 + '" preserveAspectRatio="xMidYMid meet"' + tf + '/>';
       }
-      var cx = 0, cy = y + el.h / 2, r = Math.min(el.w, el.h) * 0.36;
+      var r = Math.min(w0, h0) * 0.36;
       if (sample) {
-        return '<g><rect x="' + x + '" y="' + y + '" width="' + el.w + '" height="' + el.h + '" fill="none"/>' +
-          '<circle cx="' + cx + '" cy="' + (cy - el.h * 0.1) + '" r="' + r + '" fill="#e8451e"/>' +
-          '<path d="M' + (cx - r * 0.35) + ' ' + (cy - el.h * 0.1 - r * 0.55) + ' L' + (cx + r * 0.45) + ' ' + (cy - el.h * 0.1 - r * 0.05) + ' L' + (cx - r * 0.05) + ' ' + (cy - el.h * 0.1 + 0.05 * r) + ' L' + (cx + r * 0.3) + ' ' + (cy - el.h * 0.1 + r * 0.6) + ' L' + (cx - r * 0.5) + ' ' + (cy - el.h * 0.1 - 0.05 * r) + ' L' + (cx - r * 0.05) + ' ' + (cy - el.h * 0.1 - 0.15 * r) + ' Z" fill="#fff"/>' +
-          '<text x="0" y="' + (y + el.h * 0.88) + '" text-anchor="middle" font-family="\'Big Shoulders Display\', Impact, sans-serif" font-weight="800" font-size="' + (el.h * 0.17) + '" fill="#fff">ASSO</text></g>';
+        return '<g' + tf + '><rect x="' + x + '" y="' + top + '" width="' + w0 + '" height="' + h0 + '" fill="none"/>' +
+          '<circle cx="' + cx + '" cy="' + (cy - h0 * 0.1) + '" r="' + r + '" fill="#e8451e"/>' +
+          '<path d="M' + (cx - r * 0.35) + ' ' + (cy - h0 * 0.1 - r * 0.55) + ' L' + (cx + r * 0.45) + ' ' + (cy - h0 * 0.1 - r * 0.05) + ' L' + (cx - r * 0.05) + ' ' + (cy - h0 * 0.1 + 0.05 * r) + ' L' + (cx + r * 0.3) + ' ' + (cy - h0 * 0.1 + r * 0.6) + ' L' + (cx - r * 0.5) + ' ' + (cy - h0 * 0.1 - 0.05 * r) + ' L' + (cx - r * 0.05) + ' ' + (cy - h0 * 0.1 - 0.15 * r) + ' Z" fill="#fff"/>' +
+          '<text x="' + cx + '" y="' + (top + h0 * 0.88) + '" text-anchor="middle" font-family="\'Big Shoulders Display\', Impact, sans-serif" font-weight="800" font-size="' + (h0 * 0.17) + '" fill="#fff">ASSO</text></g>';
       }
-      return '<g><rect x="' + x + '" y="' + y + '" width="' + el.w + '" height="' + el.h + '" fill="rgba(255,255,255,.18)" stroke="#e8451e" stroke-width=".25" stroke-dasharray=".9 .7"/>' +
-        '<text x="0" y="' + (y + el.h / 2 + 0.55) + '" text-anchor="middle" font-size="1.7" fill="#e8451e" font-family="Hanken Grotesk, sans-serif" font-weight="600">ton visuel</text></g>';
+      return '<g' + tf + '><rect x="' + x + '" y="' + top + '" width="' + w0 + '" height="' + h0 + '" fill="rgba(255,255,255,.18)" stroke="#e8451e" stroke-width=".25" stroke-dasharray=".9 .7"/>' +
+        '<text x="' + cx + '" y="' + (cy + 0.55) + '" text-anchor="middle" font-size="' + Math.max(0.5, Math.min(1.7, w0 / 5)) + '" fill="#e8451e" font-family="Hanken Grotesk, sans-serif" font-weight="600">ton visuel</text></g>';
     }
-    return '<text x="0" y="' + (y + el.asc) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
+    return '<text x="' + ux + '" y="' + (y + uy + el.asc) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
       '" fill="' + esc(el.couleur) + '" style="paint-order:stroke;stroke:rgba(0,0,0,.28);stroke-width:.09px">' + esc(el.text) + '</text>';
+  }
+
+  // Poignées du visuel choisi, dans le repère de la zone : un coin pour l'agrandir (data-pv-resize), un bouton rond pour le tourner d'un quart de tour
+  // (data-pv-rotate). Leur taille suit l'écran (pxPerCm = pixels affichés par centimètre), pas la taille du vêtement.
+  function poignees(empId, bx, by, w, h, pxPerCm) {
+    var k = pxPerCm > 0 ? pxPerCm : 6, r = Math.max(0.1, 11 / k), sw = Math.max(0.04, 1.5 / k), ry = by - 2.5 * r;
+    return '<g class="pv-poignees">' +
+      '<rect x="' + bx + '" y="' + by + '" width="' + w + '" height="' + h + '" fill="none" stroke="#1f6b57" stroke-width="' + sw + '" stroke-dasharray="' + 4 * sw + ' ' + 3 * sw + '" pointer-events="none"/>' +
+      '<line x1="' + (bx + w / 2) + '" y1="' + by + '" x2="' + (bx + w / 2) + '" y2="' + (ry + r) + '" stroke="#1f6b57" stroke-width="' + sw + '" pointer-events="none"/>' +
+      '<g data-pv-rotate="' + empId + '" class="pv-poignee" role="button" aria-label="Tourner le visuel d\'un quart de tour"><circle cx="' + (bx + w / 2) + '" cy="' + ry + '" r="' + r + '" fill="#fff" stroke="#1f6b57" stroke-width="' + sw * 1.5 + '"/>' +
+      '<path d="M' + (bx + w / 2 - r * 0.45) + ' ' + (ry - r * 0.1) + ' a' + r * 0.5 + ' ' + r * 0.5 + ' 0 1 1 ' + r * 0.25 + ' ' + r * 0.6 + '" fill="none" stroke="#1f6b57" stroke-width="' + sw * 1.4 + '" stroke-linecap="round"/>' +
+      '<path d="M' + (bx + w / 2 - r * 0.7) + ' ' + (ry - r * 0.35) + ' l' + r * 0.3 + ' ' + r * 0.35 + ' l' + r * 0.35 + ' ' + (-r * 0.3) + '" fill="none" stroke="#1f6b57" stroke-width="' + sw * 1.4 + '" stroke-linecap="round" stroke-linejoin="round"/></g>' +
+      '<g data-pv-resize="' + empId + '" class="pv-poignee" role="button" aria-label="Agrandir ou réduire le visuel"><circle cx="' + (bx + w) + '" cy="' + (by + h) + '" r="' + r + '" fill="#1f6b57" stroke="#fff" stroke-width="' + sw + '"/>' +
+      '<path d="M' + (bx + w - r * 0.4) + ' ' + (by + h + r * 0.4) + ' L' + (bx + w + r * 0.4) + ' ' + (by + h - r * 0.4) + ' M' + (bx + w + r * 0.4) + ' ' + (by + h - r * 0.1) + ' V' + (by + h - r * 0.4) + ' H' + (bx + w + r * 0.1) + ' M' + (bx + w - r * 0.4) + ' ' + (by + h + r * 0.1) + ' V' + (by + h + r * 0.4) + ' H' + (bx + w - r * 0.1) + '" fill="none" stroke="#fff" stroke-width="' + sw * 1.2 + '" stroke-linecap="round" stroke-linejoin="round"/></g>' +
+      '</g>';
   }
 
   // Marquages d'une vue : cadres des emplacements, visuels, prénoms et numéros (en cm, dans le repère du vêtement).
@@ -443,7 +463,7 @@
       var sleeve = z.cy != null;
       var tf = sleeve ? "translate(" + z.cx + " " + z.cy + ") rotate(" + (z.rot || 0) + ")" : "translate(" + z.cx + " " + top + ")";
       var zy = sleeve ? -z.h / 2 : 0;
-      out += '<g transform="' + tf + '">';
+      out += '<g transform="' + tf + '" data-zone="' + empId + '">';
       out += '<rect x="' + (-z.w / 2) + '" y="' + zy + '" width="' + z.w + '" height="' + z.h + '" fill="none" stroke="' + (actif ? "#e8451e" : "#8fa39a") +
         '" stroke-width="' + (actif ? 0.22 : 0.14) + '" stroke-dasharray="' + (actif ? "1 .6" : ".6 .8") + '" opacity="' + (actif ? 0.9 : 0.55) + '"/>';
       if (!actif) {
@@ -454,10 +474,19 @@
       if (actif && opts.piece) {
         var lay = E.stackFor(empId, cfg, opts.piece, prod, opts.ctx);   // bloc collé : écart réduit entre le visuel et le texte
         var y0 = sleeve ? -lay.H / 2 : 0;
+        var inter = opts.interactif && !opts.photo, poi = "";
         lay.items.forEach(function (it) {
           if (it.kind === "image") it.src = cfg.image ? (cfg.image.url || cfg.image.dataUrl) : null;
-          out += elementSVG(it, y0 + it.dy, opts.sample);
+          var yy = y0 + it.dy, svg = elementSVG(it, yy, opts.sample);
+          if (inter && it.kind === "image") {
+            // le visuel se déplace à la souris ou au doigt (zone de prise = tout son rectangle, même sur un fond transparent)
+            var bx = (it.ux || 0) - it.w / 2, by = yy + (it.uy || 0);
+            svg = '<g data-pv-move="' + empId + '" class="pv-move"><rect x="' + bx + '" y="' + by + '" width="' + it.w + '" height="' + it.h + '" fill="transparent"/>' + svg + '</g>';
+            if (opts.sel === empId) poi = poignees(empId, bx, by, it.w, it.h, opts.pxPerCm);
+          }
+          out += svg;
         });
+        out += poi;
       }
       out += '</g>';
     });
