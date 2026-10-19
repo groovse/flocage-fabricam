@@ -266,11 +266,34 @@
     return out;
   }
 
-  var STACK_GAP = 0.8;
-  function layoutStack(els) {
-    var y = 0;
-    var items = els.map(function (e) { var it = Object.assign({}, e, { dy: y }); y += e.h + STACK_GAP; return it; });
-    return { items: items, H: els.length ? y - STACK_GAP : 0 };
+  var STACK_GAP = 0.8;      // écart entre deux éléments d'un emplacement pressés séparément, en cm
+  var BLOC_GAP = 0.5;       // écart entre deux éléments d'un bloc collé (prix.js : placement.ecartBloc), en cm
+  function layoutStack(els, gap) {
+    var g = gap == null ? STACK_GAP : gap, y = 0;
+    var items = els.map(function (e) { var it = Object.assign({}, e, { dy: y }); y += e.h + g; return it; });
+    return { items: items, H: els.length ? y - g : 0 };
+  }
+
+  // Pile d'éléments d'un emplacement pour une pièce (visuel, prénom, numéro), de haut en bas.
+  // Bloc collé (cfg.bloc === true, au moins deux éléments) : le visuel, le prénom et le numéro sont imprimés sur un seul transfert,
+  // à l'écart `placement.ecartBloc` les uns des autres, et pressés d'un seul coup : c'est un seul motif.
+  // Si le bloc ne tient pas sur le plateau de la presse, les éléments restent séparés (tropGrand: true).
+  // Chaque élément porte dy (décalage vertical dans la pile) ; W est la largeur de la pile.
+  function stackFor(empId, cfg, piece, prod, ctx) {
+    var els = elementsFor(empId, cfg, piece, prod, ctx);
+    var pl = ctx.prix && ctx.prix.placement, gapBloc = pl && pl.ecartBloc != null ? pl.ecartBloc : BLOC_GAP;
+    var W = els.reduce(function (m, e) { return Math.max(m, e.w); }, 0);
+    var bloc = cfg.bloc === true && els.length >= 2, tropGrand = false;
+    var lay = layoutStack(els, bloc ? gapBloc : STACK_GAP);
+    if (bloc && !fitsPlateau(W, lay.H, ctx.prix.plateau)) { bloc = false; tropGrand = true; lay = layoutStack(els, STACK_GAP); }
+    return { items: lay.items, H: lay.H, W: W, bloc: bloc, tropGrand: tropGrand };
+  }
+
+  // L'élément « visuel » d'un motif (un motif visuel seul, ou un bloc qui en contient un), sinon null
+  function motifImage(m) {
+    if (m.kind === "image") return m.el;
+    if (m.kind === "bloc") return m.el.items.filter(function (i) { return i.kind === "image"; })[0] || null;
+    return null;
   }
 
   // Part de polyester d'une pièce : celle de l'article ; pour un vêtement apporté par le client (prod.apporte), la matière
@@ -300,17 +323,30 @@
       Object.keys(prod.zones).forEach(function (empId) {
         var cfg = order.marquages[empId];
         if (!cfg || !cfg.actif) return;
-        var els = elementsFor(empId, cfg, piece, prod, ctx);
-        var lay = layoutStack(els);
+        var lay = stackFor(empId, cfg, piece, prod, ctx), els = lay.items;
         var zone = prod.zones[empId], emp = ctx.emplacements[empId];
+        var qui = piece.prenom || ("pièce " + (idx + 1));
         if (lay.H > zone.h + EPS) warn(emp.label + " : le contenu dépasse la zone prévue sur le vêtement (" + zone.h + " cm de haut).");
+        if (lay.tropGrand) warn(emp.label + " : le bloc (visuel, prénom et numéro collés) est trop grand pour le plateau de la presse (A4) : les éléments sont pressés séparément.");
         els.forEach(function (el) {
           if (el.reduit) warn(emp.label + " : un prénom ou un numéro est trop large, il est réduit pour tenir.");
           if (!fitsPlateau(el.w, el.h, ctx.prix.plateau)) warn(emp.label + " : un motif dépasse le plateau de la presse (A4).");
-          var qui = piece.prenom || ("pièce " + (idx + 1));
+        });
+        if (lay.bloc) {
+          // un seul motif : le bloc. Ses éléments sont centrés dans sa largeur (dx) et empilés (dy).
+          var items = els.map(function (el) { return Object.assign({}, el, { dx: (lay.W - el.w) / 2 }); });
+          motifs.push({
+            id: piece.id + ":" + empId + ":bloc", pieceId: piece.id, pieceIdx: idx,
+            emp: empId, kind: "bloc", w: lay.W, h: lay.H, techno: techno, avecImage: items.some(function (i) { return i.kind === "image"; }),
+            label: emp.label + " – bloc : " + items.map(function (i) { return i.kind === "image" ? "visuel (" + qui + ")" : i.text; }).join(" + "),
+            el: { kind: "bloc", w: lay.W, h: lay.H, items: items }
+          });
+          return;
+        }
+        els.forEach(function (el) {
           motifs.push({
             id: piece.id + ":" + empId + ":" + el.kind, pieceId: piece.id, pieceIdx: idx,
-            emp: empId, kind: el.kind, w: el.w, h: el.h, techno: techno,
+            emp: empId, kind: el.kind, w: el.w, h: el.h, techno: techno, avecImage: el.kind === "image",
             label: emp.label + " – " + (el.kind === "image" ? "visuel" : el.text) + (el.kind === "image" ? " (" + qui + ")" : ""),
             el: el
           });
@@ -522,8 +558,8 @@
 
   return {
     round2: round2, packSheet: packSheet, planSheets: planSheets, costSheets: costSheets,
-    elementsFor: elementsFor, layoutStack: layoutStack, buildMotifs: buildMotifs,
+    elementsFor: elementsFor, layoutStack: layoutStack, stackFor: stackFor, motifImage: motifImage, buildMotifs: buildMotifs,
     pieceTechno: pieceTechno, polyesterPiece: polyesterPiece, prixAchatPiece: prixAchatPiece, margePiece: margePiece, margePiecePack: margePiecePack, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
-    approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP
+    approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP, BLOC_GAP: BLOC_GAP
   };
 });

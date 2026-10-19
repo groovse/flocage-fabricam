@@ -67,7 +67,8 @@ window.PRIX = {
   // ecart = marge de coupe entre deux motifs, en cm. À 0, quatre A6 tiennent exactement sur une A4
   // (leurs A6 font 10 x 14 cm) : les cases se touchent, chaque visuel garde sa marge à l'intérieur.
   // Monte à 0.3 si tu préfères plus de marge pour couper (la facture de planches augmente un peu).
-  placement: { ecart: 0, rotation: true },
+  // ecartBloc = écart, en cm, entre le visuel, le prénom et le numéro d'un bloc collé (un seul transfert, pressé d'un coup).
+  placement: { ecart: 0, ecartBloc: 0.5, rotation: true },
 
   // Plateau de ta presse : limite A4, aucun motif ne doit dépasser
   plateau: { w: 21, h: 28 },

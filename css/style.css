@@ -184,6 +184,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .pieces .idx { width: 2rem; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
 .pieces .col-prenom, .pieces .col-numero, .pieces .col-matiere { display: none; }
 .pieces.has-prenom .col-prenom, .pieces.has-numero .col-numero, .pieces.has-matiere .col-matiere { display: table-cell; }
+.bloc-opt .hint { margin: .15rem 0 0 1.6rem; }
 .hint-matiere { display: none; }
 .pieces .col-couleur { white-space: nowrap; }
 .pieces .col-couleur .sw { margin-right: .45rem; vertical-align: middle; }

@@ -10,6 +10,7 @@
   var At = window.Atelier, A = At.A, st = At.st, F = window.Fichiers;
   var esc = At.esc, fmtEUR = At.fmtEUR, fmtN = At.fmtN, plur = At.plur, $ = A.$, $$ = A.$$;
   var DPI = 300;
+  var NOM_ELEMENT = { image: "visuel", prenom: "prénom", numero: "numéro" };
 
   /* ---------- plan d'une planche en SVG (aperçu à l'écran et fiche imprimée) ---------- */
   function sheetSVG(s) {
@@ -17,21 +18,31 @@
     var out = '<svg class="sheet" viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Plan de la planche ' + esc(s.code) + ", " + esc(sheet.format.nom) + '">';
     out += '<rect width="' + W + '" height="' + H + '" fill="#fff" stroke="#14213d" stroke-width=".25"/>';
     sheet.placed.forEach(function (p) {
-      var mo = p.ref.motif, el = mo.el, ow = p.ref.w, oh = p.ref.h;
+      var mo = p.ref.motif, ow = p.ref.w, oh = p.ref.h;
       var tf = p.rot ? "translate(" + (p.x + p.w) + " " + p.y + ") rotate(90)" : "translate(" + p.x + " " + p.y + ")";
-      var isImg = el.kind === "image";
+      var isImg = !!mo.avecImage;
       out += '<g transform="' + tf + '"><title>' + esc(mo.label) + "</title>";
       out += '<rect width="' + ow + '" height="' + oh + '" fill="' + (isImg ? "#fdf0ea" : "#e3e9e5") + '" stroke="' + (isImg ? "#e8451e" : "#14213d") + '" stroke-width=".12"/>';
-      if (isImg) {
-        var img = order.marquages[mo.emp] && order.marquages[mo.emp].image;
-        if (img && img.dataUrl) out += '<image href="' + esc(img.dataUrl) + '" width="' + ow + '" height="' + oh + '" preserveAspectRatio="xMidYMid meet"/>';
-      } else {
-        out += '<text x="' + ow / 2 + '" y="' + el.asc + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
-          '" fill="' + esc(el.couleur) + '" style="paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.08px">' + esc(el.text) + "</text>";
-      }
+      composants(mo).forEach(function (c) {
+        var el = c.el;
+        if (el.kind === "image") {
+          var img = order.marquages[mo.emp] && order.marquages[mo.emp].image;
+          if (img && img.dataUrl) out += '<image href="' + esc(img.dataUrl) + '" x="' + c.x + '" y="' + c.y + '" width="' + el.w + '" height="' + el.h + '" preserveAspectRatio="xMidYMid meet"/>';
+        } else {
+          out += '<text x="' + (c.x + el.w / 2) + '" y="' + (c.y + el.asc) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
+            '" fill="' + esc(el.couleur) + '" style="paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.08px">' + esc(el.text) + "</text>";
+        }
+      });
       out += '<text x=".4" y="1.5" font-size="1.4" fill="#14213d" font-family="Hanken Grotesk, sans-serif" font-weight="700" opacity=".8">' + esc(At.codeMotif(mo)) + "</text></g>";
     });
     return out + "</svg>";
+  }
+
+  // Ce qu'il y a dans la case d'un motif, avec sa position (en cm, depuis le coin de la case) : un visuel ou un texte seul,
+  // ou, pour un bloc collé, ses éléments empilés et centrés. Le visuel seul remplit sa case.
+  function composants(mo) {
+    if (mo.kind === "bloc") return mo.el.items.map(function (it) { return { el: it, x: it.dx, y: it.dy }; });
+    return [{ el: mo.el, x: 0, y: 0 }];
   }
 
   /* ---------- planche en PNG ---------- */
@@ -49,26 +60,30 @@
       ctx.strokeStyle = "#14213d"; ctx.lineWidth = 0.08 * ppcm; ctx.strokeRect(0.04 * ppcm, bandeau * ppcm, cv.width - 0.08 * ppcm, H * ppcm - 0.04 * ppcm);
     }
     sheet.placed.forEach(function (p) {
-      var mo = p.ref.motif, el = mo.el, ow = p.ref.w, oh = p.ref.h;
+      var mo = p.ref.motif, ow = p.ref.w, oh = p.ref.h;
       ctx.save();
       if (p.rot) { ctx.translate((p.x + p.w) * ppcm, (bandeau + p.y) * ppcm); ctx.rotate(Math.PI / 2); }
       else ctx.translate(p.x * ppcm, (bandeau + p.y) * ppcm);
-      if (el.kind === "image") {
-        var info = st.imgs[mo.emp];
-        if (info && info.img && info.nw && info.nh) {
-          var k = Math.min(ow / info.nw, oh / info.nh), dw = info.nw * k, dh = info.nh * k;
-          ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
-          ctx.drawImage(info.img, (ow - dw) / 2 * ppcm, (oh - dh) / 2 * ppcm, dw * ppcm, dh * ppcm);
+      composants(mo).forEach(function (c) {
+        var el = c.el;
+        if (el.kind === "image") {
+          var info = st.imgs[mo.emp];
+          if (info && info.img && info.nw && info.nh) {
+            var k = Math.min(el.w / info.nw, el.h / info.nh), dw = info.nw * k, dh = info.nh * k;
+            ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(info.img, (c.x + (el.w - dw) / 2) * ppcm, (c.y + (el.h - dh) / 2) * ppcm, dw * ppcm, dh * ppcm);
+          }
+        } else {
+          ctx.font = (el.fontCm * ppcm) + 'px "' + el.police + '", Impact, sans-serif';
+          ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+          var tx = (c.x + el.w / 2) * ppcm, ty = (c.y + el.asc) * ppcm;
+          if (annot) { ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 0.08 * ppcm; ctx.strokeText(el.text, tx, ty); }
+          ctx.fillStyle = el.couleur;
+          ctx.fillText(el.text, tx, ty);
         }
-      } else {
-        ctx.font = (el.fontCm * ppcm) + 'px "' + el.police + '", Impact, sans-serif';
-        ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-        if (annot) { ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 0.08 * ppcm; ctx.strokeText(el.text, ow / 2 * ppcm, el.asc * ppcm); }
-        ctx.fillStyle = el.couleur;
-        ctx.fillText(el.text, ow / 2 * ppcm, el.asc * ppcm);
-      }
+      });
       if (annot) {
-        ctx.setLineDash([0.3 * ppcm, 0.2 * ppcm]); ctx.strokeStyle = el.kind === "image" ? "#e8451e" : "#1f6b57"; ctx.lineWidth = 0.1 * ppcm;
+        ctx.setLineDash([0.3 * ppcm, 0.2 * ppcm]); ctx.strokeStyle = mo.avecImage ? "#e8451e" : "#1f6b57"; ctx.lineWidth = 0.1 * ppcm;
         ctx.strokeRect(0.05 * ppcm, 0.05 * ppcm, (ow - 0.1) * ppcm, (oh - 0.1) * ppcm); ctx.setLineDash([]);
         var lab = At.codeMotif(mo);
         ctx.font = "700 " + (1.1 * ppcm) + 'px "Hanken Grotesk", Arial, sans-serif'; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
@@ -206,7 +221,7 @@
   function visuelsHtml() {
     var o = st.order, emps = Object.keys(o.marquages).filter(function (e) {
       var m = o.marquages[e], emp = A.DATA.emplacements[e];
-      return m && m.actif && m.avecImage !== false && emp && !emp.texteSeul && st.res.motifs.some(function (x) { return x.emp === e && x.kind === "image"; });
+      return m && m.actif && m.avecImage !== false && emp && !emp.texteSeul && st.res.motifs.some(function (x) { return x.emp === e && x.avecImage; });
     });
     if (!emps.length) return "";
     return '<section class="a-block"><h2>Visuels de la commande</h2><p class="hint">Les visuels reçus du client. Si l\'un est manquant, flou ou avec un fond, remplace-le : les planches se mettent à jour.</p><div class="imgs">' +
@@ -267,28 +282,32 @@
           return [box, "<b>" + esc(s.code) + "</b> sur " + s.total, esc(A.PRIX.planches[s.techno].nom + ", " + s.sheet.format.nom), s.sheet.placed.length, esc(A.PRIX.fournisseur.nom), box, box];
         }), "f-tbl") +
         '<div class="f-plans">' + st.sheets.map(function (s) { return "<figure>" + sheetSVG(s) + "<figcaption><b>" + esc(s.code) + "</b>, " + esc(s.sheet.format.nom) + "</figcaption></figure>"; }).join("") + "</div>" +
-        '<p class="f-key">Repères : numéro de la pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de jambe, SG et SD chaussettes, SA sac, GO gourde, CA casquette, BO bonnet, TC tour de cou, BA bandeau, CE ceinture, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3.</p>';
+        '<p class="f-key">Repères : numéro de la pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de jambe, SG et SD chaussettes, SA sac, GO gourde, CA casquette, BO bonnet, TC tour de cou, BA bandeau, CE ceinture, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Un bloc collé (visuel, prénom et numéro sur un seul transfert, à presser d\'un coup) porte plusieurs lettres : 3·Pvpn = visuel, prénom et numéro collés de la poitrine de la pièce 3.</p>';
     } else html += '<p class="empty">Aucune planche : aucun marquage actif.</p>';
     html += "</section>";
 
     // 3. récap des motifs
     var rec = {};
     r.motifs.forEach(function (m) {
-      var k = m.emp; rec[k] = rec[k] || { image: 0, prenom: 0, numero: 0, fmt: {} };
+      var k = m.emp; rec[k] = rec[k] || { image: 0, prenom: 0, numero: 0, bloc: 0, fmt: {}, compo: {} };
       rec[k][m.kind]++;
-      if (m.kind === "image") rec[k].fmt[(o.marquages[m.emp] || {}).format || ""] = 1;
+      if (m.avecImage) rec[k].fmt[(o.marquages[m.emp] || {}).format || ""] = 1;
+      if (m.kind === "bloc") rec[k].compo[m.el.items.map(function (i) { return i.kind === "image" ? "visuel " + ((o.marquages[m.emp] || {}).format || "") : NOM_ELEMENT[i.kind]; }).join(" + ")] = 1;
     });
+    var avecBlocs = r.motifs.some(function (m) { return m.kind === "bloc"; });
     var empRows = A.EMP_ORDER.filter(function (e) { return rec[e]; }).map(function (e) {
       var x = rec[e];
-      return [esc(A.DATA.emplacements[e].label), x.image ? "<b>" + x.image + "</b> × " + esc(Object.keys(x.fmt).join(", ")) : "–", x.prenom ? "<b>" + x.prenom + "</b>" : "–", x.numero ? "<b>" + x.numero + "</b>" : "–"];
+      var ligne = [esc(A.DATA.emplacements[e].label), x.image ? "<b>" + x.image + "</b> × " + esc(Object.keys(x.fmt).join(", ")) : "–", x.prenom ? "<b>" + x.prenom + "</b>" : "–", x.numero ? "<b>" + x.numero + "</b>" : "–"];
+      if (avecBlocs) ligne.push(x.bloc ? "<b>" + x.bloc + "</b> × " + esc(Object.keys(x.compo).join(" ; ")) : "–");
+      return ligne;
     });
-    html += '<section class="f-sec"><h3><span class="f-n">3</span>Motifs à presser</h3>' + (empRows.length ? At.table(["Emplacement", { t: "Visuels", num: false }, "Prénoms", "Numéros"], empRows, "f-tbl") : '<p class="empty">Aucun motif.</p>') + "</section>";
+    html += '<section class="f-sec"><h3><span class="f-n">3</span>Motifs à presser</h3>' + (empRows.length ? At.table(["Emplacement", { t: "Visuels", num: false }, "Prénoms", "Numéros"].concat(avecBlocs ? ["Blocs collés"] : []), empRows, "f-tbl") : '<p class="empty">Aucun motif.</p>') + "</section>";
 
     // 4. pièces
     html += '<section class="f-sec long"><h3><span class="f-n">4</span>Pièces à presser</h3>' + At.table([{ t: "Pressée" }, { t: "N°", num: true }, "Article", "Taille", "Prénom", "Numéro", "À poser", "Planches", "Contrôlée"],
       o.pieces.map(function (p, i) {
         var col = At.colorOf(p), mine = r.motifs.filter(function (m) { return m.pieceId === p.id; }), emps = {}, codes = {};
-        mine.forEach(function (m) { (emps[m.emp] = emps[m.emp] || []).push(At.KIND[m.kind]); var sh = st.motifSheet[m.id]; if (sh) codes[sh.code] = 1; });
+        mine.forEach(function (m) { (emps[m.emp] = emps[m.emp] || []).push(m.kind === "bloc" ? "bloc " + m.el.items.map(function (i) { return At.KIND[i.kind]; }).join("+") : At.KIND[m.kind]); var sh = st.motifSheet[m.id]; if (sh) codes[sh.code] = 1; });
         var txt = A.EMP_ORDER.filter(function (e) { return emps[e]; }).map(function (e) { return At.ABBR[e] + " " + emps[e].join("+"); }).join(", ");
         var t = At.presseDe(p).tech === "sublimation" ? ' <span class="tag">sublimation</span>' : "", pk = p.pack ? ' <span class="tag">pack</span>' : "";
         return [box, i + 1, esc(At.prodOf(p).nomCourt) + ", " + esc(col.nom.toLowerCase()) + pk + t, "<b>" + esc(p.taille) + "</b>", esc(p.prenom || ""), esc(p.numero || ""), esc(txt || "rien"), esc(Object.keys(codes).join(", ")), box];

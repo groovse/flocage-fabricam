@@ -112,6 +112,8 @@
 .sl-tab td:last-child { white-space: nowrap; }
 .mo { display: flex; align-items: center; gap: .55rem; padding: .15rem 0; }
 .mini { flex: none; width: 36px; height: 36px; object-fit: contain; border: 1px solid var(--line); background: repeating-conic-gradient(#e8eeea 0% 25%, #fff 0% 50%) 50% / 10px 10px; }
+.mo-bloc { align-items: flex-start; }
+.bloc-liste { margin: .25rem 0 0; padding-left: 1.1rem; font-size: .92rem; }
 .chip-c { flex: none; width: 1rem; height: 1rem; border-radius: 50%; border: 1px solid rgba(20, 33, 61, .45); }
 .callout { border-left: 4px solid var(--mat); background: #eef6f2; padding: .7rem .9rem; margin: 1rem 0; border-radius: 0 var(--r) var(--r) 0; }
 .callout p { margin: .25rem 0 0; font-size: .92rem; }
