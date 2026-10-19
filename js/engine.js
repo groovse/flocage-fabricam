@@ -273,11 +273,19 @@
     return { items: items, H: els.length ? y - STACK_GAP : 0 };
   }
 
+  // Part de polyester d'une pièce : celle de l'article ; pour un vêtement apporté par le client (prod.apporte), la matière
+  // qu'il déclare sur la pièce (piece.matiere : "polyester", "coton" ou "inconnu"). Sans certitude, on compte 0 : le DTF.
+  function polyesterPiece(prod, piece) {
+    if (!prod) return 0;
+    if (prod.apporte) return piece && piece.matiere === "polyester" ? 100 : 0;
+    return prod.polyesterPct || 0;
+  }
+
   function pieceTechno(order, piece, ctx) {
     var prod = ctx.produits[piece.produitId];
     if (order.technique === "sublimation" && prod && prod.sublimation !== false) {
       var col = prod.couleurs.filter(function (c) { return c.id === piece.couleurId; })[0];
-      if (col && col.clair && (prod.polyesterPct || 0) >= 90) return "sublimation";
+      if (col && col.clair && polyesterPiece(prod, piece) >= 90) return "sublimation";
     }
     return "dtf";
   }
@@ -515,7 +523,7 @@
   return {
     round2: round2, packSheet: packSheet, planSheets: planSheets, costSheets: costSheets,
     elementsFor: elementsFor, layoutStack: layoutStack, buildMotifs: buildMotifs,
-    pieceTechno: pieceTechno, prixAchatPiece: prixAchatPiece, margePiece: margePiece, margePiecePack: margePiecePack, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
+    pieceTechno: pieceTechno, polyesterPiece: polyesterPiece, prixAchatPiece: prixAchatPiece, margePiece: margePiece, margePiecePack: margePiecePack, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
     approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP
   };
 });

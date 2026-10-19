@@ -5,6 +5,7 @@
  * pantalon, chaussette, gourde, casquette, bonnet, tour-de-cou, bandeau, sac-tube, sac-sport, sac-a-dos, ceinture), tags (genre, style, type : haut, bas,
  * ensemble ou accessoire), vendeur (seulement pour un article de la place de marché Decathlon, voir prix.js), sublimation: false
  * (article qui ne se sublime pas), margePack: 0 (pièce sans marge dans un pack, comme les chaussettes, voir prix.js), vitrine (emplacements du prix affiché) et zones.
+ * Un article « apporte: true » est un vêtement que le client apporte (voir plus bas, « Ton vêtement ») : prixAchat 0, couleurs = COULEURS_APPORTE.
  * Chaque couleur porte : nomDec (son nom sur Decathlon), ref (référence Decathlon), lien (la page de cette couleur), photos (sa série de
  * photos, avec dec([...])), et si besoin prixAchat (quand cette couleur ne coûte pas le prix de l'article) et rupture (date AAAA-MM-JJ
  * à laquelle Decathlon l'a signalée en rupture de stock). « photos » de l'article : les photos de la couleur de référence de apercuPhoto.
@@ -13,6 +14,25 @@
  */
 // Photos Decathlon d'une couleur : dec(["p2454696/k$d8af…", …]) donne les adresses complètes des images.
 function dec(ids) { return ids.map(function (id) { return "https://contents.mediadecathlon.com/" + id + "/picture.jpg"; }); }
+
+// Couleurs proposées pour un vêtement apporté par le client (clair : blanc ou très pâle, voir engine.js pour la sublimation)
+var COULEURS_APPORTE = [
+  { id: "blanc", nom: "Blanc", hex: "#f3f3f0", clair: true },
+  { id: "gris-clair", nom: "Gris clair", hex: "#cdd1d5", clair: true },
+  { id: "gris", nom: "Gris", hex: "#8d9196", clair: false },
+  { id: "noir", nom: "Noir", hex: "#1c1c1f", clair: false },
+  { id: "marine", nom: "Marine", hex: "#243b5e", clair: false },
+  { id: "bleu", nom: "Bleu", hex: "#2d4f9e", clair: false },
+  { id: "rouge", nom: "Rouge", hex: "#c4252b", clair: false },
+  { id: "bordeaux", nom: "Bordeaux", hex: "#6e1e2c", clair: false },
+  { id: "vert", nom: "Vert", hex: "#2f7d4f", clair: false },
+  { id: "kaki", nom: "Kaki", hex: "#6f6b4e", clair: false },
+  { id: "jaune", nom: "Jaune", hex: "#f4cf1e", clair: false },
+  { id: "orange", nom: "Orange", hex: "#f26b1d", clair: false },
+  { id: "rose", nom: "Rose", hex: "#e58fb2", clair: false },
+  { id: "autre-clair", nom: "Autre couleur claire", hex: "#e4dfd2", clair: true },
+  { id: "autre-fonce", nom: "Autre couleur foncée", hex: "#3a3d42", clair: false }
+];
 
 window.DATA = {
   service: {
@@ -47,7 +67,7 @@ window.DATA = {
   filtres: {
     genre: { label: "Pour", valeurs: [{ id: "homme", label: "Homme" }, { id: "femme", label: "Femme" }] },
     style: { label: "Style", valeurs: [{ id: "sport", label: "Sport" }, { id: "casual", label: "Casual" }] },
-    type: { label: "Type", valeurs: [{ id: "haut", label: "Hauts" }, { id: "bas", label: "Bas" }, { id: "ensemble", label: "Ensembles" }, { id: "accessoire", label: "Accessoires" }] }
+    type: { label: "Type", valeurs: [{ id: "haut", label: "Hauts" }, { id: "bas", label: "Bas" }, { id: "ensemble", label: "Ensembles" }, { id: "accessoire", label: "Accessoires" }, { id: "apporte", label: "Ton vêtement" }] }
   },
 
   // Polices proposées pour les prénoms et numéros (Google Fonts, chargées en ligne)
@@ -1617,6 +1637,372 @@ window.DATA = {
       avertissement: "Ceinture en tissu technique extensible : petit visuel, essai de pressage avant la série.",
       zones: {
         ceinture: { vue: "face", cx: 20, top: 11, w: 16, h: 9, label: "Face de la ceinture" }
+      }
+    },
+
+    // Ton vêtement : le client apporte son propre vêtement, Fabr'Icam le floque. Pas de prix d'achat (prixAchat 0), pas de photo ni de lien Decathlon :
+    // le prix est celui des planches, de la livraison et de la marge par motif. La couleur se choisit dans COULEURS_APPORTE, la matière sur chaque pièce.
+    // Les emplacements (zones) sont ceux d'un vêtement du catalogue de même dessin.
+    {
+      id: "apporte-tshirt",
+      nomCourt: "T-shirt apporté",
+      nom: "T-shirt apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "tshirt",
+      demonstratif: "ton t-shirt",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement.",
+      zones: {
+        poitrine: { vue: "face", cx: 58, top: 19, w: 16, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 13, w: 30, h: 46, label: "Dos" },
+        manche_g: { vue: "cote", cx: 77, cy: 24, w: 10, h: 14, rot: -45, label: "Manche gauche" },
+        manche_d: { vue: "cote", cx: 13, cy: 24, w: 10, h: 14, rot: 45,  label: "Manche droite" }
+      }
+    },
+    {
+      id: "apporte-polo",
+      nomCourt: "Polo apporté",
+      nom: "Polo apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "polo",
+      demonstratif: "ton polo",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement.",
+      zones: {
+        poitrine: { vue: "face", cx: 58, top: 19, w: 16, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 13, w: 30, h: 46, label: "Dos" },
+        manche_g: { vue: "cote", cx: 77, cy: 24, w: 10, h: 14, rot: -45, label: "Manche gauche" },
+        manche_d: { vue: "cote", cx: 13, cy: 24, w: 10, h: 14, rot: 45,  label: "Manche droite" }
+      }
+    },
+    {
+      id: "apporte-sweat",
+      nomCourt: "Sweat apporté",
+      nom: "Sweat apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "sweat",
+      demonstratif: "ton sweat",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement.",
+      zones: {
+        poitrine: { vue: "face", cx: 58, top: 21, w: 16, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 15, w: 32, h: 52, label: "Dos" },
+        manche_g: { vue: "cote", cx: 76.5, cy: 40, w: 10, h: 14, rot: -9, label: "Manche gauche" },
+        manche_d: { vue: "cote", cx: 13.5, cy: 40, w: 10, h: 14, rot: 9,  label: "Manche droite" }
+      }
+    },
+    {
+      id: "apporte-manches-longues",
+      nomCourt: "Haut à manches longues apporté",
+      nom: "Haut à manches longues apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "manches-longues",
+      demonstratif: "ton haut",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Haut fin ou élastique : le visuel se déforme quand le tissu s'étire. Fabr'Icam fait un essai avant la série.",
+      zones: {
+        poitrine: { vue: "face", cx: 56, top: 19, w: 14, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 14, w: 26, h: 44, label: "Dos" }
+      }
+    },
+    {
+      id: "apporte-maillot",
+      nomCourt: "Maillot ou débardeur apporté",
+      nom: "Maillot ou débardeur apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "maillot",
+      demonstratif: "ton maillot",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement.",
+      zones: {
+        poitrine: { vue: "face", cx: 57, top: 24, w: 16, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 18, w: 32, h: 52, label: "Dos" }
+      }
+    },
+    {
+      id: "apporte-veste",
+      nomCourt: "Veste apportée",
+      nom: "Veste apportée",
+      marque: "Vêtement apporté par le client",
+      modele: "veste",
+      demonstratif: "ta veste",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Polaire, matelassé, softshell : le tissu supporte mal la chaleur, le pressage se fait à basse température avec une feuille de téflon et un essai avant la série.",
+      zones: {
+        poitrine: { vue: "face", cx: 58, top: 21, w: 16, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 15, w: 32, h: 52, label: "Dos" },
+        manche_g: { vue: "cote", cx: 76.5, cy: 40, w: 10, h: 14, rot: -9, label: "Manche gauche" },
+        manche_d: { vue: "cote", cx: 13.5, cy: 40, w: 10, h: 14, rot: 9,  label: "Manche droite" }
+      }
+    },
+    {
+      id: "apporte-sweat-zip",
+      nomCourt: "Sweat ou veste zippé apporté",
+      nom: "Sweat ou veste zippé apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "sweat-zip",
+      demonstratif: "ton sweat zippé",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Polaire, matelassé, softshell : le tissu supporte mal la chaleur, le pressage se fait à basse température avec une feuille de téflon et un essai avant la série.",
+      zones: {
+        poitrine: { vue: "face", cx: 58, top: 21, w: 16, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 15, w: 32, h: 52, label: "Dos" },
+        manche_g: { vue: "cote", cx: 76.5, cy: 40, w: 10, h: 14, rot: -9, label: "Manche gauche" },
+        manche_d: { vue: "cote", cx: 13.5, cy: 40, w: 10, h: 14, rot: 9,  label: "Manche droite" }
+      }
+    },
+    {
+      id: "apporte-gilet",
+      nomCourt: "Gilet sans manches apporté",
+      nom: "Gilet sans manches apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "gilet",
+      demonstratif: "ton gilet",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Polaire, matelassé, softshell : le tissu supporte mal la chaleur, le pressage se fait à basse température avec une feuille de téflon et un essai avant la série.",
+      zones: {
+        poitrine: { vue: "face", cx: 58, top: 19, w: 14, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 14, w: 30, h: 48, label: "Dos" }
+      }
+    },
+    {
+      id: "apporte-short",
+      nomCourt: "Short apporté",
+      nom: "Short apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "short-tennis",
+      demonstratif: "ton short",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["cuisse_g"],
+      texteVitrine: "sur une cuisse",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement.",
+      zones: {
+        cuisse_g: { vue: "face", cx: 57.5, top: 20, w: 14, h: 21, label: "Cuisse gauche" },
+        cuisse_d: { vue: "face", cx: 32.5, top: 20, w: 14, h: 21, label: "Cuisse droite" }
+      }
+    },
+    {
+      id: "apporte-pantalon",
+      nomCourt: "Pantalon apporté",
+      nom: "Pantalon apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "pantalon",
+      demonstratif: "ton pantalon",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["cuisse_g"],
+      texteVitrine: "sur une cuisse",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement.",
+      zones: {
+        cuisse_g:    { vue: "face", cx: 59,   top: 22, w: 14, h: 21, label: "Cuisse gauche" },
+        cuisse_d:    { vue: "face", cx: 31,   top: 22, w: 14, h: 21, label: "Cuisse droite" },
+        bas_jambe_g: { vue: "face", cx: 59.2, top: 86, w: 12, h: 6,  label: "Bas de la jambe gauche" }
+      }
+    },
+    {
+      id: "apporte-casquette",
+      nomCourt: "Casquette apportée",
+      nom: "Casquette apportée",
+      marque: "Vêtement apporté par le client",
+      modele: "casquette",
+      demonstratif: "ta casquette",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      sublimation: false,
+      tailles: ["Taille unique"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["casquette"],
+      texteVitrine: "sur le devant de la casquette",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Casquette : le devant est bombé et le tissu fin. Un visuel de 5 × 5 cm au plus, pressé avec une presse adaptée. Fabr'Icam fait un essai avant la série.",
+      zones: {
+        casquette: { vue: "face", cx: 18, top: 8, w: 12, h: 8, label: "Devant de la casquette" }
+      }
+    },
+    {
+      id: "apporte-bonnet",
+      nomCourt: "Bonnet apporté",
+      nom: "Bonnet apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "bonnet",
+      demonstratif: "ton bonnet",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      sublimation: false,
+      tailles: ["Taille unique"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["bonnet"],
+      texteVitrine: "sur le devant du bonnet",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Bonnet en maille acrylique : tricot épais et très élastique, le transfert tient mal et se déforme à l'étirement. Fabr'Icam teste sur le revers avant la série et confirme que c'est faisable.",
+      zones: {
+        bonnet: { vue: "face", cx: 18, top: 18.6, w: 14, h: 7.4, label: "Devant du bonnet" }
+      }
+    },
+    {
+      id: "apporte-sac-a-dos",
+      nomCourt: "Sac à dos apporté",
+      nom: "Sac à dos apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "sac-a-dos",
+      demonstratif: "ton sac à dos",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      sublimation: false,
+      tailles: ["Taille unique"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["sac"],
+      texteVitrine: "sur la face du sac à dos",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Toile enduite de polyuréthane : le DTF tient, mais à 120-125 °C avec une feuille de téflon. Fabr'Icam fait un essai sur une chute avant la série.",
+      zones: {
+        sac: { vue: "face", cx: 28, top: 12, w: 18, h: 22, label: "Face du sac à dos" }
+      }
+    },
+    {
+      id: "apporte-sac-sport",
+      nomCourt: "Sac de sport apporté",
+      nom: "Sac de sport apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "sac-sport",
+      demonstratif: "ton sac de sport",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      sublimation: false,
+      tailles: ["Taille unique"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["sac"],
+      texteVitrine: "sur la face du sac",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Toile enduite de polyuréthane : le DTF tient, mais à 120-125 °C avec une feuille de téflon. Fabr'Icam fait un essai sur une chute avant la série.",
+      zones: {
+        sac: { vue: "face", cx: 32, top: 17, w: 24, h: 22, label: "Face du sac" }
+      }
+    },
+    {
+      id: "apporte-gourde",
+      nomCourt: "Gourde apportée",
+      nom: "Gourde apportée",
+      marque: "Vêtement apporté par le client",
+      modele: "gourde",
+      demonstratif: "ta gourde",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      sublimation: false,
+      tailles: ["Taille unique"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["gourde"],
+      texteVitrine: "sur la face de la gourde",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Gourde : le transfert DTF se pose sur la face, un petit visuel seulement (Mini 5 × 5 cm ou A7) car la surface est ronde. Fabr'Icam fait un essai (tenue, lavage) avant la série.",
+      zones: {
+        gourde: { vue: "face", cx: 20, top: 13, w: 7, h: 15, label: "Face de la gourde" }
+      }
+    },
+    {
+      id: "apporte-tour-de-cou",
+      nomCourt: "Tour de cou apporté",
+      nom: "Tour de cou apporté",
+      marque: "Vêtement apporté par le client",
+      modele: "tour-de-cou",
+      demonstratif: "ton tour de cou",
+      tags: { genre: ["homme", "femme"], type: "apporte" },
+      apporte: true,
+      prixAchat: 0,
+      matiere: "Selon ton vêtement (polyester, coton, mélange)",
+      polyesterPct: 0,   // la matière se choisit sur chaque pièce (polyester, coton, je ne sais pas)
+      tailles: ["Taille unique"],
+      couleurs: COULEURS_APPORTE,
+      vitrine: ["tour_de_cou"],
+      texteVitrine: "sur la face du tour de cou",
+      avertissement: "Tu apportes ton vêtement : Fabr'Icam le contrôle à la réception (matière, état, tenue à la chaleur) avant de presser. Le dessin est un modèle type, la position exacte est confirmée sur ton vêtement. Tour de cou en microfibre très élastique : le visuel se déforme quand le tissu est étiré. Fabr'Icam fait un essai (pressage, étirement, lavage) avant la série.",
+      zones: {
+        tour_de_cou: { vue: "face", cx: 28, top: 20, w: 18, h: 18, label: "Face du tour de cou" }
       }
     }
   ],
