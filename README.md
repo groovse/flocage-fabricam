@@ -9,7 +9,7 @@ Double-clique sur `index.html`. Aucun serveur, aucune installation. Il faut just
 ## Utiliser côté client
 
 1. L'association configure : pièces (couleur, taille, prénom, numéro), marquages par emplacement (poitrine, dos, manches), technique. Quand un emplacement porte un visuel avec un prénom ou un numéro, ou un prénom avec un numéro, la case « collés au visuel : un seul transfert, posé d'un coup » est **cochée par défaut** (voir « Règle de prix »).
-2. Le prix TTC par pièce se met à jour à chaque changement. L'aperçu montre le vêtement en dessin à la taille réelle, ou sur la photo du vêtement (bouton Dessin / Photo).
+2. Le prix TTC par pièce se met à jour à chaque changement. L'aperçu s'ouvre sur la photo du vêtement avec le visuel posé dessus quand elle existe (couleur de la photo), sinon sur le dessin à la taille réelle ; le bouton Dessin / Photo permet de choisir. La commande démarre dans la couleur cliquée sur la carte du produit.
    Si elle a déjà ses vêtements, elle choisit le filtre « Ton vêtement » (voir plus bas) : elle ne paie que le flocage.
    Pour un visuel, elle règle la **taille, le sens et la place** comme pour un texte : elle déplace l'image sur l'aperçu (glisser), l'agrandit par la poignée verte du coin, la tourne par quarts de tour avec le bouton rond, ou tape les valeurs précises dessous (largeur en cm, décalage). Les boutons A7, A6, A5 et A4 sont des raccourcis. Voir « Visuel à taille libre ».
 3. Elle télécharge le fichier de commande, puis clique sur « Écrire le mail » : Gmail s'ouvre dans un nouvel onglet avec le message pré-rempli vers fabricam.toulouse@icam.fr. Elle joint le fichier.
