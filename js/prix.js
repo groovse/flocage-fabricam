@@ -4,7 +4,8 @@
  *
  * - Les prix des planches DTF Print sont affichés TTC sur leur site (prixPlanchesHT: false).
  *   Si tu passes à un fournisseur qui affiche des prix HT, mets prixPlanchesHT à true : le site ajoute la TVA ci-dessous.
- * - Prix d'achat des vêtements : dans data.js (champ prixAchat, TTC, retrait en magasin).
+ * - Prix d'achat des vêtements : dans data.js (champ prixAchat, TTC, retrait en magasin). Une couleur au prix différent
+ *   porte son propre prixAchat (voir data.js).
  */
 window.PRIX = {
   maj: "2026-10-18",
@@ -30,12 +31,14 @@ window.PRIX = {
   // le vendeur livre à Fabr'Icam et fait payer des frais de port, une seule fois par vendeur et par commande.
   // Decathlon n'affiche ces frais qu'au moment de la commande : 4,99 € est une ESTIMATION (livraison à Toulouse, 31300).
   // Quand tu connais le montant réel (panier Decathlon), corrige-le ici : « defaut » sert aux vendeurs non listés.
+  // lien : la page du vendeur sur Decathlon (bouton « Voir chez le vendeur » du catalogue et de l'atelier). Sans lien, le bouton
+  // ouvre la page de l'article chez ce vendeur.
   livraisonVendeur: {
     defaut: 4.99,
     vendeurs: {
-      "sport-et-go-eu": { nom: "Sport & Go EU", frais: 4.99, delai: "2 à 6 jours" },
-      "pertemba-fr": { nom: "Pertemba FR", frais: 4.99, delai: "" },
-      "atelier-katanga": { nom: "Atelier Katanga", frais: 4.99, delai: "" }
+      "sport-et-go-eu": { nom: "Sport & Go EU", frais: 4.99, delai: "2 à 6 jours", lien: "https://www.decathlon.fr/mp/seller/sport-et-go-eu/bd0b305e-763b-4fc8-ad3c-2d5d4859a3fb" },
+      "pertemba-fr": { nom: "Pertemba FR", frais: 4.99, delai: "", lien: "" },
+      "atelier-katanga": { nom: "Atelier Katanga", frais: 4.99, delai: "", lien: "" }
     }
   },
 
