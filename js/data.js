@@ -4,11 +4,16 @@
  * maillot, short-basket, short-tennis, short-slim, tshirt, manches-longues, veste, sweat-zip, gilet, gilet-matelasse, ensemble-short,
  * pantalon, chaussette, gourde, casquette, bonnet, tour-de-cou, bandeau, sac-tube, sac-sport, sac-a-dos, ceinture), tags (genre, style, type : haut, bas,
  * ensemble ou accessoire), vendeur (seulement pour un article de la place de marché Decathlon, voir prix.js), sublimation: false
- * (article qui ne se sublime pas), margePack: 0 (pièce sans marge dans un pack, comme les chaussettes, voir prix.js), vitrine (emplacements du prix affiché) et zones. Chaque couleur peut porter ref (référence Decathlon)
- * et lien (la page de cette couleur).
+ * (article qui ne se sublime pas), margePack: 0 (pièce sans marge dans un pack, comme les chaussettes, voir prix.js), vitrine (emplacements du prix affiché) et zones.
+ * Chaque couleur porte : nomDec (son nom sur Decathlon), ref (référence Decathlon), lien (la page de cette couleur), photos (sa série de
+ * photos, avec dec([...])), et si besoin prixAchat (quand cette couleur ne coûte pas le prix de l'article) et rupture (date AAAA-MM-JJ
+ * à laquelle Decathlon l'a signalée en rupture de stock). « photos » de l'article : les photos de la couleur de référence de apercuPhoto.
  * Les zones sont en cm sur le dessin du vêtement (90 cm de large) : cx = centre horizontal,
  * top = haut de la zone (ou cy = centre), w/h = taille max de la zone.
  */
+// Photos Decathlon d'une couleur : dec(["p2454696/k$d8af…", …]) donne les adresses complètes des images.
+function dec(ids) { return ids.map(function (id) { return "https://contents.mediadecathlon.com/" + id + "/picture.jpg"; }); }
+
 window.DATA = {
   service: {
     nom: "Fabr'Icam Flocage",
@@ -66,8 +71,12 @@ window.DATA = {
       polyesterPct: 100,
       tailles: ["S", "M", "L", "XL", "2XL", "3XL"],
       couleurs: [
-        { id: "marine", nom: "Marine", hex: "#243b5e", clair: false, ref: "8336032" },
-        { id: "blanc", nom: "Blanc", hex: "#f3f3f0", clair: true, ref: "8336028" }
+        { id: "marine", nom: "Marine", nomDec: "bleu acier", hex: "#243b5e", clair: false, ref: "8336032",
+          lien: "https://www.decathlon.fr/p/polo-de-tennis-manches-courtes-homme-essential-marine/103242/c364m8336032",
+          photos: dec(["p2454696/k$d8af62394dde615416f9b470402a42bf", "p2946081/k$6ae7e948dc8375098dd4dfb91d391297", "p2875937/k$86bcf58fffce18e0ee0b2b02098f1414", "p2996308/k$c6cfda141a3f9b036b7d98e7b2a0cdaa"]) },
+        { id: "blanc", nom: "Blanc", nomDec: "blanc ultra", hex: "#f3f3f0", clair: true, ref: "8336028",
+          lien: "https://www.decathlon.fr/p/polo-de-tennis-manches-courtes-homme-essential-blanc/103242/c227m8336028",
+          photos: dec(["p2454697/k$958e5d52cbb083b81e7159bf854eef5b", "p2996311/k$f1667f709af1d794502113c1b7359f53", "p2454818/k$f396f06b4ae3d25d83ce17f430c3dec9", "p2996249/k$edef42efdb760dff4a67a8e5b3088330"]) }
       ],
       lien: "https://www.decathlon.fr/p/polo-de-tennis-manches-courtes-homme-essential-marine/103242/c364m8336032",
       photos: [
@@ -105,8 +114,18 @@ window.DATA = {
       polyesterPct: 59,
       tailles: ["S", "M", "L", "XL", "2XL", "3XL"],
       couleurs: [
-        { id: "bleu-fonce", nom: "Bleu foncé", hex: "#2e4663", clair: false, ref: "9004710" },
-        { id: "kaki", nom: "Kaki", hex: "#6f6b4e", clair: false, ref: "8961058" }
+        { id: "bleu-fonce", nom: "Bleu foncé", nomDec: "bleu acier", hex: "#2e4663", clair: false, ref: "9004710",
+          lien: "https://www.decathlon.fr/p/sweat-chaud-en-molleton-homme-bleu-fonce/351127/c364m9004710",
+          photos: dec(["p2731314/k$d4ce50f4e39cac664cf37912913cd175", "p2731313/k$9577f8a8dcb8999509e836526b68efdc", "p2731317/k$56c013a9942708e0c0096d3a5f0a890f", "p2731315/k$6135be8c8d35692ca577cda8efd7ba9b", "p2731316/k$a6f10d77258cbd82a7353675def8674e", "p2731318/k$d641c0cdc58455775bfec220ddb8bb47"]) },
+        { id: "kaki", nom: "Kaki", nomDec: "vert kaki", hex: "#6f6b4e", clair: false, ref: "8961058",
+          lien: "https://www.decathlon.fr/p/sweat-chaud-en-molleton-homme-kaki/351127/c109m8961058",
+          photos: dec(["p2933015/k$5ed20a74e1fdecf627900472e9e11456", "p2933068/k$6c4a24539c27ad901047712ceb4acc13", "p2933023/k$f89d25a604fae75d818c76b5f773a70d", "p2933034/k$9838b3bcdfe147b45ea403c13a0251ef", "p2933088/k$785bce6d4528a77fa40efb412f9085b6", "p2933103/k$11aba50c8448786aa447297fe61adafb"]) },
+        { id: "gris", nom: "Gris", nomDec: "gris", hex: "#9ea2a7", clair: false, ref: "8883261",
+          lien: "https://www.decathlon.fr/p/sweat-chaud-en-molleton-homme-gris/351127/c251m8883261",
+          photos: dec(["p2731214/k$30690d038636a4d7c590ee2f86e36fb3", "p2731211/k$e91578d2e4c28f965e22ec2e2b884d6d", "p2731210/k$79239e90beb7c03b9efabe4f9ab976f6", "p2731212/k$3838eee5d01508c57534cf4ce7a1205c", "p2731213/k$34998821085c27538913491f72487d0f", "p2731209/k$ee4e3cd64b5abab632d3734e5786ddf4"]) },
+        { id: "noir", nom: "Noir", nomDec: "noir ultra", hex: "#1c1c1f", clair: false, ref: "8873617",
+          lien: "https://www.decathlon.fr/p/sweat-chaud-en-molleton-homme-noir/351127/c378m8873617",
+          photos: dec(["p2731204/k$26273a21c90c4397e5766b897f8170df", "p2731203/k$4e9941db61d0639ef34a048b8f69277a", "p2731208/k$353e7c5cc64288a822a89a76e0578d1e", "p2731205/k$0d11a69f6d4da5d4b13b6b6361870b8a", "p2731206/k$8ad86db68db6b9d0d9704d6252ff7f1c", "p2731207/k$96a698ffbff9e307a1596268aad0509d"]) }
       ],
       lien: "https://www.decathlon.fr/p/sweat-chaud-en-molleton-homme-bleu-fonce/351127/c364m9004710",
       photos: [
@@ -146,7 +165,21 @@ window.DATA = {
       polyesterPct: 100,
       tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
       couleurs: [
-        { id: "blanc", nom: "Blanc", hex: "#f3f3f0", clair: true, ref: "8941322" }
+        { id: "blanc", nom: "Blanc", nomDec: "blanc ultra / noir fumé", hex: "#f3f3f0", clair: true, ref: "8941322",
+          lien: "https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-blanc/362058/c227c382m8941322",
+          photos: dec(["p2938737/k$cb964f859411a64f3b547eb595368593", "p2938838/k$e97e16f73ab955533dc1c6114fe65b29", "p2938601/k$028c1a4fda58a2d47f38aef63ab06169", "p2938670/k$27bd8fcca87685013513a8dc28879667", "p2938646/k$f69e087976a5f25d26adbe3dc8969c08", "p2938618/k$e0e39fd469f2cb8c8a713d30396affe9", "p2929375/k$67f50b8c908aca741bfbffb86ea438d3", "p2929349/k$2ec15fe68fc60f656a009e71f5c352d8"]) },
+        { id: "marine", nom: "Marine", nomDec: "indigo nuit. / blanc ultra", hex: "#243b5e", clair: false, ref: "8935974",
+          lien: "https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-navy/362058/c188c227m8935974",
+          photos: dec(["p2938706/k$d7916c39067ec0316072df7b2a387057", "p2938895/k$bc3f206cbead1e6006f3c7095f73fec5", "p2938876/k$10b9b795a99ba6019f629e9c8020b85b", "p2938605/k$8ba4a3ff06eacb22bf3dbdad95ffb87b", "p2938702/k$4bdb59c097d1fa62bb6bf8d4729a0cbf", "p2938651/k$5ddc85a614fa2524203d65f4884c8b2f"]) },
+        { id: "bleu", nom: "Bleu", nomDec: "bleu indigo / blanc ultra", hex: "#2d4f9e", clair: false, ref: "8941324",
+          lien: "https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-bleu/362058/c59c227m8941324",
+          photos: dec(["p2938677/k$62a2eea90a62833ab839fa3aad2bb123", "p2938580/k$fddedcccdacfeaf3e2f290311606ab7e", "p2938846/k$ad00cd9060c1feba2b5960b8af38087b", "p2938756/k$733c382e9be79c0ca1b77e78daf79e53", "p2938834/k$96cec9bb1147b26200092773a38af6ef", "p2938731/k$6f035eecd3abe0e890e44538fd8996ba", "p2929375/k$67f50b8c908aca741bfbffb86ea438d3", "p2929365/k$e032e59b0d26a0288d8d0ea09aed9b98"]) },
+        { id: "noir", nom: "Noir", nomDec: "noir fumé / blanc ultra", hex: "#1c1c1f", clair: false, ref: "8941321",
+          lien: "https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-noir/362058/c382c227m8941321",
+          photos: dec(["p2938623/k$90bf535c310ae5eb913c409cf02a7f77", "p2938827/k$bb664b29b35acc4d2a6ee531e98f44f8", "p2938811/k$dacb387b9bc6ad6e67b72ffcbfd8b1f8", "p2938878/k$1feae196b76e1b0f24857bdff517aa59", "p2938692/k$465100b6925e10fb24bb6d3937dbe51c", "p2938736/k$ee00a36875c13b38bd85da02fa742fe4"]) },
+        { id: "rouge", nom: "Rouge", nomDec: "rouge piment / blanc ultra", hex: "#c4252b", clair: false, ref: "8941325", rupture: "2026-10-19",
+          lien: "https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-rouge/362058/c221c227m8941325",
+          photos: dec(["p2938803/k$e33c16a794b62779929076be7d71d564", "p2938592/k$29bd0defee49ad997d0dc7b653c73e30", "p2938649/k$109cb59e77ad52529f850293fb7b175a", "p2938719/k$011b0ceab8fd431c0ee8fe13131c8f11", "p2938760/k$3623cc4e28f870c5343380455c1cba23", "p2938745/k$fbb3827f73a3c1f1c8ef09d895dda318"]) }
       ],
       lien: "https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-blanc/362058/c227c382m8941322",
       photos: [

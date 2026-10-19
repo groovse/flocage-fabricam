@@ -75,6 +75,8 @@
 .thumb { flex: none; width: 56px; height: 56px; object-fit: contain; background: #f7f9f8; border: 1px solid var(--line); border-radius: 3px; display: inline-block; }
 .tag { font-size: .8rem; background: var(--mat); color: #fff; padding: .05rem .4rem; border-radius: 3px; margin-left: .3rem; }
 .tag.mp { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-bar); margin-left: 0; font-weight: 600; }
+.tag.rupt { background: var(--err-bg); color: var(--err-ink); border: 1px solid var(--err-bar); font-weight: 600; }
+.thumb-c { width: 30px; height: 30px; margin-right: .4rem; vertical-align: middle; }
 .warn-line { color: var(--warn-ink); background: var(--warn-bg); padding: .6rem .8rem; border-left: 4px solid var(--warn-bar); border-radius: var(--r); margin: .9rem 0 0; font-size: .92rem; }
 .ok-line { color: var(--mat); margin: .9rem 0 0; font-size: .92rem; font-weight: 600; }
 .notes { margin: 0; padding-left: 1.2rem; }
