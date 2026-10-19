@@ -122,12 +122,13 @@ test("le fichier est un PDF complet : en-tête, table des références exacte, f
   const rows = s.substr(start).split("\n").slice(2, 2 + n);
   rows.slice(1).forEach((r, i) => assert.strictEqual(s.substr(Number(r.slice(0, 10)), (i + 1 + " 0 obj").length), (i + 1) + " 0 obj"));
 });
-test("la fiche de paiement contient l'IBAN, le titulaire, le total, la référence, le créateur et la phrase sur le paiement", () => {
+test("la fiche de paiement contient l'IBAN, le BIC, le titulaire, le total, la référence, le créateur et la phrase sur le paiement", () => {
   const t = textes(Fa.creerPdf(Object.assign({ type: "fiche" }, BASE), LOGO)).join("\n");
   assert.ok(t.includes("FICHE DE PAIEMENT"));
   assert.ok(t.includes("N° FP-2026-001"));
   assert.ok(t.includes("FR76 1759 8000 0100 0332 1323 381"));
-  assert.ok(t.includes("Fablab Icam 26-29"));
+  assert.ok(t.includes("Antton GARY et Martin ERNST"));
+  assert.ok(t.includes("BIC") && t.includes("LYDIFRP2XXX"));
   assert.ok(t.includes("167,60 €"), t);
   assert.ok(t.includes("FP-2026-001 Section basket"));
   assert.ok(t.includes("Martin Ernst"));
@@ -140,7 +141,7 @@ test("la facture est acquittée, avec la date du paiement, et ne montre pas l'IB
   assert.ok(t.includes("FACTURE") && t.includes("Facture acquittée"));
   assert.ok(t.includes("Paiement reçu le 15 octobre 2026"));
   assert.ok(t.includes("Fiche de paiement associée : FP-2026-001"));
-  assert.ok(!t.includes("FR76"));
+  assert.ok(!t.includes("FR76") && !t.includes("LYDIFRP2XXX"));
 });
 test("aucune mention de TVA, de SIRET ni du BDE sur les documents", () => {
   ["fiche", "facture"].forEach(type => {

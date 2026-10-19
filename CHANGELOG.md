@@ -5,6 +5,17 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.0.1 — 19/10/2026
+
+Coordonnées bancaires de la fiche de paiement alignées sur le RIB Lydia. **Version CORRECTIF : aucun prix ne change.**
+
+- **Titulaire du compte** : « Antton GARY et Martin ERNST », comme sur le RIB (compte commun). Le nom « Fablab Icam 26-29 » ne figurait pas sur le RIB ; un virement vers un autre nom que celui du compte peut être refusé ou retardé par certaines banques.
+- **BIC ajouté** : `LYDIFRP2XXX`, sur une ligne de plus du bloc « Comment payer ? ». L'IBAN est inchangé.
+- Le texte d'aide sous les boutons de la page « Paiement et facture » (atelier) cite le titulaire, l'IBAN et le BIC.
+- L'adresse personnelle du titulaire et les autres champs du RIB (code banque, guichet, numéro de compte, clé) ne sont pas repris : l'IBAN les contient déjà et le dépôt GitHub est public.
+- Réglage : `titulaire` et `bic` dans le bloc `CONFIG` de `js/facturation.js` (un `bic` vide supprime la ligne).
+- Tests : la fiche doit contenir le titulaire et le BIC, la facture ne doit contenir ni IBAN ni BIC.
+
 ## 6.0.0 — 19/10/2026
 
 Marge divisée par 2 sur les vêtements apportés au-delà de 5 pièces. **Version MAJEURE : la règle de prix change.**
