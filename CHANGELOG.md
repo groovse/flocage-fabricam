@@ -5,6 +5,14 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.3.1 — 19/10/2026
+
+La commande reprend la couleur choisie sur la carte du produit, et l'aperçu s'ouvre sur la photo avec son calque. **Version CORRECTIF : aucun prix ne change.**
+
+- **Couleur de la carte reprise dans la commande.** La couleur cliquée sur la carte d'un article du catalogue est celle de la première pièce dans « Ta commande » (avant, la commande démarrait toujours dans la première couleur de la liste). Si l'article est déjà dans une commande vierge, la pièce change de couleur ; si la commande est commencée, une pièce dans cette couleur s'ajoute. Les packs n'ont pas de choix de couleur sur leur carte.
+- **Photo avec calque par défaut.** L'aperçu du configurateur montre la photo du vêtement avec le visuel posé dessus dès l'arrivée, quand la photo existe dans la couleur de la pièce (polo, sweat, maillot, short de basket et débardeur, dans leur couleur de référence). Sinon, il affiche le dessin sans message d'erreur. Les boutons Dessin et Photo gardent leur rôle : « Dessin » force le dessin (les poignées de déplacement et de taille n'existent que là), « Photo » explique pourquoi la photo manque quand c'est le cas.
+- **À vérifier.** Pour les autres couleurs de ces cinq vêtements, la photo n'est toujours pas calibrée : l'aperçu reste en dessin.
+
 ## 6.3.0 — 19/10/2026
 
 L'en-tête du site client et la navigation du catalogue sont refaits. **Version MINEURE : ni les prix, ni le fichier de commande, ni l'atelier ne changent.**

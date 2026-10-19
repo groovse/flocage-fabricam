@@ -41,7 +41,7 @@
   var CTX = { prix: PRIX, produits: byId, packs: PACKS, emplacements: DATA.emplacements, measure: measure };
 
   /* ---------------- état de la commande en cours ---------------- */
-  var S = { pieces: [], nextId: 1, marquages: null, technique: "dtf", vue: "face", mode: "dessin", previewId: null,
+  var S = { pieces: [], nextId: 1, marquages: null, technique: "dtf", vue: "face", mode: "auto", previewId: null,
     contact: { asso: "", nom: "", email: "", tel: "", date: "", message: "" }, result: null,
     entryId: null, addModel: null, nextPack: 1, sel: null };
   function itemOf(id) { return byId[id] || PACKS[id]; }
@@ -159,6 +159,14 @@
     };
   }
 
+  // Couleur cliquée sur la carte d'un article du catalogue (produit -> identifiant de couleur) : la commande démarre dans cette couleur.
+  // Vidée à chaque affichage de la vitrine, où les cartes repartent de leur première couleur.
+  var COULEUR_CARTE = {};
+  function couleurChoisie(item) {
+    var id = !item.produits && COULEUR_CARTE[item.id];
+    return id && item.couleurs.some(function (c) { return c.id === id; }) ? { couleurId: id } : null;
+  }
+
   function newPiece(prod, over) {
     var p = { id: "p" + (S.nextId++), produitId: prod.id, couleurId: prod.couleurs[0].id, taille: prod.tailles[Math.min(1, prod.tailles.length - 1)], prenom: "", numero: "" };
     if (prod.apporte) p.matiere = "inconnu";   // vêtement apporté : la matière se choisit sur la pièce
@@ -198,7 +206,7 @@
         if (DATA.emplacements[e].texteSeul) S.marquages[e].prenom.actif = true;
       });
     }
-    if (!S.pieces.length) S.pieces = item.produits ? newPack(item, null) : [newPiece(item)];
+    if (!S.pieces.length) S.pieces = item.produits ? newPack(item, null) : [newPiece(item, couleurChoisie(item))];
     if (!S.addModel) S.addModel = item.id;
     fixPreview();
   }
@@ -215,13 +223,18 @@
 
   // Arrivée sur un produit depuis la vitrine : on repart de zéro si la commande est vierge, sinon on l'ajoute à la commande
   function enter(item) {
+    var coul = couleurChoisie(item);
     if (S.marquages && S.entryId !== item.id) {
       if (pristine()) { S.marquages = null; S.pieces = []; S.previewId = null; S.technique = "dtf"; S.addModel = null; }
       else {
-        S.pieces = S.pieces.concat(item.produits ? newPack(item, null) : [newPiece(item)]);
+        S.pieces = S.pieces.concat(item.produits ? newPack(item, null) : [newPiece(item, coul)]);
         S.addModel = item.id;
         toast((item.nomCourt || item.nom) + " ajouté à ta commande.");
       }
+    } else if (S.marquages && coul && !S.pieces.some(function (x) { return x.produitId === item.id && x.couleurId === coul.couleurId; })) {
+      // Retour sur le même article dans une autre couleur : une commande vierge change de couleur, sinon la pièce s'ajoute
+      if (pristine()) S.pieces.forEach(function (x) { if (x.produitId === item.id && !x.pack) x.couleurId = coul.couleurId; });
+      else { S.pieces.push(newPiece(item, coul)); toast((item.nomCourt || item.nom) + " ajouté à ta commande."); }
     }
     ensureState(item);
     S.entryId = item.id;
@@ -549,6 +562,7 @@
   // Un clic sur une couleur de la carte : sa série de photos et le lien vers sa page
   function choisitCouleur(card, ci) {
     var media = $(".p-media", card), prod = byId[card.dataset.prod], col = prod.couleurs[ci];
+    COULEUR_CARTE[prod.id] = col.id;
     $$(".sw-btn", card).forEach(function (x) { x.setAttribute("aria-pressed", Number(x.dataset.c) === ci ? "true" : "false"); });
     var liens = $(".p-liens", card); if (liens) liens.innerHTML = liensHTML(prod, col);
     if (!media) return;
@@ -560,6 +574,7 @@
   }
 
   function viewVitrine() {
+    COULEUR_CARTE = {};
     app.innerHTML =
       '<section class="hero">' +
       '<div class="hero-text">' +
@@ -1050,7 +1065,7 @@
     var prod = prodOf(piece);
     var hasBack = Object.keys(prod.zones).some(function (k) { var v = prod.zones[k].vue; return v === "dos" || v === "cote"; });
     if (!hasBack && S.vue === "dos") S.vue = "face";
-    var ph = photoApercu(piece, S.vue), photo = S.mode === "photo" && ph.ok;
+    var ph = photoApercu(piece, S.vue), photo = S.mode !== "dessin" && ph.ok;     // « auto » : la photo avec son calque quand elle existe, sinon le dessin
     var pv = $("#pv");
     var opts = { prod: prod, hex: colorOf(piece).hex, vue: S.vue, marquages: S.marquages, piece: piece, ctx: CTX };
     if (!photo) {        // vue Dessin : le visuel se déplace, s'agrandit et se tourne à la souris ou au doigt
