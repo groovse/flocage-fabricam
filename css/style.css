@@ -19,6 +19,9 @@
   --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
   --body: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
   --r: 4px;
+  --header-h: 4.6rem;   /* hauteur réelle de l'en-tête, mise à jour par app.js */
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --page: 1280px;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -46,22 +49,45 @@ h4 { font-size: 1.25rem; font-weight: 700; }
 p { margin: 0 0 1rem; }
 
 /* ---------- bandeau du haut ---------- */
-.top-note { background: var(--ink); color: #fff; padding: .6rem clamp(1rem, 4vw, 3rem); text-align: center; font-size: .95rem; }
+.top-note { background: var(--ink); color: #fff; padding: .6rem var(--gutter); text-align: center; font-size: .95rem; }
 .top-note p { margin: 0; }
 .top-note a { color: #fff; font-weight: 700; white-space: nowrap; }
 .top-note a:hover { color: #ffd2c5; }
 
 /* ---------- en-tête / pied ---------- */
-.site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem clamp(1rem, 4vw, 3rem); border-bottom: 1px solid var(--line); background: var(--paper); }
+.site-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem var(--gutter); border-bottom: 1px solid var(--line); background: var(--paper); }
 .brand { display: inline-flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--ink); font: 800 1.7rem/1 var(--display); letter-spacing: .01em; }
-.brand .mark { width: 1.05rem; height: 1.05rem; background: var(--heat); display: inline-block; box-shadow: 4px 4px 0 var(--ink); transform: translate(-2px, -2px); }
-.nav { display: flex; gap: .4rem; }
-.nav a { text-decoration: none; color: var(--ink); padding: .45rem .8rem; border-radius: var(--r); font-weight: 600; }
-.nav a:hover { background: var(--film); }
-.nav a.on { background: var(--ink); color: #fff; }
 
-main { display: block; padding: 0 clamp(1rem, 4vw, 3rem) 4rem; max-width: 1280px; margin: 0 auto; outline: none; }
-.site-footer { border-top: 1px solid var(--line); background: var(--paper); padding: 1.5rem clamp(1rem, 4vw, 3rem); display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 2rem; color: var(--muted); font-size: .92rem; }
+/* En-tête de la vitrine : toujours visible, aligné sur la largeur de la page (l'atelier garde le sien, voir atelier.css) */
+body:not(.at) .site-header {
+  position: sticky; top: 0; z-index: 30;
+  padding-block: .65rem;
+  padding-inline: max(var(--gutter), calc((100% - var(--page)) / 2 + var(--gutter)));
+  box-shadow: 0 1px 0 var(--line), 0 6px 14px -10px rgba(20, 33, 61, .35);
+}
+
+.nav { display: flex; align-items: center; gap: .3rem; }
+.nav-link { display: inline-flex; align-items: center; gap: .45rem; padding: .5rem .9rem; border: 0; border-radius: var(--r); background: none; color: var(--ink); font: 600 1rem/1.2 var(--body); text-decoration: none; cursor: pointer; }
+.nav-link:hover { background: var(--film); color: var(--ink); }
+.nav-link.on { box-shadow: inset 0 -3px 0 var(--heat); }
+.nav-cta { background: var(--ink); color: #fff; }
+.nav-cta:hover { background: var(--heat-strong); color: #fff; }
+.nav-cta.on { box-shadow: none; background: var(--heat-strong); }
+
+/* menu « Produits » : les catégories, avec le nombre d'articles */
+.menu { position: relative; }
+.menu-chevron { transition: transform .15s; }
+.menu-btn[aria-expanded="true"] { background: var(--film); }
+.menu-btn[aria-expanded="true"] .menu-chevron { transform: rotate(180deg); }
+.menu-panel { position: absolute; top: calc(100% + .5rem); right: 0; z-index: 35; width: min(20rem, 92vw); background: var(--paper); border: 1px solid var(--ink); border-radius: 6px; box-shadow: 6px 6px 0 var(--ink); padding: .4rem; }
+.menu-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.menu-list a { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .6rem .7rem; border-radius: var(--r); color: var(--ink); text-decoration: none; font-weight: 600; }
+.menu-list a:hover, .menu-list a:focus-visible { background: var(--film); }
+.menu-list li:first-child a { border-bottom: 1px solid var(--line); border-radius: var(--r) var(--r) 0 0; margin-bottom: .25rem; }
+.menu-n { min-width: 1.7rem; padding: .15rem .45rem; border-radius: 999px; background: var(--film); color: var(--muted); font-size: .82rem; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
+
+main { display: block; padding: 0 var(--gutter) 4rem; max-width: var(--page); margin: 0 auto; outline: none; }
+.site-footer { border-top: 1px solid var(--line); background: var(--paper); padding: 1.5rem var(--gutter); display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 2rem; color: var(--muted); font-size: .92rem; }
 .site-footer p { margin: 0; }
 
 /* ---------- boutons et champs ---------- */
@@ -105,6 +131,17 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .catalogue { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1rem, 2vw, 1.6rem); }
 .produit { display: flex; flex-direction: column; gap: 1.1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: clamp(1rem, 2vw, 1.5rem); }
 /* filtres du catalogue */
+#catalogue { scroll-margin-top: calc(var(--header-h) + .5rem); }
+.cat-bar { position: sticky; top: var(--header-h); z-index: 20; margin: 0 calc(-1 * var(--gutter)) 1rem; padding: .55rem var(--gutter); background: var(--film); border-bottom: 1px solid var(--line); }
+.cat-chips { display: flex; gap: .4rem; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; padding-right: 1.5rem; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent); }
+.cat-chips::-webkit-scrollbar { display: none; }
+.cat-chip { flex: none; scroll-snap-align: start; white-space: nowrap; padding: .42rem .7rem; font-size: .9rem; }
+/* écran large : toutes les catégories restent visibles, sur une ou deux lignes */
+@media (min-width: 900px) {
+  .cat-chips { flex-wrap: wrap; overflow: visible; padding-right: 0; -webkit-mask-image: none; mask-image: none; }
+}
+.cat-titre { margin: clamp(.8rem, 2vw, 1.4rem) 0 0; padding-bottom: .4rem; border-bottom: 3px solid var(--ink); grid-column: 1 / -1; scroll-margin-top: calc(var(--header-h) + 4.5rem); }
+.cat-titre:first-child { margin-top: 0; }
 .filtres { display: flex; flex-wrap: wrap; gap: .6rem 2rem; margin: 0 0 .6rem; }
 .f-group { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
 .f-label { font-weight: 700; margin-right: .2rem; }
@@ -188,7 +225,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .hint-matiere { display: none; }
 .pieces .col-couleur { white-space: nowrap; }
 .pieces .col-couleur .sw { margin-right: .45rem; vertical-align: middle; }
-.pieces .col-couleur select { width: calc(100% - 1.6rem); }
+.pieces .col-couleur select { width: calc(100% - 1.6rem); min-width: 5.8rem; }
 .pieces .col-numero input { width: 4.5rem; }
 .pieces .act { white-space: nowrap; text-align: right; }
 .pieces .act .ico + .ico { margin-left: .3rem; }
@@ -229,9 +266,8 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .radio { padding: .6rem .8rem; border: 1px solid var(--line); border-radius: var(--r); background: var(--paper); margin-bottom: .6rem; }
 .radio:has(input:checked) { border-color: var(--ink); }
 .radio.off { opacity: .55; cursor: not-allowed; }
-.radio b { display: block; }
+.radio b { display: block; color: var(--ink); }
 .radio span { font-size: .95rem; color: var(--muted); }
-.radio b { color: var(--ink); }
 
 .form2 { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin-bottom: .9rem; }
 .send { list-style: none; margin: 1.3rem 0 .8rem; padding: 0; display: grid; gap: .9rem; }
@@ -244,9 +280,9 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .warn li + li, .err li + li { margin-top: .35rem; }
 
 /* ---------- panneau de droite ---------- */
-.cfg-side { position: sticky; top: 1rem; display: grid; gap: 1rem; }
+.cfg-side { position: sticky; top: calc(var(--header-h) + 1rem); display: grid; gap: 1rem; }
 .pv-card { background: var(--paper); border: 1px solid var(--ink); border-radius: var(--r); overflow: hidden; }
-.pv-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .6rem; padding: .6rem .8rem; border-bottom: 1px solid var(--line); }
+.pv-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem .6rem; padding: .6rem .8rem; border-bottom: 1px solid var(--line); }
 .seg { display: inline-flex; border: 1px solid var(--ink); border-radius: var(--r); overflow: hidden; }
 .seg button { font: 600 .95rem/1 var(--body); padding: .5rem .9rem; border: 0; background: var(--paper); color: var(--ink); cursor: pointer; }
 .seg button + button { border-left: 1px solid var(--ink); }
@@ -259,7 +295,6 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .pv-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
 #pv .pv-photo svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .pv-note { margin: 0; padding: .6rem .8rem; border-top: 1px solid var(--line); font-size: .88rem; color: var(--muted); }
-.pv-bar { row-gap: .5rem; }
 .seg button.is-off { opacity: .55; }
 
 .total { background: var(--ink); color: #fff; border-radius: var(--r); padding: 1.1rem 1.3rem 1.2rem; }
@@ -291,7 +326,6 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
   .txt-opts { grid-template-columns: 1fr 1fr; padding-left: 0; }
   .vis-size, .vis-pos { grid-template-columns: 1fr; }
   .seq { grid-template-columns: 1fr; }
-  .site-header { flex-wrap: wrap; }
   .hint-matiere { display: block; }
   .lb-stage { grid-template-columns: 1fr 1fr; }
   .lb-fig { grid-column: 1 / -1; order: -1; }
@@ -301,7 +335,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
   * { scroll-behavior: auto !important; transition: none !important; }
 }
 @media print {
-  .top-note, .filtres, .f-count, .p-zoom, .lightbox, .site-header, .site-footer, .cfg-head, .toast, .skip { display: none !important; }
+  .top-note, .cat-bar, .filtres, .f-count, .p-zoom, .lightbox, .site-header, .site-footer, .cfg-head, .toast, .skip { display: none !important; }
   body { background: #fff; }
 }
 
@@ -315,7 +349,6 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .t-lines { list-style: none; margin: .8rem 0 .5rem; padding: 0; }
 .t-lines li { display: flex; justify-content: space-between; gap: 1rem; padding: .3rem 0; border-top: 1px solid rgba(255, 255, 255, .18); font-size: 1.02rem; font-variant-numeric: tabular-nums; }
 .t-lines li:first-child { border-top: 0; }
-.t-lines .rem { color: #9fe3cc; }
 .seg button:disabled { opacity: .4; cursor: not-allowed; }
 
 /* ---------- visionneuse de photos ---------- */
@@ -330,13 +363,11 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .lb-fig { margin: 0; display: grid; place-items: center; min-height: 40vh; background: #f7f9f8; }
 .lb-fig img { display: block; max-width: 100%; max-height: min(78vh, 760px); width: auto; height: auto; object-fit: contain; }
 .lb-err { margin: 0; padding: 1rem; color: var(--muted); text-align: center; }
-.pv-card svg { display: block; }
 
 /* ---------- tableau des pièces : colonnes lisibles, défilement horizontal si l'écran est étroit ---------- */
 .cfg-main, .cfg-side { min-width: 0; }
 .pieces select { min-width: 4.2rem; }
 .pieces .col-modele select { min-width: 7rem; }
-.pieces .col-couleur select { min-width: 5.8rem; }
 .pieces .col-prenom input { width: 100%; min-width: 6.5rem; }
 
 /* ---------- logo Fabr'Icam ---------- */
@@ -344,4 +375,12 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .brand #brand-name { font-size: 1.5rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .foot-brand { display: flex; align-items: center; gap: .8rem; }
 .foot-brand img { height: 2.4rem; width: auto; display: block; }
+@media (max-width: 720px) {
+  body:not(.at) .site-header { gap: .5rem; }
+  .nav-link { padding: .5rem .65rem; font-size: .95rem; }
+  /* le menu des catégories prend toute la largeur de l'écran, sous l'en-tête (positionné par rapport à l'en-tête collant) */
+  .menu { position: static; }
+  .menu-panel { top: calc(100% + .25rem); left: .5rem; right: .5rem; width: auto; max-height: calc(100vh - var(--header-h) - 5rem); overflow-y: auto; }
+}
 @media (max-width: 560px) { .brand-logo { height: 2.5rem; } .brand #brand-name { font-size: 1.25rem; } }
+@media (max-width: 480px) { .brand #brand-name { display: none; } .top-note { padding-block: .5rem; font-size: .85rem; } }

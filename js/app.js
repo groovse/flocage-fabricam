@@ -59,11 +59,26 @@
     return gmailHref(DATA.service.email, "Demande de flocage, vêtement hors catalogue", body);
   }
   // Filtres du catalogue : une valeur par groupe, "" = tous
-  var FILTRE = { genre: "", style: "", type: "" };
+  var FILTRE = { categorie: "", genre: "", style: "" };
   function tagsOf(item) { return item.tags || {}; }
-  // Ordre du catalogue : les vêtements Decathlon, les packs, puis les vêtements que le client apporte
+
+  // Catégories : l'ordre de DATA.categories est celui du menu, de la barre et des rayons du catalogue
+  var CATEGORIES = DATA.categories || [];
+  var RANG_CATEGORIE = {};
+  CATEGORIES.forEach(function (c, i) { RANG_CATEGORIE[c.id] = i; });
+  function categoriesOf(item) { return tagsOf(item).categories || []; }
+  function categorieLabel(id) { return CATEGORIES.filter(function (c) { return c.id === id; })[0].label; }
+  // Rayon d'un article : sa première catégorie (c'est là qu'il apparaît quand aucune catégorie n'est choisie)
+  function rayonOf(item) { return categoriesOf(item)[0] || ""; }
+  // Ordre du catalogue : par rayon, et dans un rayon les vêtements Decathlon, puis les packs, puis les vêtements apportés
   function catalogueItems() {
-    return DATA.produits.filter(function (p) { return !p.apporte; }).concat(DATA.packs || [], DATA.produits.filter(function (p) { return p.apporte; }));
+    var tous = DATA.produits.filter(function (p) { return !p.apporte; }).concat(DATA.packs || [], DATA.produits.filter(function (p) { return p.apporte; }));
+    return tous.map(function (item, i) { return { item: item, i: i, rang: RANG_CATEGORIE[rayonOf(item)] }; })
+      .sort(function (a, b) { return a.rang - b.rang || a.i - b.i; })
+      .map(function (x) { return x.item; });
+  }
+  function compteCategorie(id) {
+    return catalogueItems().filter(function (it) { return !id || categoriesOf(it).indexOf(id) >= 0; }).length;
   }
   // Matière d'une pièce apportée (champ matiere de la pièce) : { id, nom, court }
   function matiereDe(p) {
@@ -72,9 +87,9 @@
   }
   function matchFiltre(item) {
     var t = tagsOf(item);
+    if (FILTRE.categorie && categoriesOf(item).indexOf(FILTRE.categorie) < 0) return false;
     if (FILTRE.genre && (t.genre || []).indexOf(FILTRE.genre) < 0) return false;
     if (FILTRE.style && t.style && t.style !== FILTRE.style) return false;
-    if (FILTRE.type && t.type !== FILTRE.type) return false;
     return true;
   }
   // Nom d'une ligne de prix : un produit, ou un pack
@@ -311,9 +326,18 @@
     return v ? v.label : id;
   }
 
+  // Barre de catégories : reste collée sous l'en-tête pendant qu'on parcourt le catalogue
+  function barreCategoriesHTML() {
+    var puces = [{ id: "", label: "Tout" }].concat(CATEGORIES).map(function (c) {
+      return '<button type="button" class="chip cat-chip" data-cat="' + esc(c.id) + '" aria-pressed="' + (FILTRE.categorie === c.id ? "true" : "false") + '">' + esc(c.label) + '</button>';
+    }).join("");
+    return '<div class="cat-bar" id="cat-bar"><div class="cat-chips" role="group" aria-label="Catégories de produits">' + puces + '</div></div>';
+  }
+
+  // Filtres secondaires (pour qui, quel style), sous la barre de catégories
   function filtresHTML() {
-    var f = DATA.filtres; if (!f) return "";
-    var groupes = Object.keys(f).map(function (k) {
+    var f = DATA.filtres || {};
+    var groupes = ["genre", "style"].filter(function (k) { return f[k]; }).map(function (k) {
       var g = f[k];
       return '<div class="f-group" role="group" aria-label="' + esc(g.label) + '"><span class="f-label">' + esc(g.label) + '</span>' +
         [{ id: "", label: "Tous" }].concat(g.valeurs).map(function (v) {
@@ -324,16 +348,75 @@
   }
 
   function majFiltres() {
-    var all = catalogueItems(), cards = $$(".catalogue .produit"), nV = 0, nP = 0;
+    var all = catalogueItems(), cards = $$(".catalogue .produit"), nV = 0, nP = 0, rayons = {};
     cards.forEach(function (c, i) {
       var ok = matchFiltre(all[i]);
       c.hidden = !ok;
-      if (ok) { if (c.dataset.pack) nP++; else nV++; }
+      if (ok) { rayons[c.dataset.rayon] = true; if (c.dataset.pack) nP++; else nV++; }
     });
+    // Titres de rayon : seulement quand toutes les catégories sont affichées, et pas pour un rayon vide
+    $$(".cat-titre").forEach(function (h) { h.hidden = !!FILTRE.categorie || !rayons[h.dataset.rayon]; });
     $$("[data-filtre]").forEach(function (b) { b.setAttribute("aria-pressed", FILTRE[b.dataset.filtre] === b.dataset.valeur ? "true" : "false"); });
+    $$(".cat-chip").forEach(function (b) { b.setAttribute("aria-pressed", FILTRE.categorie === b.dataset.cat ? "true" : "false"); });
     var out = $("#f-count"); if (!out) return;
     if (!nV && !nP) out.innerHTML = "Aucun article ne correspond à ces filtres. Tu peux nous <a href=\"" + autreVetementHref() + "\">demander le vêtement que tu cherches</a>.";
     else out.textContent = nV + (nV > 1 ? " articles" : " article") + (nP ? " et " + nP + (nP > 1 ? " packs" : " pack") : "");
+  }
+
+  // Les cartes du catalogue, avec un titre devant chaque rayon
+  function rayonsHTML() {
+    var dernier = null;
+    return catalogueItems().map(function (item) {
+      var r = rayonOf(item), titre = "";
+      if (r !== dernier) { dernier = r; titre = '<h3 class="cat-titre" data-rayon="' + esc(r) + '" id="rayon-' + esc(r) + '">' + esc(categorieLabel(r)) + '</h3>'; }
+      return titre + cardHTML(item);
+    }).join("");
+  }
+
+  /* ---------- navigation par catégories (menu « Produits » de l'en-tête, barre du catalogue, adresses #/produits/…) ---------- */
+  function adresseCategorie(id) { return id ? "#/produits/" + id : "#/produits"; }
+  function categorieValide(id) { return id in RANG_CATEGORIE; }
+  function defileVersCatalogue() {
+    var cat = $("#catalogue"); if (!cat) return;
+    cat.scrollIntoView({ behavior: "auto", block: "start" });
+  }
+  // Choisit une catégorie : sur la vitrine on filtre sur place, ailleurs on y revient par l'adresse.
+  // Depuis le menu on va toujours au catalogue ; depuis la barre, seulement si on a défilé plus bas que son début.
+  function allerCategorie(id, depuisMenu) {
+    if (!$(".catalogue")) { location.hash = adresseCategorie(id); return; }
+    FILTRE.categorie = id;
+    majFiltres();
+    history.replaceState(null, "", adresseCategorie(id));
+    if (depuisMenu || $("#catalogue").getBoundingClientRect().top < 0) defileVersCatalogue();
+  }
+  function menuHTML() {
+    var ligne = function (id, label) {
+      return '<li><a href="' + adresseCategorie(id) + '" data-cat="' + esc(id) + '"><span>' + esc(label) + '</span><span class="menu-n">' + compteCategorie(id) + '</span></a></li>';
+    };
+    return '<ul class="menu-list">' + ligne("", "Tous les produits") + CATEGORIES.map(function (c) { return ligne(c.id, c.label); }).join("") + '</ul>';
+  }
+  function menuOuvert() { return !$("#menu-panel").hidden; }
+  function basculeMenu(ouvre) {
+    var btn = $("#menu-btn"), panel = $("#menu-panel");
+    panel.hidden = !ouvre;
+    btn.setAttribute("aria-expanded", ouvre ? "true" : "false");
+  }
+  function onMenuClick(e) {
+    var lien = e.target.closest("[data-cat]");
+    if (lien && lien.tagName === "A") { e.preventDefault(); basculeMenu(false); allerCategorie(lien.dataset.cat, true); return; }
+    if (lien) { allerCategorie(lien.dataset.cat); return; }          // puce de la barre du catalogue
+    if (e.target.closest("#menu-btn")) { basculeMenu(!menuOuvert()); return; }
+    if (menuOuvert() && !e.target.closest("#menu-panel")) basculeMenu(false);
+  }
+  function onMenuKey(e) {
+    if (e.key === "Escape" && menuOuvert()) { basculeMenu(false); $("#menu-btn").focus(); }
+  }
+  // Hauteur de l'en-tête : la barre de catégories se cale juste dessous
+  function suitHauteurEntete() {
+    var hd = $("#site-header"), maj = function () { document.documentElement.style.setProperty("--header-h", hd.offsetHeight + "px"); };
+    maj();
+    window.addEventListener("resize", maj);
+    if (window.ResizeObserver) new ResizeObserver(maj).observe(hd);
   }
 
   function nombreEnLettres(n) { return ["Zéro", "Une", "Deux", "Trois", "Quatre", "Cinq", "Six"][n] || String(n); }
@@ -373,11 +456,11 @@
     (t.genre || []).forEach(function (g) { labels.push(valeurLabel("genre", g)); });
     if (t.style) labels.push(valeurLabel("style", t.style));
     if (t.sport) labels.push(t.sport);
-    if (t.type) labels.push(valeurLabel("type", t.type));
+    categoriesOf(item).forEach(function (c) { labels.push(categorieLabel(c)); });
     var mp = prods.filter(function (pr) { return pr.vendeur; })[0];
     var chips = labels.length || mp ? '<ul class="tags" aria-label="Étiquettes">' + labels.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") +
       (mp ? '<li class="mp">Livré par le vendeur</li>' : "") + "</ul>" : "";
-    return '<article class="produit" data-prod="' + item.id + '" data-pack="' + (isPack ? "1" : "") + '"' + (matchFiltre(item) ? "" : " hidden") + '>' + cardPhoto(item) +
+    return '<article class="produit" data-prod="' + item.id + '" data-pack="' + (isPack ? "1" : "") + '" data-rayon="' + esc(rayonOf(item)) + '"' + (matchFiltre(item) ? "" : " hidden") + '>' + cardPhoto(item) +
       '<div class="p-info">' + chips + '<h3>' + esc(item.nom) + '</h3>' +
       '<p class="p-meta">' + meta + '</p>' +
       (app ? "" : '<ul class="swatches" aria-label="Couleurs">' + sw + '</ul>') +
@@ -477,8 +560,6 @@
   }
 
   function viewVitrine() {
-    var cards = catalogueItems().map(cardHTML).join("");
-
     app.innerHTML =
       '<section class="hero">' +
       '<div class="hero-text">' +
@@ -486,7 +567,7 @@
       '<p class="lead">Tu choisis le vêtement, tu importes ton logo, tu ajoutes les prénoms et les numéros. On presse à l\'atelier de Fabr\'Icam, et tu vois le prix à chaque changement.</p>' +
       '<p><a class="btn btn-primary" href="#catalogue" data-scroll="catalogue">Choisir un vêtement</a></p>' +
       '</div>' + heroArt() + '</section>' +
-      '<section class="block" id="catalogue"><h2>Catalogue</h2>' + filtresHTML() + '<div class="catalogue">' + cards + '</div></section>' +
+      '<section class="block" id="catalogue"><h2>Catalogue</h2>' + barreCategoriesHTML() + filtresHTML() + '<div class="catalogue">' + rayonsHTML() + '</div></section>' +
       '<section class="block steps"><h2>Comment ça marche</h2><ol class="seq">' +
       '<li><b>Tu configures.</b> Couleurs, tailles, visuels, prénoms et numéros, avec un aperçu à la taille réelle.</li>' +
       '<li><b>Tu vois le prix.</b> Il se met à jour à chaque changement, vêtements et marquage compris.</li>' +
@@ -765,7 +846,7 @@
       if (vb.length === 4 && vb[2] > 0 && vb[3] > 0) return vb[3] / vb[2];
       var w = parseFloat(el.getAttribute("width")), h = parseFloat(el.getAttribute("height"));
       if (w > 0 && h > 0) return h / w;
-    } catch (err) { /* on retombe sur les dimensions lues par le navigateur */ }
+    } catch (_) { /* on retombe sur les dimensions lues par le navigateur */ }
     return 0;
   }
 
@@ -1259,7 +1340,7 @@
     e.preventDefault();
     if (ro) { tourne(m, 1); renderEmp(empId); refresh(); return; }
     var p0 = pointZone(e, empId); if (!p0) return;
-    try { pv.setPointerCapture(e.pointerId); } catch (err) { /* sans capture, le glisser marche quand même tant que la souris reste sur l'aperçu */ }
+    try { pv.setPointerCapture(e.pointerId); } catch (_) { /* sans capture, le glisser marche quand même tant que la souris reste sur l'aperçu */ }
     var g = E.imageGeom(m, CTX);
     if (rs) {
       // le coin tiré suit la souris : le visuel grandit à partir de son bord haut (ou de son centre sur une manche), sans se déformer
@@ -1290,7 +1371,7 @@
   function onPointerUp(e) {
     if (!drag || e.pointerId !== drag.id) return;
     var emp = drag.emp; drag = null;
-    var pv = $("#pv"); try { if (pv) pv.releasePointerCapture(e.pointerId); } catch (err) { /* déjà relâché */ }
+    var pv = $("#pv"); try { if (pv) pv.releasePointerCapture(e.pointerId); } catch (_) { /* déjà relâché */ }
     renderEmp(emp); refresh();
   }
   function onFocusIn(e) {
@@ -1305,10 +1386,21 @@
     var h = location.hash || "#/";
     if (h.indexOf("#catalogue") === 0) return;
     if (h.indexOf("#/atelier") === 0) { location.replace("atelier.html"); return; }   // anciens liens vers l'atelier
-    var m = h.match(/^#\/configurer(?:\/(.+))?$/);
-    if (m) viewConfigurator(m[1]); else viewVitrine();
-    window.scrollTo(0, 0);
-    $$(".nav a").forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === (h.indexOf("#/configurer") === 0 ? "#/configurer" : "#/")); });
+    var cfg = h.match(/^#\/configurer(?:\/(.+))?$/), prod = h.match(/^#\/produits(?:\/([\w-]+))?$/);
+    if (cfg) {
+      viewConfigurator(cfg[1]);
+      window.scrollTo(0, 0);
+    } else {
+      FILTRE.categorie = prod && prod[1] && categorieValide(prod[1]) ? prod[1] : "";
+      viewVitrine();
+      if (prod) defileVersCatalogue(); else window.scrollTo(0, 0);
+    }
+    $$("[data-nav]").forEach(function (el) {
+      var actif = el.dataset.nav === (cfg ? "cfg" : "vitrine");
+      el.classList.toggle("on", actif);
+      if (actif) el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current");
+    });
+    basculeMenu(false);
   }
 
   function start() {
@@ -1316,6 +1408,8 @@
     document.addEventListener("input", onInput);
     document.addEventListener("change", onChange);
     document.addEventListener("click", onClick);
+    document.addEventListener("click", onMenuClick);
+    document.addEventListener("keydown", onMenuKey);
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("pointermove", onPointerMove);
     document.addEventListener("pointerup", onPointerUp);
@@ -1323,7 +1417,8 @@
     document.addEventListener("focusin", onFocusIn);
     window.addEventListener("hashchange", route);
     $("#brand-name").textContent = DATA.service.nom.replace(/^Fabr'Icam\s+/i, "") || DATA.service.nom;   // le logo porte déjà « Fabr'Icam »
-    var cfgLink = $(".nav a[data-cfg]"); if (cfgLink) cfgLink.href = "#/configurer";
+    $("#menu-panel").innerHTML = menuHTML();
+    suitHauteurEntete();
     gmailLink($("#foot-mail"), gmailHref(DATA.service.email));
     gmailLink($("#top-note-mail"), autreVetementHref());
     $("#foot-mail").textContent = DATA.service.email;

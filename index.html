@@ -20,11 +20,17 @@
     <p>Un vêtement qui n'est pas au catalogue ? Tu peux aussi nous demander de floquer le vêtement de ton choix. <a id="top-note-mail" href="https://mail.google.com/mail/?view=cm&fs=1&to=fabricam.toulouse%40icam.fr" target="_blank" rel="noopener">Faire une demande</a></p>
   </aside>
 
-  <header class="site-header">
+  <header class="site-header" id="site-header">
     <a class="brand" href="#/"><img class="brand-logo" src="img/logo-fabricam.png" alt="Fabr'Icam" width="782" height="414"><span id="brand-name">Fabr'Icam Flocage</span></a>
     <nav class="nav" aria-label="Navigation principale">
-      <a href="#/">Catalogue</a>
-      <a href="#/configurer" data-cfg>Ma commande</a>
+      <div class="menu">
+        <button type="button" class="nav-link menu-btn" id="menu-btn" data-nav="vitrine" aria-expanded="false" aria-controls="menu-panel">
+          Produits
+          <svg class="menu-chevron" viewBox="0 0 12 8" width="12" height="8" aria-hidden="true" focusable="false"><path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="menu-panel" id="menu-panel" role="region" aria-label="Catégories de produits" hidden></div>
+      </div>
+      <a class="nav-link nav-cta" href="#/configurer" data-cfg data-nav="cfg">Ma commande</a>
     </nav>
   </header>
 

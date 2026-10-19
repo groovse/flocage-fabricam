@@ -327,6 +327,20 @@ test("catalogue : identifiants uniques, emplacements, modèles de dessin et tags
     k.vitrine.forEach(e => assert.ok(k.produits.some(id => produits[id].zones[e]), k.id + " : la vitrine utilise un emplacement absent " + e));
   });
 });
+test("catégories de la vitrine : liste valide, chaque article et pack en porte au moins une, sans doublon", () => {
+  const ids = DATA.categories.map(c => c.id);
+  assert.strictEqual(new Set(ids).size, ids.length, "identifiants de catégorie en double");
+  DATA.categories.forEach(c => assert.ok(c.label, c.id + " : libellé manquant"));
+  DATA.produits.concat(DATA.packs).forEach(it => {
+    const cats = it.tags.categories;
+    assert.ok(Array.isArray(cats) && cats.length, it.id + " : aucune catégorie");
+    assert.strictEqual(new Set(cats).size, cats.length, it.id + " : catégorie en double");
+    cats.forEach(c => assert.ok(ids.indexOf(c) >= 0, it.id + " : catégorie inconnue " + c));
+    assert.strictEqual(cats.indexOf("apporte") >= 0, !!it.apporte, it.id + " : « Ton vêtement » seulement pour les vêtements apportés");
+  });
+  ids.forEach(id => assert.ok(DATA.produits.concat(DATA.packs).some(it => it.tags.categories.indexOf(id) >= 0), id + " : catégorie vide"));
+  DATA.packs.forEach(k => assert.strictEqual(k.tags.categories[0], "ensembles", k.id + " : un pack est rangé dans « Packs »"));
+});
 test("dessins : chaque vêtement se dessine de face et de dos, et ses zones tiennent dans le dessin", () => {
   DATA.produits.forEach(p => {
     const m = window.Preview.models[p.modele], W = m.w || 90, H = m.h || 82, dy = m.dy || 0;

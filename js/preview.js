@@ -514,7 +514,7 @@
    * ctx : { prix, produits, emplacements, measure }
    */
   function render(opts) {
-    var E = window.Engine, prod = opts.prod, vue = opts.vue || "face", out = "";
+    var prod = opts.prod, vue = opts.vue || "face", out = "";
     var mod = MODELS[prod.modele] || {}, W = mod.w || 90, H = mod.h || 82, dy = mod.dy || 0;
     out += '<svg class="pv-svg" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aperçu, vue ' + (vue === "dos" ? "de dos" : "de face") + '">';
     out += defs();
