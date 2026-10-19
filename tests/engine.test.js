@@ -503,7 +503,7 @@ test("couleurs : identifiants uniques, nom Decathlon, lien de la page Decathlon,
     });
     (p.photos || []).forEach(u => assert.ok(URL_PHOTO.test(u), p.id + " : adresse de photo " + u));
   });
-  assert.ok(avecPhotos >= 11, "couleurs avec leur série de photos : " + avecPhotos);
+  assert.ok(avecPhotos >= 121, "couleurs avec leur série de photos : " + avecPhotos);
 });
 test("couleurs : la photo de calibrage (apercuPhoto) reste celle de la couleur de référence", () => {
   DATA.produits.forEach(p => {
@@ -520,6 +520,22 @@ test("relecture Decathlon : polo 2 couleurs, sweat 4 couleurs, maillot de basket
   assert.ok(m.couleurs.every(c => c.photos && c.ref && /m\d+$/.test(c.lien)), "chaque couleur du maillot a ses photos, sa référence et sa page");
   assert.deepStrictEqual(m.couleurs.filter(c => c.rupture).map(c => c.id), ["rouge"]);
   assert.strictEqual(new Set(m.couleurs.map(c => c.photos[0])).size, 5, "une série de photos différente par couleur");
+});
+test("relecture Decathlon des 45 articles : un lien pour chaque couleur ; en magasin, sa série de photos et sa référence", () => {
+  const dec = DATA.produits.filter(p => !p.apporte);
+  assert.strictEqual(dec.length, 45);
+  dec.forEach(p => p.couleurs.forEach(c => {
+    assert.ok(/^https:\/\/www\.decathlon\.fr\/p\//.test(c.lien || ""), p.id + " " + c.id + " : lien de la couleur");
+    if (!p.vendeur) assert.ok(c.photos && c.ref && c.lien.endsWith("m" + c.ref), p.id + " " + c.id + " : photos, référence et page de la couleur");
+  }));
+  const nb = id => produits[id].couleurs.length;
+  assert.deepStrictEqual(["short-basket", "short-tennis", "debardeur-fitness", "polo-golf-mw500", "bonnet-rider-500", "tour-de-cou-morf", "short-football-essentiel", "sac-a-dos-arpenaz-100", "survetement-joma", "ensemble-hummel"].map(nb), [5, 2, 2, 12, 13, 13, 8, 7, 8, 10]);
+  assert.deepStrictEqual(produits["sac-a-dos-arpenaz-100"].couleurs.filter(c => c.rupture).map(c => c.id), ["vert-cedre", "orange-terracotta"]);
+  assert.strictEqual(produits["sweat-viralto-axton"].prixAchat, 21.99);
+  assert.deepStrictEqual(produits["sweat-viralto-axton"].tailles, ["S", "M", "L", "XL", "2XL", "3XL", "4XL"]);
+  assert.strictEqual(E.prixAchatPiece(produits["polo-golf-mw500"], "vieux-violet"), 9.99);
+  assert.strictEqual(E.prixAchatPiece(produits["polo-golf-mw500"], "noir"), 14.99);
+  assert.strictEqual(E.prixAchatPiece(produits["survetement-joma"], "noir-gris"), 89.77);
 });
 test("prix d'achat par couleur : la couleur au prix différent change le coût, les autres gardent le prix de l'article", () => {
   const prod = JSON.parse(JSON.stringify(produits["polo-essential"]));
