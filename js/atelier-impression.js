@@ -259,7 +259,7 @@
     var html = '<div class="fiche-bar no-print"><h1>Fiche de fabrication</h1><button type="button" class="btn btn-primary" id="f-print">Imprimer la fiche</button>' +
       '<p class="hint">Une feuille A4 par tranche d\'une trentaine de pièces. Les cases à cocher servent à suivre l\'avancement à la main.</p></div>';
 
-    html += '<article class="fiche"><header class="f-head"><div><p class="f-brand">' + esc(A.DATA.service.nom) + ", atelier</p><h2>Fiche de fabrication</h2></div>" +
+    html += '<article class="fiche"><header class="f-head"><div><img class="f-logo" src="img/logo-fabricam.png" alt="Fabr\'Icam" width="782" height="414"><p class="f-brand">' + esc(A.DATA.service.nom) + ", atelier</p><h2>Fiche de fabrication</h2></div>" +
       "<dl><div><dt>Association</dt><dd>" + esc(c.asso || "–") + "</dd></div><div><dt>Contact</dt><dd>" + esc([c.nom, c.email, c.tel].filter(Boolean).join(", ") || "–") + "</dd></div>" +
       "<div><dt>À rendre pour le</dt><dd>" + (c.date ? esc(At.fmtDate(c.date)) : "pas de date") + "</dd></div>" +
       (recu ? "<div><dt>Commande reçue le</dt><dd>" + esc(recu) + "</dd></div>" : "") + "<div><dt>Fiche éditée le</dt><dd>" + esc(today) + "</dd></div></dl></header>";
