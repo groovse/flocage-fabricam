@@ -211,6 +211,21 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .unit { display: flex; align-items: center; gap: .4rem; color: var(--ink); }
 .unit input { width: 5rem; }
 
+/* taille, rotation et position du visuel (version 6.2.0) */
+.vis { display: grid; gap: .8rem; padding: .8rem; background: var(--film); border-radius: var(--r); }
+.vis-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .8rem; }
+.vis-lab { font-weight: 600; font-size: .92rem; min-width: 8.5rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.vis-size { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); gap: .8rem; align-items: end; }
+.vis-range { width: 100%; accent-color: var(--ink); margin: 0 0 .5rem; }
+.vis-pos { display: grid; grid-template-columns: 1fr 1fr auto; gap: .8rem; align-items: end; }
+.vis-pos small { color: var(--muted); font-weight: 400; }
+.vis output { font-weight: 700; min-width: 3rem; }
+.vis .hint { margin: 0; }
+.pv-move { cursor: move; touch-action: none; }
+.pv-poignee { cursor: pointer; touch-action: none; }
+.pv-poignee[data-pv-resize] { cursor: nwse-resize; }
+
 .radio { padding: .6rem .8rem; border: 1px solid var(--line); border-radius: var(--r); background: var(--paper); margin-bottom: .6rem; }
 .radio:has(input:checked) { border-color: var(--ink); }
 .radio.off { opacity: .55; cursor: not-allowed; }
@@ -274,6 +289,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
   .pc:nth-child(n+3) { border-top: 1px solid var(--line); }
   .form2, .row2 { grid-template-columns: 1fr; }
   .txt-opts { grid-template-columns: 1fr 1fr; padding-left: 0; }
+  .vis-size, .vis-pos { grid-template-columns: 1fr; }
   .seq { grid-template-columns: 1fr; }
   .site-header { flex-wrap: wrap; }
   .hint-matiere { display: block; }

@@ -235,15 +235,77 @@
     return (w <= P.w + EPS && h <= P.h + EPS) || (w <= P.h + EPS && h <= P.w + EPS);
   }
 
+  /* Visuel : taille, rotation et position (version 6.2.0)
+   * Avant la 6.2.0, un visuel était un format (A6, A5...) avec un sens (portrait ou paysage) : la case réservée sur la planche était celle du format.
+   * Un marquage peut maintenant porter une taille libre :
+   *   largeur  : largeur du visuel en cm (la hauteur suit les proportions de l'image, image.ratio = hauteur / largeur) ;
+   *   rot      : quart de tour, 0, 90, 180 ou 270 degrés (sens des aiguilles d'une montre) ;
+   *   dx, dy   : décalage en cm par rapport à la place par défaut dans la zone (vers la droite, vers le bas).
+   * Sans `largeur`, rien ne change : on retrouve la case du format et son sens (anciens fichiers de commande, tableaux de prix de la vitrine).
+   * La case qui compte pour les planches et pour le prix est le rectangle qui englobe le visuel tourné (w, h).
+   */
+  var LARGEUR_MIN = 0.2, LARGEUR_MAX = 60, DECALAGE_MAX = 100;
+  function quartDeTour(r) { var n = Math.round((Number(r) || 0) / 90); return (((n % 4) + 4) % 4) * 90; }
+  function nombre(v, def) { v = Number(v); return isFinite(v) ? v : def; }
+  // Rapport hauteur / largeur de l'image du marquage, sinon celui de la case du format
+  function ratioImage(cfg, boite) {
+    var r = cfg && cfg.image && Number(cfg.image.ratio);
+    return r > 0 && isFinite(r) ? r : boite.h / boite.w;
+  }
+  function imageGeom(cfg, ctx) {
+    var f = ctx.prix.formatsMotif[cfg.format];
+    if (!f) return null;
+    var boite = cfg.orient === "paysage" ? { w: f.h, h: f.w } : { w: f.w, h: f.h };
+    var w0 = boite.w, h0 = boite.h, libre = Number(cfg.largeur) > 0;
+    if (libre) {
+      w0 = Math.max(LARGEUR_MIN, Math.min(LARGEUR_MAX, Number(cfg.largeur)));
+      h0 = w0 * ratioImage(cfg, boite);
+    }
+    var rot = quartDeTour(cfg.rot), tourne = rot % 180 !== 0;
+    return { libre: libre, w0: w0, h0: h0, rot: rot, w: tourne ? h0 : w0, h: tourne ? w0 : h0,
+      dx: Math.max(-DECALAGE_MAX, Math.min(DECALAGE_MAX, nombre(cfg.dx, 0))), dy: Math.max(-DECALAGE_MAX, Math.min(DECALAGE_MAX, nombre(cfg.dy, 0))) };
+  }
+  // Plus grande largeur de visuel dont le rectangle (tourné) tient sur le plateau de la presse
+  function largeurMax(ratio, rot, plateau) {
+    var r = ratio > 0 ? ratio : 1, tourne = quartDeTour(rot) % 180 !== 0;
+    var bw = tourne ? r : 1, bh = tourne ? 1 : r;          // rectangle englobant pour une largeur de 1 cm
+    return Math.min(LARGEUR_MAX, Math.max(Math.min(plateau.w / bw, plateau.h / bh), Math.min(plateau.h / bw, plateau.w / bh)));
+  }
+  // Largeur qui fait tenir le visuel dans un format (raccourci A7, A6...). Le format se prend dans le sens de l'image :
+  // en hauteur pour une image haute, en largeur pour une image large (comme avant avec « Paysage »).
+  function largeurPourFormat(formatId, ratio, rot, ctx) {
+    var f = ctx.prix.formatsMotif[formatId]; if (!f) return null;
+    var r = ratio > 0 ? ratio : f.h / f.w, tourne = quartDeTour(rot) % 180 !== 0;
+    var rb = tourne ? 1 / r : r;                           // hauteur / largeur du rectangle englobant
+    var court = Math.min(f.w, f.h), long = Math.max(f.w, f.h);
+    var bw = rb >= 1 ? court : long, bh = rb >= 1 ? long : court;
+    var wb = Math.min(bw, bh / rb);                        // largeur du rectangle englobant
+    var L = tourne ? wb / r : wb;
+    return Math.round(L * 100) / 100;
+  }
+
+  function cm(n) { return String(Math.round(n * 10) / 10).replace(".", ","); }
+  // Le visuel en une phrase, pour les mails et l'atelier : « A6, 10 × 14 cm » (format sans taille libre, comme avant la 6.2.0)
+  // ou « 12 × 8 cm, tourné de 90°, décalé de 2 cm vers la droite et 1,5 cm vers le bas »
+  function descriptionVisuel(cfg, ctx) {
+    var g = imageGeom(cfg, ctx); if (!g) return "";
+    if (!g.libre) return (cfg.format || "") + (cfg.orient === "paysage" ? " en paysage" : "") + ", " + cm(g.w) + " × " + cm(g.h) + " cm" + (g.rot ? ", tourné de " + g.rot + "°" : "") + decalageTxt(g);
+    return cm(g.w0) + " × " + cm(g.h0) + " cm" + (g.rot ? ", tourné de " + g.rot + "°" : "") + decalageTxt(g);
+  }
+  function decalageTxt(g) {
+    var p = [];
+    if (Math.abs(g.dx) >= 0.05) p.push(cm(Math.abs(g.dx)) + " cm vers la " + (g.dx > 0 ? "droite" : "gauche"));
+    if (Math.abs(g.dy) >= 0.05) p.push(cm(Math.abs(g.dy)) + " cm vers le " + (g.dy > 0 ? "bas" : "haut"));
+    return p.length ? ", décalé de " + p.join(" et ") : "";
+  }
+
   // Liste ordonnée (de haut en bas) des éléments d'un emplacement pour une pièce
   function elementsFor(empId, cfg, piece, prod, ctx) {
     var zone = prod.zones[empId], P = ctx.prix.plateau, out = [];
     function image() {
-      var f = ctx.prix.formatsMotif[cfg.format];
-      if (!f) return null;
-      var w = f.w, h = f.h;
-      if (cfg.orient === "paysage") { var t = w; w = h; h = t; }
-      return { kind: "image", w: w, h: h };
+      var g = imageGeom(cfg, ctx);
+      if (!g) return null;
+      return { kind: "image", w: g.w, h: g.h, w0: g.w0, h0: g.h0, rot: g.rot };
     }
     function texte(kind, valeur, o) {
       var text = String(valeur || "").trim();
@@ -286,7 +348,14 @@
     var bloc = cfg.bloc === true && els.length >= 2, tropGrand = false;
     var lay = layoutStack(els, bloc ? gapBloc : STACK_GAP);
     if (bloc && !fitsPlateau(W, lay.H, ctx.prix.plateau)) { bloc = false; tropGrand = true; lay = layoutStack(els, STACK_GAP); }
-    return { items: lay.items, H: lay.H, W: W, bloc: bloc, tropGrand: tropGrand };
+    // Position choisie par le client (cfg.dx, cfg.dy) : elle déplace le visuel seul, ou le bloc entier quand le texte lui est collé.
+    // Elle ne change rien aux planches : seulement la place sur le vêtement (aperçu, avertissement de débordement).
+    var g = els.some(function (e) { return e.kind === "image"; }) ? imageGeom(cfg, ctx) : null, ux = g ? g.dx : 0, uy = g ? g.dy : 0;
+    lay.items.forEach(function (it) {
+      it.ux = (bloc || it.kind === "image") ? ux : 0;
+      it.uy = (bloc || it.kind === "image") ? uy : 0;
+    });
+    return { items: lay.items, H: lay.H, W: W, bloc: bloc, tropGrand: tropGrand, ux: bloc ? ux : 0, uy: bloc ? uy : 0 };
   }
 
   // L'élément « visuel » d'un motif (un motif visuel seul, ou un bloc qui en contient un), sinon null
@@ -317,6 +386,15 @@
     return "dtf";
   }
 
+  // Le contenu d'un emplacement (pile d'éléments, avec la position choisie) sort-il de sa zone ? Une zone de manche est centrée en hauteur, les autres partent du haut.
+  function debordeZone(lay, zone) {
+    var y0 = zone.cy != null ? -lay.H / 2 : 0, zy0 = zone.cy != null ? -zone.h / 2 : 0;
+    return lay.items.some(function (it) {
+      var x0 = -it.w / 2 + it.ux, y = y0 + it.dy + it.uy;      // les éléments d'une pile sont centrés
+      return x0 < -zone.w / 2 - 0.05 || x0 + it.w > zone.w / 2 + 0.05 || y < zy0 - 0.05 || y + it.h > zy0 + zone.h + 0.05;
+    });
+  }
+
   function buildMotifs(order, ctx) {
     var motifs = [], warnings = [], seen = {};
     function warn(msg) { if (!seen[msg]) { seen[msg] = 1; warnings.push(msg); } }
@@ -331,6 +409,7 @@
         var zone = prod.zones[empId], emp = ctx.emplacements[empId];
         var qui = piece.prenom || ("pièce " + (idx + 1));
         if (lay.H > zone.h + EPS) warn(emp.label + " : le contenu dépasse la zone prévue sur le vêtement (" + zone.h + " cm de haut).");
+        else if (debordeZone(lay, zone)) warn(emp.label + " : le visuel déborde de la zone prévue sur le vêtement. Fabr'Icam vérifie la place sur le vêtement avant de presser.");
         if (lay.tropGrand) warn(emp.label + " : le bloc (visuel, prénom et numéro collés) est trop grand pour le plateau de la presse (A4) : les éléments sont pressés séparément.");
         els.forEach(function (el) {
           if (el.reduit) warn(emp.label + " : un prénom ou un numéro est trop large, il est réduit pour tenir.");
@@ -578,6 +657,7 @@
     round2: round2, packSheet: packSheet, planSheets: planSheets, costSheets: costSheets,
     elementsFor: elementsFor, layoutStack: layoutStack, stackFor: stackFor, motifImage: motifImage, buildMotifs: buildMotifs,
     pieceTechno: pieceTechno, polyesterPiece: polyesterPiece, prixAchatPiece: prixAchatPiece, margePiece: margePiece, margePiecePack: margePiecePack, reglesApporte: reglesApporte, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
-    approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP, BLOC_GAP: BLOC_GAP
+    approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP, BLOC_GAP: BLOC_GAP,
+    imageGeom: imageGeom, descriptionVisuel: descriptionVisuel, largeurMax: largeurMax, largeurPourFormat: largeurPourFormat, quartDeTour: quartDeTour, LARGEUR_MIN: LARGEUR_MIN
   };
 });

@@ -43,7 +43,7 @@
   /* ---------------- état de la commande en cours ---------------- */
   var S = { pieces: [], nextId: 1, marquages: null, technique: "dtf", vue: "face", mode: "dessin", previewId: null,
     contact: { asso: "", nom: "", email: "", tel: "", date: "", message: "" }, result: null,
-    entryId: null, addModel: null, nextPack: 1 };
+    entryId: null, addModel: null, nextPack: 1, sel: null };
   function itemOf(id) { return byId[id] || PACKS[id]; }
   // Mails : on ouvre Gmail (rédaction d'un message dans un nouvel onglet), pas l'application de mail installée sur l'ordinateur.
   function gmailHref(to, subject, body) {
@@ -132,9 +132,11 @@
     var mini = /^(gourde|casquette|bonnet|tour_de_cou|bandeau|ceinture|ouvre_bouteille|porte_cles)$/.test(empId);   // accessoires : très petite surface
     var micro = empId === "porte_cles";   // barre de 2 cm de large : texte minuscule
     var txt = darkColor(prod) ? "#ffffff" : "#14213d";
+    var fmt = f.length ? (big ? f[f.length - 1] : f[0]) : "A6";
     return {
       actif: false, avecImage: !emp.texteSeul, image: null,
       format: f.length ? (big ? f[f.length - 1] : f[0]) : "A6", orient: "portrait",
+      largeur: E.largeurPourFormat(fmt, 0, 0, CTX), libre: false, rot: 0, dx: 0, dy: 0,      // taille libre, quart de tour et position du visuel (version 6.2.0)
       prenom: { actif: false, hauteur: big ? 4 : tiny ? 2.5 : small ? 1.5 : micro ? 0.5 : mini ? 1.2 : 2, police: "Bebas Neue", couleur: txt },
       numero: { actif: false, hauteur: big ? 14 : tiny ? 3.5 : small ? 4 : micro ? 1 : mini ? 2.5 : 5, police: "Bebas Neue", couleur: txt },
       maj: true, textePos: "dessous",
@@ -651,16 +653,11 @@
       '</div>';
   }
 
-  function dimsOf(m) {
-    var f = PRIX.formatsMotif[m.format]; if (!f) return { w: 0, h: 0 };
-    return m.orient === "paysage" ? { w: f.h, h: f.w } : { w: f.w, h: f.h };
-  }
-
   function dpiText(m) {
     if (!m.image) return "";
     if (m.image.svg) return "Fichier SVG : net à toutes les tailles.";
-    var d = dimsOf(m), ar = (m.image.pxW || 1) / (m.image.pxH || 1);
-    var printedW = Math.min(d.w, d.h * ar), dpi = Math.round((m.image.pxW || 0) / (printedW / 2.54));
+    var g = E.imageGeom(m, CTX) || { w0: 0, h0: 0 }, ar = (m.image.pxW || 1) / (m.image.pxH || 1);
+    var printedW = Math.min(g.w0, g.h0 * ar), dpi = Math.round((m.image.pxW || 0) / (printedW / 2.54));
     if (dpi >= 280) return "Résolution : " + dpi + " dpi, c'est bon.";
     if (dpi >= 150) return "Résolution : " + dpi + " dpi. " + PRIX.fournisseur.nom + " demande 300 dpi minimum, le rendu sera moins net.";
     return "Résolution : " + dpi + " dpi, trop faible. Utilise une image plus grande (300 dpi minimum).";
@@ -676,6 +673,52 @@
       '<p class="hint">Fabr\'Icam presse le bloc en une fois, ce qui compte pour un seul motif dans le prix.</p></div>';
   }
 
+  /* ---------- taille, rotation et position du visuel (version 6.2.0) ---------- */
+  function fmtField(n) { return String(Math.round(n * 100) / 100); }
+  function visuelControles(m, emp) {
+    var g = E.imageGeom(m, CTX); if (!g) return "";
+    var ratio = g.h0 / g.w0, max = Math.floor(E.largeurMax(ratio, g.rot, PRIX.plateau) * 10) / 10;
+    var chips = emp.formats.map(function (id) {
+      var f = PRIX.formatsMotif[id];
+      return '<button type="button" class="chip" data-act="fmt" data-fmt="' + id + '" aria-pressed="' + (!m.libre && m.format === id) + '">' + esc(f.nom) + " · " + fmtN(f.w) + " × " + fmtN(f.h) + " cm</button>";
+    }).join("");
+    return '<div class="vis" data-vis>' +
+      '<div class="vis-row"><span class="vis-lab">Taille de départ</span><div class="chips" role="group" aria-label="Taille de départ">' + chips + "</div></div>" +
+      '<div class="vis-size"><label>Largeur du visuel<span class="unit"><input type="number" data-k="largeur" min="0.5" max="' + max + '" step="0.1" value="' + fmtField(g.w0) + '"> cm</span></label>' +
+      '<input type="range" class="vis-range" data-k="largeur" aria-label="Largeur du visuel" min="0.5" max="' + max + '" step="0.1" value="' + fmtField(g.w0) + '"></div>' +
+      '<p class="hint" data-dims>' + dimsTexte(g) + "</p>" +
+      '<div class="vis-row"><span class="vis-lab">Rotation</span><div class="seg" role="group" aria-label="Rotation"><button type="button" data-act="rot" data-dir="-1" title="Quart de tour vers la gauche">&#8634; 90°</button><button type="button" data-act="rot" data-dir="1" title="Quart de tour vers la droite">&#8635; 90°</button></div><output data-rot>' + g.rot + "°</output></div>" +
+      '<div class="vis-pos"><label>Décalage horizontal <small>(+ vers la droite)</small><span class="unit"><input type="number" data-k="dx" min="-60" max="60" step="0.5" value="' + fmtField(g.dx) + '"> cm</span></label>' +
+      '<label>Décalage vertical <small>(+ vers le bas)</small><span class="unit"><input type="number" data-k="dy" min="-60" max="60" step="0.5" value="' + fmtField(g.dy) + '"> cm</span></label>' +
+      '<button type="button" class="btn btn-quiet" data-act="center">Recentrer</button></div>' +
+      '<p class="hint">Sur l\'aperçu (vue Dessin), glisse le visuel pour le placer, tire le coin vert pour l\'agrandir, touche le bouton rond pour le tourner. Il peut dépasser le cadre rouge, pas le plateau de la presse (' + PRIX.plateau.w + " × " + PRIX.plateau.h + " cm).</p></div>";
+  }
+  function dimsTexte(g) {
+    return "Hauteur : " + fmtN(g.h0) + " cm, les proportions du visuel sont gardées." + (g.rot ? " Une fois tourné, il occupe " + fmtN(g.w) + " × " + fmtN(g.h) + " cm." : "");
+  }
+
+  // Applique une nouvelle largeur (en cm) au visuel d'un emplacement : bornée par le plateau de la presse
+  function fixeLargeur(m, v) {
+    var g = E.imageGeom(m, CTX), ratio = g.h0 / g.w0;
+    m.largeur = Math.max(0.5, Math.min(Math.floor(E.largeurMax(ratio, g.rot, PRIX.plateau) * 10) / 10, Math.round(v * 10) / 10)); m.libre = true;
+    return m.largeur;
+  }
+  // Raccourci A7, A6... : le visuel entier tient dans ce format, dans son sens
+  function ajusteFormat(m, fmt) {
+    m.format = fmt; m.libre = false;
+    m.largeur = E.largeurPourFormat(fmt, m.image && m.image.ratio, m.rot, CTX);
+  }
+  // Remet à jour les champs de la carte d'un emplacement sans la redessiner (on garde le focus pendant qu'on tape ou qu'on glisse)
+  function majChampsVisuel(empId, sauf) {
+    var m = S.marquages[empId], card = $('[data-emp="' + empId + '"]'), g = E.imageGeom(m, CTX);
+    if (!card || !g) return;
+    var vals = { largeur: g.w0, dx: g.dx, dy: g.dy };
+    $$("[data-vis] [data-k]", card).forEach(function (inp) { if (inp !== sauf && vals[inp.dataset.k] != null) inp.value = fmtField(vals[inp.dataset.k]); });
+    var d = $("[data-dims]", card); if (d) d.textContent = dimsTexte(g);
+    var rt = $("[data-rot]", card); if (rt) rt.textContent = g.rot + "°";
+    $$("[data-fmt]", card).forEach(function (b) { b.setAttribute("aria-pressed", String(!m.libre && m.format === b.dataset.fmt)); });
+  }
+
   function empCard(empId) {
     var m = S.marquages[empId], emp = DATA.emplacements[empId];
     var prod = DATA.produits.filter(function (p) { return p.zones[empId]; })[0];
@@ -683,13 +726,11 @@
     var body = "";
     if (m.actif) {
       var imgGroup = "";
-      var fm = emp.formats.map(function (id) { var f = PRIX.formatsMotif[id]; return '<option value="' + id + '"' + (id === m.format ? " selected" : "") + ">" + f.nom + " : " + fmtN(f.w) + " × " + fmtN(f.h) + " cm</option>"; }).join("");
       if (!emp.texteSeul) imgGroup = '<div class="grp"><label class="chk"><input type="checkbox" data-k="avecImage"' + (m.avecImage ? " checked" : "") + '> Ajouter un visuel (logo, image)</label>' +
         (m.avecImage ? '<div class="up">' +
           '<label class="filebtn">' + (m.image ? "Changer le fichier" : "Importer le fichier") + '<input type="file" data-upload accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>' +
           (m.image ? '<span class="fname">' + esc(m.image.nom) + '</span><button type="button" class="linkbtn" data-act="rmimg">Retirer</button>' : '<span class="fname muted">PNG, JPG, SVG ou WebP, fond transparent conseillé</span>') + '</div>' +
-          '<div class="row2"><label>Taille du visuel<select data-k="format">' + fm + '</select></label>' +
-          '<label>Sens<select data-k="orient"><option value="portrait"' + (m.orient === "portrait" ? " selected" : "") + '>Portrait</option><option value="paysage"' + (m.orient === "paysage" ? " selected" : "") + '>Paysage</option></select></label></div>' +
+          visuelControles(m, emp) +
           '<p class="hint dpi" data-dpi>' + esc(dpiText(m)) + '</p>' : "") + '</div>';
       body = '<div class="emp-body">' + imgGroup +
         '<div class="grp">' + textBlock(m, "prenom", "Prénom de chaque pièce") + textBlock(m, "numero", "Numéro de chaque pièce") +
@@ -715,6 +756,25 @@
     if (el) { var t = document.createElement("div"); t.innerHTML = empCard(empId); el.replaceWith(t.firstChild); }
   }
 
+  // Proportions (hauteur / largeur) d'un SVG : sa fenêtre (viewBox), sinon ses attributs width et height ; 0 si on ne sait pas
+  function svgRatio(texte) {
+    try {
+      var el = new DOMParser().parseFromString(texte, "image/svg+xml").documentElement;
+      if (!el || String(el.nodeName).toLowerCase() !== "svg") return 0;
+      var vb = String(el.getAttribute("viewBox") || "").trim().split(/[\s,]+/).map(Number);
+      if (vb.length === 4 && vb[2] > 0 && vb[3] > 0) return vb[3] / vb[2];
+      var w = parseFloat(el.getAttribute("width")), h = parseFloat(el.getAttribute("height"));
+      if (w > 0 && h > 0) return h / w;
+    } catch (err) { /* on retombe sur les dimensions lues par le navigateur */ }
+    return 0;
+  }
+
+  // Quart de tour du visuel d'un emplacement (dir : 1 vers la droite, -1 vers la gauche)
+  function tourne(m, dir) {
+    m.rot = E.quartDeTour((m.rot || 0) + 90 * dir);
+    fixeLargeur(m, m.largeur);                // le plateau n'est pas pareil dans l'autre sens
+  }
+
   function handleUpload(empId, file) {
     if (!file) return;
     var ok = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"];
@@ -724,9 +784,17 @@
     rd.onload = function () {
       var img = new Image();
       img.onload = function () {
-        S.marquages[empId].image = { nom: file.name, dataUrl: rd.result, url: URL.createObjectURL(file), pxW: img.naturalWidth || 0, pxH: img.naturalHeight || 0, svg: file.type === "image/svg+xml" };
-        if (S.marquages[empId].image.svg) { S.marquages[empId].image.pxW = 0; }
-        renderEmp(empId); refresh();
+        var m = S.marquages[empId], svg = file.type === "image/svg+xml";
+        var fin = function (ratioSvg) {
+          var nat = img.naturalWidth > 0 && img.naturalHeight > 0 ? img.naturalHeight / img.naturalWidth : 1;
+          m.image = { nom: file.name, dataUrl: rd.result, url: URL.createObjectURL(file), pxW: img.naturalWidth || 0, pxH: img.naturalHeight || 0, svg: svg, ratio: Math.round((ratioSvg || nat) * 1000) / 1000 };
+          if (svg) m.image.pxW = 0;
+          if (!m.libre) ajusteFormat(m, m.format);        // la taille de départ s'applique aux proportions du visuel ; une taille choisie à la main est gardée
+          else fixeLargeur(m, m.largeur);                // et reste dans le plateau si les proportions ont changé
+          S.sel = empId;
+          renderEmp(empId); refresh();
+        };
+        if (svg && file.text) file.text().then(function (t) { fin(svgRatio(t)); }, function () { fin(0); }); else fin(0);
       };
       img.onerror = function () { toast("Impossible de lire cette image."); };
       img.src = rd.result;
@@ -862,7 +930,7 @@
     usedEmps().forEach(function (e) {
       var m = S.marquages[e]; if (!m.actif) return;
       var d = [];
-      if (m.avecImage) d.push("visuel " + m.format + (m.orient === "paysage" ? " paysage" : "") + (m.image ? " (" + m.image.nom + ")" : ""));
+      if (m.avecImage) d.push("visuel " + E.descriptionVisuel(m, CTX) + (m.image ? " (" + m.image.nom + ")" : ""));
       ["prenom", "numero"].forEach(function (k) { if (m[k].actif) d.push((k === "prenom" ? "prénom" : "numéro") + " en " + m[k].police + ", " + fmtN(m[k].hauteur) + " cm, " + m[k].couleur); });
       t.push("- " + DATA.emplacements[e].label + " : " + d.join(" + ") + (m.bloc && d.length > 1 ? " (collés en un seul bloc)" : ""));
     });
@@ -902,8 +970,12 @@
     var hasBack = Object.keys(prod.zones).some(function (k) { var v = prod.zones[k].vue; return v === "dos" || v === "cote"; });
     if (!hasBack && S.vue === "dos") S.vue = "face";
     var ph = photoApercu(piece, S.vue), photo = S.mode === "photo" && ph.ok;
-    var opts = { prod: prod, hex: colorOf(piece).hex, vue: S.vue, marquages: S.marquages, piece: piece, ctx: CTX };
     var pv = $("#pv");
+    var opts = { prod: prod, hex: colorOf(piece).hex, vue: S.vue, marquages: S.marquages, piece: piece, ctx: CTX };
+    if (!photo) {        // vue Dessin : le visuel se déplace, s'agrandit et se tourne à la souris ou au doigt
+      opts.interactif = true; opts.sel = empChoisi(piece);
+      opts.pxPerCm = (pv.clientWidth || 560) / ((P.models[prod.modele] || {}).w || 90);
+    }
     if (photo) {
       var html = P.renderPhoto(Object.assign({}, opts, { cfg: ph.cfg, src: ph.src })), cur = $(".pv-photo img", pv);
       if (cur && cur.getAttribute("src") === ph.src) {
@@ -1060,6 +1132,14 @@
     var card = t.closest("[data-emp]");
     if (card && t.dataset.k) {
       var emp = card.dataset.emp, m = S.marquages[emp], k = t.dataset.k, v;
+      if (k === "largeur" || k === "dx" || k === "dy") {          // visuel : taille libre et position (champ ou curseur)
+        v = parseFloat(String(t.value).replace(",", ".")); if (!isFinite(v)) return;
+        S.sel = emp;
+        if (k === "largeur") { fixeLargeur(m, v); }
+        else m[k] = Math.max(-60, Math.min(60, Math.round(v * 10) / 10));
+        majChampsVisuel(emp, t);
+        scheduleRefresh(); return;
+      }
       if (t.type === "checkbox") v = t.checked;
       else if (t.type === "number") { v = parseFloat(String(t.value).replace(",", ".")); if (!isFinite(v)) return; v = Math.max(0.5, Math.min(28, v)); }
       else v = t.value;
@@ -1078,6 +1158,7 @@
 
   function onChange(e) {
     var t = e.target;
+    if (t.matches("[data-vis] [data-k]")) { var c0 = t.closest("[data-emp]"); if (c0) majChampsVisuel(c0.dataset.emp); return; }
     if (t.matches("[data-upload]")) { var card = t.closest("[data-emp]"); handleUpload(card.dataset.emp, t.files && t.files[0]); }
   }
 
@@ -1112,6 +1193,14 @@
     }
     else if (act === "paste") { var pb = $("#pastebox"); pb.hidden = !pb.hidden; if (!pb.hidden) $("#pastetxt").focus(); }
     else if (act === "pasteok") { addFromList($("#pastetxt").value); $("#pastetxt").value = ""; $("#pastebox").hidden = true; renderPieces(); refresh(); }
+    else if (act === "fmt" || act === "rot" || act === "center") {
+      var c1 = b.closest("[data-emp]"); if (!c1) return;
+      var emp1 = c1.dataset.emp, m1 = S.marquages[emp1]; S.sel = emp1;
+      if (act === "fmt") ajusteFormat(m1, b.dataset.fmt);
+      else if (act === "rot") tourne(m1, parseInt(b.dataset.dir, 10) || 1);
+      else { m1.dx = 0; m1.dy = 0; }
+      renderEmp(emp1); refresh();
+    }
     else if (act === "rmimg") { var card = b.closest("[data-emp]"); S.marquages[card.dataset.emp].image = null; renderEmp(card.dataset.emp); refresh(); }
     else if (act === "dl") {
       var pb1 = problems(); showIssues(pb1);
@@ -1133,6 +1222,82 @@
     }
   }
 
+  /* ---------- aperçu interactif : déplacer, agrandir, tourner le visuel ---------- */
+  // Emplacement dont le visuel porte les poignées : celui qu'on a touché en dernier, s'il est visible sur cette vue, sinon le premier visible
+  function empChoisi(piece) {
+    var prod = prodOf(piece);
+    var ok = usedEmps().filter(function (e) {
+      var m = S.marquages[e], emp = DATA.emplacements[e];
+      return m.actif && m.avecImage && !emp.texteSeul && P.zoneForView(prod, e, S.vue);
+    });
+    return ok.indexOf(S.sel) >= 0 ? S.sel : (ok[0] || null);
+  }
+
+  var drag = null, rafId = 0, dernierRefresh = 0;
+  // Point de la souris dans le repère de la zone de l'emplacement (en cm, sur le dessin)
+  function pointZone(ev, empId) {
+    var g = $('#pv [data-zone="' + empId + '"]'), svg = g && g.ownerSVGElement, ctm = g && g.getScreenCTM();
+    if (!svg || !ctm) return null;
+    var pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+    return pt.matrixTransform(ctm.inverse());
+  }
+  function planifie(complet) {
+    if (rafId) return;
+    rafId = requestAnimationFrame(function () {
+      rafId = 0;
+      var now = Date.now();
+      if (complet && now - dernierRefresh > 140) { dernierRefresh = now; refresh(); } else renderPreview();
+    });
+  }
+  function onPointerDown(e) {
+    var pv = $("#pv");
+    if (!pv || !pv.contains(e.target) || (e.button != null && e.button > 0)) return;
+    var ro = e.target.closest("[data-pv-rotate]"), rs = e.target.closest("[data-pv-resize]"), mv = e.target.closest("[data-pv-move]");
+    var empId = ro ? ro.dataset.pvRotate : rs ? rs.dataset.pvResize : mv ? mv.dataset.pvMove : null;
+    if (!empId || !S.marquages[empId]) return;
+    var m = S.marquages[empId]; S.sel = empId;
+    e.preventDefault();
+    if (ro) { tourne(m, 1); renderEmp(empId); refresh(); return; }
+    var p0 = pointZone(e, empId); if (!p0) return;
+    try { pv.setPointerCapture(e.pointerId); } catch (err) { /* sans capture, le glisser marche quand même tant que la souris reste sur l'aperçu */ }
+    var g = E.imageGeom(m, CTX);
+    if (rs) {
+      // le coin tiré suit la souris : le visuel grandit à partir de son bord haut (ou de son centre sur une manche), sans se déformer
+      var piece = S.pieces.filter(function (x) { return x.id === S.previewId; })[0] || S.pieces[0], prod = prodOf(piece), z = prod.zones[empId];
+      var lay = E.stackFor(empId, m, piece, prod, CTX), it = lay.items.filter(function (x) { return x.kind === "image"; })[0];
+      if (!it) return;
+      var sleeve = z.cy != null, y0 = sleeve ? -lay.H / 2 : 0, bx = (it.ux || 0) - it.w / 2, by = y0 + it.dy + (it.uy || 0);
+      var anchor = { x: bx + it.w / 2, y: sleeve ? by + it.h / 2 : by };
+      var v0 = { x: bx + it.w - anchor.x, y: by + it.h - anchor.y };
+      drag = { kind: "resize", emp: empId, id: e.pointerId, anchor: anchor, v0: v0, L0: g.w0 };
+    } else drag = { kind: "move", emp: empId, id: e.pointerId, p0: p0, dx0: g.dx, dy0: g.dy };
+    renderPreview();
+  }
+  function onPointerMove(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    var m = S.marquages[drag.emp], p = pointZone(e, drag.emp); if (!p) return;
+    if (drag.kind === "move") {
+      m.dx = Math.max(-60, Math.min(60, Math.round((drag.dx0 + p.x - drag.p0.x) * 10) / 10));
+      m.dy = Math.max(-60, Math.min(60, Math.round((drag.dy0 + p.y - drag.p0.y) * 10) / 10));
+      planifie(false);
+    } else {
+      var v = { x: p.x - drag.anchor.x, y: p.y - drag.anchor.y }, d2 = drag.v0.x * drag.v0.x + drag.v0.y * drag.v0.y;
+      if (d2 > 0) fixeLargeur(m, drag.L0 * Math.max(0.05, (v.x * drag.v0.x + v.y * drag.v0.y) / d2));
+      planifie(true);
+    }
+    majChampsVisuel(drag.emp);
+  }
+  function onPointerUp(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    var emp = drag.emp; drag = null;
+    var pv = $("#pv"); try { if (pv) pv.releasePointerCapture(e.pointerId); } catch (err) { /* déjà relâché */ }
+    renderEmp(emp); refresh();
+  }
+  function onFocusIn(e) {
+    var card = e.target.closest && e.target.closest("[data-emp]");
+    if (card && $("[data-view=cfg]") && S.sel !== card.dataset.emp) { S.sel = card.dataset.emp; renderPreview(); }
+  }
+
   /* =================================================================== */
   /* ROUTAGE                                                             */
   /* =================================================================== */
@@ -1151,6 +1316,11 @@
     document.addEventListener("input", onInput);
     document.addEventListener("change", onChange);
     document.addEventListener("click", onClick);
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("pointermove", onPointerMove);
+    document.addEventListener("pointerup", onPointerUp);
+    document.addEventListener("pointercancel", onPointerUp);
+    document.addEventListener("focusin", onFocusIn);
     window.addEventListener("hashchange", route);
     $("#brand-name").textContent = DATA.service.nom.replace(/^Fabr'Icam\s+/i, "") || DATA.service.nom;   // le logo porte déjà « Fabr'Icam »
     var cfgLink = $(".nav a[data-cfg]"); if (cfgLink) cfgLink.href = "#/configurer";

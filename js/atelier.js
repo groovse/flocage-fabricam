@@ -159,7 +159,7 @@
     var info = st.imgs[emp], m = st.res && st.res.motifs.filter(function (x) { return x.emp === emp && x.avecImage; })[0];
     var vis = m && E.motifImage(m);      // le visuel, seul ou dans un bloc collé : c'est sa taille qui compte
     if (!info || !info.img || info.vector || !vis || !info.nw || !info.nh) return null;
-    return Math.round(2.54 / Math.min(vis.w / info.nw, vis.h / info.nh));
+    return Math.round(2.54 / Math.min((vis.w0 != null ? vis.w0 : vis.w) / info.nw, (vis.h0 != null ? vis.h0 : vis.h) / info.nh));      // taille du visuel avant rotation
   }
 
   function alertes() {
@@ -309,7 +309,7 @@
 
   // Description lisible d'un motif : « Visuel A6, 10 × 14 cm », « Prénom LÉO, Bebas Neue, 4 cm »
   function elementTexte(el, cfg) {
-    if (el.kind === "image") return "Visuel " + esc(cfg.format || "") + (cfg.orient === "paysage" ? " en paysage" : "") + ", " + fmtN(el.w) + " × " + fmtN(el.h) + " cm";
+    if (el.kind === "image") return "Visuel " + esc(E.descriptionVisuel(cfg, A.CTX) || (fmtN(el.w) + " × " + fmtN(el.h) + " cm"));
     return (el.kind === "prenom" ? "Prénom " : "Numéro ") + "<b>" + esc(el.text) + "</b>, " + esc(el.police) + ", " + fmtN(el.hauteur) + " cm de haut";
   }
   // Un bloc collé : « Bloc collé, 10 × 23,1 cm : visuel A6 + prénom LÉO + numéro 7 », éléments centrés, de haut en bas

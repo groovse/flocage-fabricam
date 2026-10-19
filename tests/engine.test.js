@@ -832,4 +832,95 @@ test("6.1.0 : chasuble Kipsta en polyester (sublimation si blanc), serviette Nab
   assert.ok(ch.zones.poitrine && ch.zones.dos);
 });
 
+console.log("\nVisuel à taille libre, quart de tour et position (version 6.2.0)");
+const polo = (n) => Array.from({ length: n }, (_, i) => ({ id: "v" + i, produitId: "polo-essential", couleurId: "marine", taille: "M", prenom: "", numero: "" }));
+const marqV = (extra) => ({ poitrine: Object.assign({ actif: true, avecImage: true, format: "A6", orient: "portrait" }, extra || {}) });
+const cmdV = (extra, n) => E.computeOrder({ pieces: polo(n || 1), marquages: marqV(extra), technique: "dtf" }, ctx);
+test("6.2.0 : sans taille libre, le visuel garde la case du format et son sens (anciens fichiers de commande)", () => {
+  assert.deepStrictEqual(cmdV({}).motifs.map(m => [m.w, m.h]), [[10, 14]]);
+  assert.deepStrictEqual(cmdV({ orient: "paysage" }).motifs.map(m => [m.w, m.h]), [[14, 10]]);
+  assert.deepStrictEqual(cmdV({ format: "A4" }).motifs.map(m => [m.w, m.h]), [[21, 28]]);
+  const g = E.imageGeom({ format: "A6", orient: "paysage" }, ctx);
+  assert.strictEqual(g.libre, false); assert.deepStrictEqual([g.w0, g.h0, g.rot, g.dx, g.dy], [14, 10, 0, 0, 0]);
+  assert.strictEqual(E.descriptionVisuel({ format: "A6", orient: "paysage" }, ctx), "A6 en paysage, 14 × 10 cm");
+});
+test("6.2.0 : largeur libre, la hauteur suit les proportions de l'image (ratio) ou, sans image, celles du format", () => {
+  assert.deepStrictEqual(cmdV({ largeur: 8, image: { ratio: 0.5 } }).motifs.map(m => [m.w, m.h]), [[8, 4]]);
+  assert.deepStrictEqual(cmdV({ largeur: 8, image: { ratio: 2 } }).motifs.map(m => [m.w, m.h]), [[8, 16]]);
+  const sansImage = cmdV({ largeur: 7 }).motifs[0];
+  assert.ok(Math.abs(sansImage.w - 7) < 1e-9 && Math.abs(sansImage.h - 9.8) < 1e-9, "sans image : proportions du format A6 (10 × 14), obtenu " + sansImage.w + " × " + sansImage.h);
+  assert.deepStrictEqual(cmdV({ largeur: 8, image: { ratio: "n'importe quoi" } }).motifs.map(m => [m.w, m.h]), [[8, 11.2]], "ratio illisible : le format");
+  assert.strictEqual(E.descriptionVisuel({ format: "A6", largeur: 8, image: { ratio: 0.5 } }, ctx), "8 × 4 cm");
+  assert.strictEqual(E.imageGeom({ format: "A6", largeur: 1000 }, ctx).w0, 60, "borne haute de sécurité");
+});
+test("6.2.0 : quarts de tour, la case est le rectangle qui englobe le visuel tourné", () => {
+  const base = { largeur: 8, image: { ratio: 0.5 } };
+  [[0, [8, 4]], [90, [4, 8]], [180, [8, 4]], [270, [4, 8]], [360, [8, 4]], [-90, [4, 8]], [30, [8, 4]], [50, [4, 8]]].forEach(([rot, wh]) => {
+    assert.deepStrictEqual(cmdV(Object.assign({ rot }, base)).motifs.map(m => [m.w, m.h]), [wh], "rotation " + rot);
+  });
+  assert.deepStrictEqual([0, 90, 180, 270, 360, -90, 100].map(E.quartDeTour), [0, 90, 180, 270, 0, 270, 90]);
+  const el = cmdV(Object.assign({ rot: 90 }, base)).motifs[0].el;
+  assert.deepStrictEqual([el.w0, el.h0, el.rot], [8, 4, 90], "le visuel garde sa taille avant rotation, pour dessiner les planches");
+  assert.strictEqual(E.descriptionVisuel(Object.assign({ format: "A6", rot: 90 }, base), ctx), "8 × 4 cm, tourné de 90°");
+});
+test("6.2.0 : la taille compte pour les planches et le prix, la position non", () => {
+  const prix = extra => cmdV(extra, 10);
+  const petit = prix({ largeur: 5, image: { ratio: 1 } }), grand = prix({ largeur: 20, image: { ratio: 1.2 } });
+  assert.ok(petit.couts.planchesTTC < grand.couts.planchesTTC, "petits visuels : " + petit.couts.planchesTTC + " €, grands : " + grand.couts.planchesTTC + " €");
+  assert.ok(petit.prix.unitaire < grand.prix.unitaire);
+  const centre = prix({ largeur: 8, image: { ratio: 1 } }), decale = prix({ largeur: 8, image: { ratio: 1 }, dx: 3, dy: -2 });
+  assert.strictEqual(decale.couts.total, centre.couts.total); assert.strictEqual(decale.prix.unitaire, centre.prix.unitaire);
+  assert.deepStrictEqual(decale.motifs.map(m => [m.w, m.h]), centre.motifs.map(m => [m.w, m.h]));
+});
+test("6.2.0 : un visuel peut dépasser la zone (avertissement), pas le plateau de la presse (21 × 28 cm)", () => {
+  assert.deepStrictEqual(cmdV({ largeur: 8, image: { ratio: 1 } }).warnings, []);
+  const large = cmdV({ largeur: 18, image: { ratio: 0.5 } });
+  assert.ok(large.warnings.some(w => /déborde de la zone/.test(w)), large.warnings.join(" | "));
+  assert.ok(cmdV({ largeur: 8, image: { ratio: 1 }, dx: 15 }).warnings.some(w => /déborde de la zone/.test(w)), "décalé hors de la zone");
+  assert.ok(cmdV({ largeur: 8, image: { ratio: 1 }, dy: 30 }).warnings.some(w => /zone/.test(w)));
+  const trop = cmdV({ largeur: 25, image: { ratio: 1 } });
+  assert.ok(trop.warnings.some(w => /plateau de la presse/.test(w)), trop.warnings.join(" | "));
+  assert.strictEqual(E.largeurMax(1, 0, PRIX.plateau), 21);
+  assert.strictEqual(E.largeurMax(2, 0, PRIX.plateau), 14, "un visuel deux fois plus haut que large : 14 × 28");
+  assert.strictEqual(E.largeurMax(2, 90, PRIX.plateau), 14, "tourné, il occupe 28 × 14 : le plateau se prend dans l'autre sens");
+  assert.strictEqual(E.largeurMax(0.5, 0, PRIX.plateau), 28, "large : 28 × 14");
+  const maxi = cmdV({ largeur: E.largeurMax(1.3, 90, PRIX.plateau), rot: 90, image: { ratio: 1.3 } }).motifs[0];
+  assert.ok(E.fitsPlateau(maxi.w, maxi.h, PRIX.plateau), "à la largeur maximale, la case tient sur le plateau : " + maxi.w + " × " + maxi.h);
+});
+test("6.2.0 : les raccourcis A7, A6, A5, A4 font tenir le visuel dans le format, dans son sens", () => {
+  const f = (fmt, ratio, rot) => E.largeurPourFormat(fmt, ratio, rot || 0, ctx);
+  assert.strictEqual(f("A6", 0, 0), 10, "sans image : le format lui-même");
+  assert.strictEqual(f("A6", 1, 0), 10);
+  assert.strictEqual(f("A6", 0.5, 0), 14, "image large : A6 en paysage (14 × 7)");
+  assert.strictEqual(f("A6", 2, 0), 7, "image haute : 7 × 14");
+  assert.strictEqual(f("A6", 0.5, 90), 14, "tournée, elle occupe 7 × 14 : elle tient dans A6");
+  assert.strictEqual(f("A4", 1, 0), 21); assert.strictEqual(f("Micro", 0, 0), 1.5);
+  [["A7", 1], ["A6", 0.5], ["A5", 1.7], ["A4", 3]].forEach(([fmt, ratio]) => {
+    const L = f(fmt, ratio), box = PRIX.formatsMotif[fmt], w = L, h = L * ratio;
+    assert.ok((w <= box.w + 1e-9 && h <= box.h + 1e-9) || (w <= box.h + 1e-9 && h <= box.w + 1e-9), fmt + " " + ratio + " : " + w + " × " + h);
+  });
+});
+test("6.2.0 : la position déplace le visuel seul, ou tout le bloc quand le texte lui est collé", () => {
+  const piece = Object.assign({}, polo(1)[0], { prenom: "Léo", numero: "7" });
+  const cfgBase = { actif: true, avecImage: true, format: "A6", orient: "portrait", largeur: 8, image: { ratio: 1 }, dx: 2, dy: 3, textePos: "dessous",
+    prenom: { actif: true, police: "Bebas Neue", hauteur: 2, couleur: "#fff" }, numero: { actif: true, police: "Bebas Neue", hauteur: 4, couleur: "#fff" } };
+  const seul = E.stackFor("poitrine", Object.assign({ bloc: false }, cfgBase), piece, produits["polo-essential"], ctx);
+  assert.deepStrictEqual(seul.items.map(i => [i.kind, i.ux, i.uy]), [["image", 2, 3], ["prenom", 0, 0], ["numero", 0, 0]]);
+  const colle = E.stackFor("poitrine", Object.assign({ bloc: true }, cfgBase), piece, produits["polo-essential"], ctx);
+  assert.deepStrictEqual(colle.items.map(i => [i.kind, i.ux, i.uy]), [["image", 2, 3], ["prenom", 2, 3], ["numero", 2, 3]]);
+  assert.strictEqual(colle.bloc, true); assert.deepStrictEqual([colle.ux, colle.uy], [2, 3]);
+  // la position ne change pas la taille du bloc ni la planche
+  const r1 = E.computeOrder({ pieces: [piece], marquages: { poitrine: Object.assign({ bloc: true }, cfgBase) }, technique: "dtf" }, ctx);
+  const r0 = E.computeOrder({ pieces: [piece], marquages: { poitrine: Object.assign({ bloc: true }, cfgBase, { dx: 0, dy: 0 }) }, technique: "dtf" }, ctx);
+  assert.deepStrictEqual(r1.motifs.map(m => [m.w, m.h]), r0.motifs.map(m => [m.w, m.h]));
+  assert.strictEqual(r1.couts.total, r0.couts.total);
+});
+test("6.2.0 : décalage dit en français, et valeurs aberrantes ramenées à des bornes raisonnables", () => {
+  assert.strictEqual(E.descriptionVisuel({ format: "A6", largeur: 8, image: { ratio: 1 }, dx: 2, dy: 1.5 }, ctx), "8 × 8 cm, décalé de 2 cm vers la droite et 1,5 cm vers le bas");
+  assert.strictEqual(E.descriptionVisuel({ format: "A6", largeur: 8, image: { ratio: 1 }, dx: -3, dy: -0.5 }, ctx), "8 × 8 cm, décalé de 3 cm vers la gauche et 0,5 cm vers le haut");
+  const g = E.imageGeom({ format: "A6", largeur: 8, dx: 9999, dy: "abc" }, ctx);
+  assert.deepStrictEqual([g.dx, g.dy], [100, 0]);
+  assert.strictEqual(E.imageGeom({ format: "A6", largeur: -4 }, ctx).libre, false, "largeur négative : on retrouve le format");
+});
+
 console.log("\n" + ok + " tests passés");
