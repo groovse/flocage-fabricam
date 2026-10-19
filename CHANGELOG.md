@@ -5,6 +5,18 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.0.0 — 19/10/2026
+
+Marge divisée par 2 sur les vêtements apportés au-delà de 5 pièces. **Version MAJEURE : la règle de prix change.**
+
+- **Plus de 5 pièces « Ton vêtement » dans une commande (6 ou plus) : la marge de toutes ces pièces est divisée par 2**, soit 0,50 € par motif et 1 € au plus par pièce (au lieu de 1 € et 2 €). Les pièces apportées se comptent tous articles confondus (3 vestes et 3 t-shirts font 6). À 5 pièces ou moins, rien ne change.
+- Les articles Decathlon d'une même commande ne comptent pas dans le seuil et gardent 1 € par motif. Les packs ne sont pas touchés.
+- Exemples, une veste apportée avec un visuel A6 à la poitrine : 3,58 € la pièce pour 5 (inchangé), **2,65 € pour 6** (3,15 € avant), 2,34 € pour 10 (2,84 €), 1,65 € pour 20 (2,15 €), 1,23 € pour 50 (1,73 €). La baisse est de 0,50 € par pièce dès la sixième apportée.
+- Client : la carte du catalogue et l'aide « Tu as déjà tes vêtements ? » annoncent la règle ; sous le prix, la note « Tu apportes plus de 5 vêtements : le prix de ces pièces est réduit » apparaît quand elle joue. Le tableau de prix par quantité des articles « Ton vêtement » la prend en compte.
+- Atelier : le détail des coûts indique « 0,50 € par motif, 1,00 € au plus par pièce : marge × 0,5, plus de 5 vêtements apportés ».
+- Réglage : `regles.apporte` dans `js/prix.js` (`seuil: 5`, `facteur: 0.5` ; `facteur: 1` supprime la règle). Le fichier de commande ne change pas ; un ancien fichier avec plus de 5 pièces apportées se recalcule avec la nouvelle règle, et l'atelier signale l'écart avec le prix vu par le client.
+- Tests : 101 en tout (69 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier, 24 sur les fiches de paiement et les factures), dont 6 sur cette règle.
+
 ## 5.1.1 — 19/10/2026
 
 Relecture des pages Decathlon des 42 articles restants : toutes les couleurs, tous les liens, toutes les photos. **Version CORRECTIF : les prix de vente ne changent pas, sauf celui du sweat Viralto Axton.**

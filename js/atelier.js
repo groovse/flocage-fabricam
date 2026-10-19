@@ -514,7 +514,8 @@
         var sans = g.produitIds.some(function (id) { return A.byId[id] && A.byId[id].margePack != null; });
         detail += " (" + fmtEUR(rg.parPiecePack) + " par pièce" + (sans ? ", chaussettes sans marge" : "") + ")";
       } else {
-        detail += g.motifs ? " (" + fmtEUR(rg.parMotif) + " par motif" + (rg.maxParPiece != null ? ", " + fmtEUR(rg.maxParPiece) + " au plus par pièce" : "") + ")" : " (aucun motif)";
+        var f = g.margeReduite && rg.apporte ? rg.apporte.facteur : 1;   // plus de 5 pièces apportées : marge réduite
+        detail += g.motifs ? " (" + fmtEUR(rg.parMotif * f) + " par motif" + (rg.maxParPiece != null ? ", " + fmtEUR(rg.maxParPiece * f) + " au plus par pièce" : "") + (f !== 1 ? " : marge × " + String(f).replace(".", ",") + ", plus de " + rg.apporte.seuil + " vêtements apportés" : "") + ")" : " (aucun motif)";
       }
       detail += ", soit " + fmtEUR(g.unitaire) + " l'unité";
       rows.push([esc(A.groupName(g)) + " × " + g.n, detail, fmtEUR(g.total)]);

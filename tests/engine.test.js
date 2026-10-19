@@ -688,4 +688,63 @@ test("bloc collé : un pack garde sa marge de pièce, le bloc ne change que les 
   assert.strictEqual(un(false).prix.groupes[0].margeMoyenne, 2);
 });
 
+console.log("\nVêtements apportés : marge divisée par 2 au-delà de 5 pièces (version 6.0.0)");
+const apps = (n, pid, deb) => Array.from({ length: n }, (_, i) => pApp("ap" + pid + (deb || 0) + "_" + i, pid));
+const cmdApp = (ps, marq, c) => E.computeOrder({ pieces: ps, marquages: marq || A6seul, technique: "dtf" }, c || ctx);
+const ctxSans = Object.assign({}, ctx, { prix: Object.assign({}, PRIX, { regles: Object.assign({}, PRIX.regles, { apporte: null }) }) });   // sans la règle
+const ctxMoitie = Object.assign({}, ctx, { prix: Object.assign({}, PRIX, { regles: Object.assign({}, PRIX.regles, { apporte: null, parMotif: 0.5, maxParPiece: 1 }) }) });   // la moitié partout
+test("vêtements apportés : la règle est dans prix.js (au-delà de 5 pièces, marge × 0,5)", () => {
+  assert.deepStrictEqual(PRIX.regles.apporte, { seuil: 5, facteur: 0.5 });
+  const r = E.reglesApporte(PRIX.regles, 6);
+  assert.deepStrictEqual([r.parMotif, r.maxParPiece, r.parPiecePack], [0.5, 1, 1]);
+  assert.strictEqual(E.reglesApporte(PRIX.regles, 5), PRIX.regles, "à 5 pièces, rien ne change");
+  assert.strictEqual(E.reglesApporte(Object.assign({}, PRIX.regles, { maxParPiece: null }), 9).maxParPiece, null);
+  assert.strictEqual(E.reglesApporte(Object.assign({}, PRIX.regles, { apporte: { seuil: 5, facteur: 1 } }), 9).parMotif, 1);
+});
+test("vêtements apportés : 5 pièces, 1 € par motif comme avant ; 6 pièces, 0,50 € par motif pour toutes les pièces", () => {
+  const r5 = cmdApp(apps(5, "apporte-veste")), r6 = cmdApp(apps(6, "apporte-veste"));
+  assert.strictEqual(r5.prix.groupes[0].margeMoyenne, 1);
+  assert.deepStrictEqual(r5.prix.apporte, { n: 5, seuil: 5, reduite: false });
+  assert.strictEqual(r5.prix.unitaire, 3.58);   // inchangé
+  assert.strictEqual(r5.prix.unitaire, cmdApp(apps(5, "apporte-veste"), null, ctxSans).prix.unitaire);
+  assert.strictEqual(r6.prix.groupes[0].margeMoyenne, 0.5);
+  assert.strictEqual(r6.prix.groupes[0].margeReduite, true);
+  assert.deepStrictEqual(r6.prix.apporte, { n: 6, seuil: 5, reduite: true });
+  assert.strictEqual(r6.prix.unitaire, 2.65);   // 3,15 € sans la règle
+  assert.strictEqual(cmdApp(apps(6, "apporte-veste"), null, ctxSans).prix.unitaire, 3.15);
+  assert.strictEqual(r6.prix.total, cmdApp(apps(6, "apporte-veste"), null, ctxMoitie).prix.total);
+});
+test("vêtements apportés : on compte toutes les pièces apportées, tous articles confondus", () => {
+  const trois = cmdApp(apps(3, "apporte-veste").concat(apps(3, "apporte-tshirt")));
+  assert.strictEqual(trois.prix.apporte.n, 6); assert.strictEqual(trois.prix.apporte.reduite, true);
+  assert.ok(trois.prix.groupes.length === 2 && trois.prix.groupes.every(g => g.margeMoyenne === 0.5 && g.margeReduite));
+  const cinq = cmdApp(apps(3, "apporte-veste").concat(apps(2, "apporte-tshirt")));
+  assert.strictEqual(cinq.prix.apporte.reduite, false); assert.ok(cinq.prix.groupes.every(g => g.margeMoyenne === 1 && !g.margeReduite));
+});
+test("vêtements apportés : les vêtements Decathlon ne comptent pas et gardent leur marge de 1 € par motif", () => {
+  const peu = cmdApp(apps(3, "apporte-veste").concat(pieces(10)));
+  assert.strictEqual(peu.prix.apporte.reduite, false);
+  assert.ok(peu.prix.groupes.every(g => g.margeMoyenne === 1));
+  const mix = cmdApp(apps(6, "apporte-veste").concat(pieces(4).map((p, i) => Object.assign(p, { id: "d" + i }))));
+  const g = id => mix.prix.groupes.find(x => x.produitId === id);
+  assert.strictEqual(g("apporte-veste").margeMoyenne, 0.5); assert.strictEqual(g("polo-essential").margeMoyenne, 1);
+  assert.strictEqual(g("polo-essential").margeReduite, false);
+});
+test("vêtements apportés : trois motifs, plafond de 1 € par pièce au lieu de 2 € ; un bloc collé, 0,50 €", () => {
+  const trois = marqBloc(false), bloc = marqBloc(true);
+  const ps = n => apps(n, "apporte-veste").map((p, i) => Object.assign(p, { prenom: "Léo", numero: String(i + 1) }));
+  assert.strictEqual(cmdApp(ps(5), trois).prix.groupes[0].margeMoyenne, 2);
+  assert.strictEqual(cmdApp(ps(6), trois).prix.groupes[0].margeMoyenne, 1);
+  assert.strictEqual(cmdApp(ps(5), bloc).prix.groupes[0].margeMoyenne, 1);
+  assert.strictEqual(cmdApp(ps(6), bloc).prix.groupes[0].margeMoyenne, 0.5);
+});
+test("vêtements apportés : un pack et les articles Decathlon ne sont pas touchés, la table de prix du catalogue suit la règle", () => {
+  const pack = ["maillot-basket", "short-basket"].map((id, j) => ({ id: "k" + j, produitId: id, couleurId: produits[id].couleurs[0].id, taille: "M", prenom: "", numero: "", pack: "pk0", packType: "pack-basket" }));
+  const r = cmdApp(pack.concat(apps(6, "apporte-veste")));
+  assert.strictEqual(r.prix.groupes.find(g => g.pack).margeMoyenne, 2);
+  const t = E.priceTable(produits["apporte-veste"], [5, 6, 10], ctx).map(x => x.unitaire), t0 = E.priceTable(produits["apporte-veste"], [5, 6, 10], ctxSans).map(x => x.unitaire);
+  assert.strictEqual(t[0], t0[0]);
+  assert.strictEqual(t[1], E.round2(t0[1] - 0.5)); assert.strictEqual(t[2], E.round2(t0[2] - 0.5));
+});
+
 console.log("\n" + ok + " tests passés");

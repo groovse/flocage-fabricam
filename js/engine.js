@@ -367,6 +367,14 @@
     return round2(m);
   }
 
+  // Vêtements apportés par le client : au-delà de regles.apporte.seuil pièces apportées dans la commande, la marge de ces pièces
+  // est multipliée par regles.apporte.facteur (0,5 : 0,50 € par motif, 1 € au plus par pièce). Renvoie les règles à appliquer à une pièce apportée.
+  function reglesApporte(r, nbApportees) {
+    var a = r.apporte;
+    if (!a || a.facteur == null || a.facteur === 1 || nbApportees <= a.seuil) return r;
+    return Object.assign({}, r, { parMotif: r.parMotif * a.facteur, maxParPiece: r.maxParPiece == null ? null : r.maxParPiece * a.facteur });
+  }
+
   // Marge d'une pièce vendue dans un pack : un montant fixe, quel que soit le nombre de motifs.
   // regles.parPiecePack (1 €), sauf pour un produit qui déclare sa propre valeur (margePack : 0 pour les chaussettes).
   function margePiecePack(prod, r) {
@@ -478,6 +486,9 @@
     // Les autres pièces forment un groupe par produit, avec 1 € de marge par motif (2 € au plus par pièce).
     var nbMotifs = {};
     motifs.forEach(function (m) { nbMotifs[m.pieceId] = (nbMotifs[m.pieceId] || 0) + 1; });
+    // vêtements apportés : plus de regles.apporte.seuil pièces apportées dans la commande = marge réduite sur toutes ces pièces
+    var nApportees = order.pieces.filter(function (p) { var pr = ctx.produits[p.produitId]; return pr && pr.apporte && coutPieces[p.id]; }).length;
+    var reglesApp = reglesApporte(prix.regles, nApportees), apporteReduite = reglesApp !== prix.regles;
     var parPack = {};
     order.pieces.forEach(function (p) { if (p.pack && coutPieces[p.id]) (parPack[p.pack] = parPack[p.pack] || []).push(p); });
     var groupes = [], gi = {}, nbPacks = 0;
@@ -496,7 +507,9 @@
       } else {
         var g2 = groupe("produit:" + p.produitId, { pack: false, produitId: p.produitId, pieces: 1 });
         g2.n++; g2.cout += coutPieces[p.id].total;
-        g2.motifs += nbMotifs[p.id] || 0; g2.margeTotale += margePiece(nbMotifs[p.id] || 0, prix.regles);
+        var pr2 = ctx.produits[p.produitId];
+        g2.motifs += nbMotifs[p.id] || 0; g2.margeTotale += margePiece(nbMotifs[p.id] || 0, pr2.apporte ? reglesApp : prix.regles);
+        if (pr2.apporte && apporteReduite) g2.margeReduite = true;
       }
     });
 
@@ -509,9 +522,10 @@
         unitaire: seul ? groupes[0].unitaire : null,   // un seul prix par pièce seulement s'il n'y a qu'un produit et pas de pack
         groupes: groupes.map(function (g) {
           return { pack: g.pack, produitId: g.produitId || null, packType: g.packType || null, produitIds: g.produitIds || null, n: g.n, pieces: g.pieces,
-            coutMoyen: round2(g.coutMoyen), margeMoyenne: round2(g.margeMoyenne), motifs: g.pack ? null : g.motifs, unitaire: g.unitaire, total: g.total };
+            coutMoyen: round2(g.coutMoyen), margeMoyenne: round2(g.margeMoyenne), motifs: g.pack ? null : g.motifs, margeReduite: !!g.margeReduite, unitaire: g.unitaire, total: g.total };
         }),
         packs: { n: nbPacks },
+        apporte: { n: nApportees, seuil: prix.regles.apporte ? prix.regles.apporte.seuil : null, reduite: apporteReduite },
         total: fx.total, marge: fx.marge
       };
     }
@@ -559,7 +573,7 @@
   return {
     round2: round2, packSheet: packSheet, planSheets: planSheets, costSheets: costSheets,
     elementsFor: elementsFor, layoutStack: layoutStack, stackFor: stackFor, motifImage: motifImage, buildMotifs: buildMotifs,
-    pieceTechno: pieceTechno, polyesterPiece: polyesterPiece, prixAchatPiece: prixAchatPiece, margePiece: margePiece, margePiecePack: margePiecePack, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
+    pieceTechno: pieceTechno, polyesterPiece: polyesterPiece, prixAchatPiece: prixAchatPiece, margePiece: margePiece, margePiecePack: margePiecePack, reglesApporte: reglesApporte, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
     approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP, BLOC_GAP: BLOC_GAP
   };
 });

@@ -380,7 +380,7 @@
       (isPack || app ? "" : '<p class="p-liens">' + liensHTML(item, item.couleurs[0]) + '</p>') +
       '<p class="p-meta">' + (app ? "Tu indiques la couleur, la taille et la matière de ton vêtement à l'étape suivante." : (pointures ? "Pointures" : "Tailles") + ' : ' + tailles + '.') + '</p>' +
       '<h4>Prix par ' + (isPack ? "pack" : "pièce") + '</h4>' + priceStrip(item) +
-      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : app ? "marquage" : "article") + ', planche de transfert et livraison compris' + (app ? ", sans vêtement (c'est toi qui l'apportes)" : "") + '. Le prix baisse avec la quantité.' + prixParCouleurTxt(prods) + '</p>' +
+      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : app ? "marquage" : "article") + ', planche de transfert et livraison compris' + (app ? ", sans vêtement (c'est toi qui l'apportes)" : "") + '. Le prix baisse avec la quantité' + (app && seuilApporte() != null ? ", et dès " + (seuilApporte() + 1) + " vêtements apportés dans une commande, le prix de ces pièces baisse encore" : "") + '.' + prixParCouleurTxt(prods) + '</p>' +
       prods.filter(function (pr) { return pr.vendeur; }).map(function (pr) { return '<p class="note note-vendeur">' + esc(vendeurTexte(pr)) + '</p>'; }).join("") +
       '<a class="btn btn-primary" href="#/configurer/' + item.id + '">Personnaliser ' + esc(item.demonstratif || "ce produit") + '</a>' +
       '</div></article>';
@@ -491,7 +491,7 @@
       '<section class="block facts"><h2>Bon à savoir</h2><dl>' +
       '<div><dt>Aucun minimum</dt><dd>Une seule pièce ou toute l\'équipe, le calcul est le même. Tu peux mélanger plusieurs vêtements dans une commande.</dd></div>' +
       '<div><dt>Deux techniques</dt><dd>Le DTF convient à toutes les couleurs. La sublimation, plus lisse, ne marche que sur polyester blanc ou clair.</dd></div>' +
-      '<div><dt>Tu as déjà tes vêtements ?</dt><dd>Choisis « Ton vêtement » dans le catalogue : tu apportes tes vêtements et on les floque. Le prix compte les planches de transfert, la livraison et le flocage, sans vêtement. Fabr\'Icam t\'indique où et quand les déposer.</dd></div>' +
+      '<div><dt>Tu as déjà tes vêtements ?</dt><dd>Choisis « Ton vêtement » dans le catalogue : tu apportes tes vêtements et on les floque. Le prix compte les planches de transfert, la livraison et le flocage, sans vêtement. ' + (seuilApporte() != null ? "À partir de " + (seuilApporte() + 1) + " vêtements apportés dans une commande, le prix de ces pièces baisse. " : "") + 'Fabr\'Icam t\'indique où et quand les déposer.</dd></div>' +
       '<div><dt>Des vêtements Decathlon</dt><dd>Fabr\'Icam les retire en magasin, il n\'y a donc pas de frais de livraison sur les vêtements. Les articles marqués « Livré par le vendeur » viennent de vendeurs partenaires de Decathlon : ils sont livrés à Fabr\'Icam, et leurs frais de port sont déjà dans le prix.</dd></div>' +
       '</dl></section>';
 
@@ -968,6 +968,13 @@
   }
   function ucfirst(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
 
+  // Plus de PRIX.regles.apporte.seuil vêtements apportés dans la commande : le prix de ces pièces est réduit
+  function remiseApporteTxt(r) {
+    var a = r.prix && r.prix.apporte;
+    return a && a.reduite ? '<p class="t-note t-remise">Tu apportes plus de ' + a.seuil + ' vêtements : le prix de ces pièces est réduit.</p>' : "";
+  }
+  function seuilApporte() { var a = PRIX.regles.apporte; return a && a.facteur != null && a.facteur !== 1 ? a.seuil : null; }
+
   function renderTotal(r) {
     var box = $("#total"); if (!box) return;
     var html;
@@ -975,11 +982,13 @@
     else if (r.prix.unitaire != null) {
       html = '<div class="t-main"><span class="t-big">' + fmtEUR(r.prix.unitaire) + '</span><span class="t-unit">par pièce, TTC</span></div>' +
         '<p class="t-sub">' + r.N + (r.N > 1 ? " pièces" : " pièce") + ' : <b>' + fmtEUR(r.prix.total) + '</b></p>' +
+        remiseApporteTxt(r) +
         '<p class="t-note">' + ucfirst(inclusTxt()) + fraisVendeurTxt(r) + '. Fabr\'Icam confirme le devis avant toute commande.</p>';
     } else {
       var pv = r.prix;
       html = '<div class="t-main"><span class="t-big">' + fmtEUR(pv.total) + '</span><span class="t-unit">au total, TTC, pour ' + r.N + (r.N > 1 ? " pièces" : " pièce") + '</span></div>' +
         '<ul class="t-lines">' + pv.groupes.map(function (g) { return '<li><span>' + g.n + ' × ' + esc(groupName(g)) + '</span><b>' + fmtEUR(g.unitaire) + '</b></li>'; }).join("") + '</ul>' +
+        remiseApporteTxt(r) +
         '<p class="t-note">Prix à l\'unité, ' + inclusTxt() + fraisVendeurTxt(r) + '. Fabr\'Icam confirme le devis avant toute commande.</p>';
     }
     if (r.warnings.length) html += '<ul class="warn">' + r.warnings.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>";
