@@ -5,6 +5,22 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.1.0 — 19/10/2026
+
+Quatre nouveaux produits : un chasuble de football, une serviette de bain et deux accessoires en métal (ouvre-bouteille, porte-clés décapsuleur) achetés sur AliExpress. **Version MINEURE : les prix des articles existants ne changent pas.**
+
+- **Chasuble de football Kipsta** (Decathlon, 3,49 €, 100 % polyester, taille unique) : 6 couleurs (jaune fluo, orange fluo, rouge, blanc, bleu acier, turquoise) avec leur référence, leur lien et leurs photos. Poitrine (A6, A5) et dos (A5, A4). Sublimation possible en blanc seulement. Prix de la vitrine : 14,89 € pour 1 pièce, 7,07 € pour 5, 6,33 € pour 10, 5,64 € pour 20, 5,22 € pour 50.
+- **Serviette de bain microfibre Nabaiji, taille L** (Decathlon, 7,99 €, 80 × 130 cm, 88 % polyester et 12 % polyamide) : 6 couleurs (noir, rose, bleu, vert, violet lilas, orange). Un visuel A6, A5 ou A4 **en bas de la serviette**. DTF seulement (`sublimation: false`), à chaleur modérée, avec un essai avant la série. Prix : 19,39 € pour 1, 11,57 € pour 5, 10,83 € pour 10, 10,14 € pour 20, 9,72 € pour 50.
+- **Ouvre-bouteille en forme de carte** (AliExpress, boutique QST EXPress-02, acier inoxydable) : 5 variantes avec leur prix d'achat (noir 1,81 €, argent 1,91 €, anthracite 2,08 €, argent à trèfle 2,12 €, noir à trèfle 2,12 €). **Porte-clés décapsuleur** (AliExpress, boutique Shop4293023 Store, aluminium) : 8 couleurs de 1,46 € (argent) à 1,66 € (noir, bleu). Une photo par variante.
+- **Gravure laser ou vinyle thermocollant, sans planche DTF.** Ces deux articles portent `technique: "gravure"` : leur motif ne va sur aucune planche, quelle que soit la technique choisie par le client (DTF ou sublimation), et ne coûte ni planche ni livraison DTF Print. **Prix = achat + 1 € de marge par motif**, identique de 1 à 50 pièces : 2,81 € pour l'ouvre-bouteille noir, 2,46 € pour le porte-clés argent. Le coût du vinyle ou de l'énergie du laser n'est pas compté (la marge le couvre). Le client le lit dans le catalogue (« gravure ou vinyle thermocollant et livraison compris ») et à l'étape de la technique.
+- **Nouveau format de visuel « Micro »** : 1,5 × 3 cm, seul format du porte-clés (zone de 1,7 × 3,2 cm). L'ouvre-bouteille garde le Mini (5 × 5 cm). Prénom et numéro du porte-clés démarrent à 0,5 et 1 cm de haut.
+- **AliExpress comme plateforme de vente.** Deux boutiques dans `livraisonVendeur` (`js/prix.js`) avec `plateforme: "AliExpress"`. **Port compté à 0 €** (livraison offerte dès 10 € d'achat, TVA comprise ; les droits de douane éventuels se calculent au paiement) et **délai de 5 à 10 jours**, annoncés au client et à l'atelier, sans le texte « frais de port estimés » quand le montant est nul.
+- **Aperçu** : quatre nouveaux dessins (chasuble avec ourlet et coutures d'épaules, serviette avec ourlets pointillés, ouvre-bouteille carte avec sa fente, porte-clés avec son anneau). Le nom d'une zone très petite s'écrit sous le cadre, et la légende s'adapte aux petits dessins.
+- **Atelier** : abréviations SE (serviette), OB (ouvre-bouteille) et PC (porte-clés) ; étiquette « gravure / vinyle » sur la fiche de fabrication et le diaporama, avec la cellule « sans planche » ; texte de réglage `presse.gravure` ; alerte quand le visuel est un PNG ou un JPEG plutôt qu'un SVG ; la liste d'achats distingue « place de marché Decathlon » et « AliExpress » (nom de la variante, port à 0 €, note de livraison) ; la base d'achats et l'export CSV indiquent la plateforme.
+- **À vérifier** : le stock AliExpress est très faible sur certaines variantes (3 à 6 pièces au 19/10/2026) ; les teintes (`hex`) sont estimées d'après le nom ; les images des variantes Rouge et Violet du porte-clés n'ont pas été contrôlées une à une ; les dimensions du lien de l'ouvre-bouteille (13 × 11 × 2 cm) sont celles du colis, la carte mesure environ 8,5 × 5,4 cm.
+- Catalogue : **49 articles** (28 vêtements, 21 accessoires) plus 16 « Ton vêtement ».
+- Tests : 107 en tout (75 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier, 24 sur les fiches de paiement et les factures), dont 6 nouveaux : format Micro, gravure sans planche ni livraison DTF, prix par variante AliExpress, motifs gravés absents des planches, port AliExpress à 0 €, chasuble et serviette.
+
 ## 6.0.1 — 19/10/2026
 
 Coordonnées bancaires de la fiche de paiement alignées sur le RIB Lydia. **Version CORRECTIF : aucun prix ne change.**

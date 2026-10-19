@@ -87,6 +87,11 @@
     var y = back ? 9 : 10;
     return { start: [45, y], segs: [["Q", 50, y, 51.5, 3.5], ["L", 59, 4], ["C", 58.5, 15, 66.5, 19, 67, 30], ["L", 68, 74], ["Q", 58, 76, 45, 76]] };
   }
+  // chasuble de football : large, sans manches, grandes emmanchures, encolure profonde devant
+  function chasubleSegs(back) {
+    var y = back ? 8 : 20;
+    return { start: [45, y], segs: [["Q", 54, y, 55, 4], ["L", 63, 4.5], ["C", 62, 19, 71, 24, 71.5, 38], ["L", 72, 74], ["Q", 58, 76.5, 45, 76.5]] };
+  }
   // bande du col (moitié droite, recopiée en miroir)
   function neckband(y, stroke, collar, top) {
     var t = top == null ? 5 : top;
@@ -281,6 +286,40 @@
           line("M3 15.9 L9.6 15.9", stroke, 0.25, 'opacity=".6"') + line("M30.4 15.9 L37 15.9", stroke, 0.25, 'opacity=".6"');
       }
     },
+    chasuble: {
+      path: function (vue) { var g = chasubleSegs(vue === "dos"); return symPath(g.start, g.segs); },
+      details: function (vue, stroke) {
+        return line("M19.5 72.6 Q45 75.4 70.5 72.6", stroke, 0.3, 'opacity=".8"') + both(line("M59 4.8 L59.6 13", stroke, 0.3, 'opacity=".7"'));
+      }
+    },
+    /* ---- Serviette de bain 80 x 130 cm, ouvre-bouteilles : dessinés à l'échelle réelle ---- */
+    serviette: {
+      w: 90, h: 140,
+      path: function () { return "M7 5 L83 5 Q85 5 85 7 L85 133 Q85 135 83 135 L7 135 Q5 135 5 133 L5 7 Q5 5 7 5 Z"; },
+      details: function (vue, stroke) {
+        return line("M5.8 8.2 L84.2 8.2", stroke, 0.3, 'stroke-dasharray="1.2 .8" opacity=".7"') + line("M5.8 131.8 L84.2 131.8", stroke, 0.3, 'stroke-dasharray="1.2 .8" opacity=".7"') +
+          line("M8.2 5.8 L8.2 134.2", stroke, 0.25, 'stroke-dasharray="1.2 .8" opacity=".5"') + line("M81.8 5.8 L81.8 134.2", stroke, 0.25, 'stroke-dasharray="1.2 .8" opacity=".5"');
+      }
+    },
+    // carte de crédit en métal, 5,4 x 8,5 cm : fente d'ouverture en haut (la place du motif est dessous)
+    "ouvre-bouteille": {
+      w: 24, h: 18,
+      path: function () { return "M9.9 4.95 L14.1 4.95 Q14.7 4.95 14.7 5.55 L14.7 12.85 Q14.7 13.45 14.1 13.45 L9.9 13.45 Q9.3 13.45 9.3 12.85 L9.3 5.55 Q9.3 4.95 9.9 4.95 Z"; },
+      details: function (vue, stroke) {
+        return '<path d="M10.6 5.9 L13.4 5.9 L13.4 7.1 Q13.4 7.4 13.1 7.4 L10.9 7.4 Q10.6 7.4 10.6 7.1 Z" fill="url(#pv-g5)" stroke="' + stroke + '" stroke-width=".25"/>' +
+          line("M9.7 13 L14.3 13", stroke, 0.2, 'opacity=".5"');
+      }
+    },
+    // porte-clés décapsuleur en aluminium, debout : anneau en haut, barre d'environ 1,9 x 6,6 cm
+    "porte-cles": {
+      w: 14, h: 12,
+      path: function () { return "M6.25 4.2 L7.75 4.2 Q7.95 4.2 7.95 4.4 L7.95 10.6 Q7.95 10.8 7.75 10.8 L6.25 10.8 Q6.05 10.8 6.05 10.6 L6.05 4.4 Q6.05 4.2 6.25 4.2 Z"; },
+      details: function (vue, stroke) {
+        return '<circle cx="7" cy="2.7" r="1.4" fill="none" stroke="' + stroke + '" stroke-width=".3"/>' +
+          '<circle cx="7" cy="4.9" r=".35" fill="url(#pv-g5)" stroke="' + stroke + '" stroke-width=".2"/>' +
+          '<path d="M6.5 9.5 L7.5 9.5 L7.5 10.3 L6.5 10.3 Z" fill="url(#pv-g5)" stroke="' + stroke + '" stroke-width=".2"/>';
+      }
+    },
     polo: {
       path: function (vue) { return vue === "dos" ? BODY_BACK : BODY_FRONT; },
       details: function (vue, stroke, collar) {
@@ -408,7 +447,9 @@
       out += '<rect x="' + (-z.w / 2) + '" y="' + zy + '" width="' + z.w + '" height="' + z.h + '" fill="none" stroke="' + (actif ? "#e8451e" : "#8fa39a") +
         '" stroke-width="' + (actif ? 0.22 : 0.14) + '" stroke-dasharray="' + (actif ? "1 .6" : ".6 .8") + '" opacity="' + (actif ? 0.9 : 0.55) + '"/>';
       if (!actif) {
-        out += '<text x="0" y="' + (zy + 1.9) + '" text-anchor="middle" font-size="1.6" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">' + esc(emplLabel(opts, empId)) + '</text>';
+        // zone minuscule (porte-clés, ouvre-bouteille) : le nom passe en petit sous le cadre, il ne tiendrait pas dedans
+        if (z.w < 8) out += '<text x="0" y="' + (zy + z.h + 1.1) + '" text-anchor="middle" font-size="0.9" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">' + esc(emplLabel(opts, empId)) + '</text>';
+        else out += '<text x="0" y="' + (zy + 1.9) + '" text-anchor="middle" font-size="1.6" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">' + esc(emplLabel(opts, empId)) + '</text>';
       }
       if (actif && opts.piece) {
         var lay = E.stackFor(empId, cfg, opts.piece, prod, opts.ctx);   // bloc collé : écart réduit entre le visuel et le texte
@@ -453,7 +494,8 @@
 
     out += markings(opts, vue);
     out += '</g>';
-    out += '<text x="1.5" y="' + (H - 1.6) + '" font-size="1.7" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">carreaux de 5 cm</text>';
+    var fs = Math.min(1.7, W / 30);     // sur un petit dessin (porte-clés), la légende se réduit
+    out += '<text x="' + Math.min(1.5, W * 0.05) + '" y="' + (H - fs * 0.95) + '" font-size="' + fs + '" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">carreaux de 5 cm</text>';
     out += '</svg>';
     return out;
   }

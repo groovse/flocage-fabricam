@@ -27,18 +27,26 @@ window.PRIX = {
   // 4,90 € est une ESTIMATION (colis postal). Corrige-le ici quand tu connais le montant réel.
   livraison: { seuilGratuit: 100, colissimo: 4.90 },
 
-  // Articles vendus par un vendeur partenaire de la place de marché Decathlon (pas de retrait en magasin) :
-  // le vendeur livre à Fabr'Icam et fait payer des frais de port, une seule fois par vendeur et par commande.
+  // Articles vendus par un vendeur en ligne (pas de retrait en magasin) : un vendeur partenaire de la place de marché Decathlon,
+  // ou un vendeur AliExpress. Le vendeur livre à Fabr'Icam et fait payer des frais de port, une seule fois par vendeur et par commande.
   // Decathlon n'affiche ces frais qu'au moment de la commande : 4,99 € est une ESTIMATION (livraison à Toulouse, 31300).
   // Quand tu connais le montant réel (panier Decathlon), corrige-le ici : « defaut » sert aux vendeurs non listés.
-  // lien : la page du vendeur sur Decathlon (bouton « Voir chez le vendeur » du catalogue et de l'atelier). Sans lien, le bouton
+  // plateforme : « AliExpress » pour un vendeur AliExpress ; sans cette ligne, c'est un vendeur de la place de marché Decathlon.
+  // note : phrase ajoutée au texte du vendeur quand ses frais de port sont nuls (livraison offerte, voir plus bas).
+  // lien : la page du vendeur (bouton « Voir chez le vendeur » du catalogue et de l'atelier). Sans lien, le bouton
   // ouvre la page de l'article chez ce vendeur.
+  // AliExpress : livraison offerte dès 10 € d'achat (les commandes de série dépassent ce seuil, d'où des frais à 0 €), 5 à 10 jours,
+  // TVA comprise dans le prix affiché. Sous 10 € de panier, AliExpress facture un petit port : à ajouter ici si besoin.
   livraisonVendeur: {
     defaut: 4.99,
     vendeurs: {
       "sport-et-go-eu": { nom: "Sport & Go EU", frais: 4.99, delai: "2 à 6 jours", lien: "https://www.decathlon.fr/mp/seller/sport-et-go-eu/bd0b305e-763b-4fc8-ad3c-2d5d4859a3fb" },
       "pertemba-fr": { nom: "Pertemba FR", frais: 4.99, delai: "", lien: "" },
-      "atelier-katanga": { nom: "Atelier Katanga", frais: 4.99, delai: "", lien: "" }
+      "atelier-katanga": { nom: "Atelier Katanga", frais: 4.99, delai: "", lien: "" },
+      "qst-express-02": { nom: "QST EXPress-02", plateforme: "AliExpress", frais: 0, delai: "5 à 10 jours", lien: "https://fr.aliexpress.com/store/1406222",
+        note: "La livraison est offerte dès 10 € d'achat sur AliExpress, TVA comprise. Les droits de douane éventuels se calculent au paiement." },
+      "shop4293023": { nom: "Shop4293023 Store", plateforme: "AliExpress", frais: 0, delai: "5 à 10 jours", lien: "https://fr.aliexpress.com/store/4293023",
+        note: "La livraison est offerte dès 10 € d'achat sur AliExpress, TVA comprise. Les droits de douane éventuels se calculent au paiement." }
     }
   },
 
@@ -80,8 +88,9 @@ window.PRIX = {
   // Plateau de ta presse : limite A4, aucun motif ne doit dépasser
   plateau: { w: 21, h: 28 },
 
-  // Dimensions des tailles de motif (Mini et A7 : accessoires, casquettes, bonnets, gourdes...)
+  // Dimensions des tailles de motif (Mini et A7 : accessoires, casquettes, bonnets, gourdes... ; Micro : porte-clés)
   formatsMotif: {
+    Micro: { w: 1.5, h: 3, nom: "Micro" },
     Mini: { w: 5, h: 5, nom: "Mini" },
     A7: { w: 7, h: 10, nom: "A7" },
     A6: { w: 10, h: 14, nom: "A6" },
@@ -123,6 +132,7 @@ window.PRIX = {
   presse: {
     dtf_polyester: "DTF sur polyester ou nylon : 135 °C pendant 10 s, pression moyenne (DTF Print). Sportswear fin (lycra, softshell) : descends à 120-125 °C. Teinture sensible (marine, noir, rouge) : fais d'abord un essai sur une chute ou un polo d'essai.",
     dtf_autre: "DTF sur coton : 150 °C pendant 10 à 15 s ; mélange coton et polyester : 145 °C pendant 12 s. Mets une feuille de protection sur le transfert.",
-    sublimation: "Sublimation : polyester blanc ou très clair uniquement (DTF Print admet dès 65 % de polyester, ce site exige 90 % pour un rendu net), visuel sans blanc. 190-200 °C pendant 40 à 60 s, pression moyenne à forte, face imprimée contre le vêtement. Envoie le fichier à l'endroit."
+    sublimation: "Sublimation : polyester blanc ou très clair uniquement (DTF Print admet dès 65 % de polyester, ce site exige 90 % pour un rendu net), visuel sans blanc. 190-200 °C pendant 40 à 60 s, pression moyenne à forte, face imprimée contre le vêtement. Envoie le fichier à l'endroit.",
+    gravure: "Gravure laser ou vinyle thermocollant (ouvre-bouteilles en métal), sans planche DTF : un visuel simple, en une couleur, en vecteur (SVG) de préférence. Fais un essai sur une pièce avant la série : réglage du laser (puissance, vitesse), ou vinyle découpé au plotter et pressé à la température indiquée par son fabricant. Le métal chauffe : utilise une pince et laisse refroidir avant de manipuler."
   }
 };

@@ -13,7 +13,7 @@
   var PACKS = {};
   (DATA.packs || []).forEach(function (p) { PACKS[p.id] = p; });
   var EMP_ORDER = ["poitrine", "dos", "manche_g", "manche_d", "cuisse_g", "cuisse_d", "bas_jambe_g", "chaussette_g", "chaussette_d",
-    "sac", "gourde", "casquette", "bonnet", "tour_de_cou", "bandeau", "ceinture"];
+    "sac", "gourde", "casquette", "bonnet", "tour_de_cou", "bandeau", "ceinture", "serviette", "ouvre_bouteille", "porte_cles"];
   var QUANTITES_VITRINE = [1, 5, 10, 20, 50];
 
   var nfEUR = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
@@ -83,11 +83,11 @@
     return byId[g.produitId].nomCourt;
   }
 
-  // Article d'un vendeur de la place de marché Decathlon : frais de port estimés dans prix.js (livraisonVendeur)
+  // Article d'un vendeur en ligne (place de marché Decathlon ou AliExpress) : frais de port estimés dans prix.js (livraisonVendeur)
   function vendeurInfo(prod) {
     if (!prod || !prod.vendeur) return null;
     var lv = PRIX.livraisonVendeur || {}, d = (lv.vendeurs || {})[prod.vendeur] || {};
-    return { id: prod.vendeur, nom: d.nom || prod.vendeur, frais: d.frais != null ? d.frais : (lv.defaut || 0), delai: d.delai || "", lien: d.lien || "" };
+    return { id: prod.vendeur, nom: d.nom || prod.vendeur, frais: d.frais != null ? d.frais : (lv.defaut || 0), delai: d.delai || "", lien: d.lien || "", plateforme: d.plateforme || "Decathlon", note: d.note || "" };
   }
   // Photos d'une couleur (la série de photos de cette couleur sur Decathlon), à défaut celles de l'article
   function photosOf(prod, col) { return col && col.photos && col.photos.length ? col.photos : (prod.photos || []); }
@@ -112,9 +112,9 @@
   function vendeurTexte(prod, noms) {
     var v = vendeurInfo(prod); if (!v) return "";
     var pl = noms && noms.length > 1;
-    return (noms ? noms.join(", ") + " : " + (pl ? "articles vendus" : "article vendu") : (pl ? "Articles vendus" : "Article vendu")) + " par " + v.nom + " sur la place de marché Decathlon. " +
+    return (noms ? noms.join(", ") + " : " + (pl ? "articles vendus" : "article vendu") : (pl ? "Articles vendus" : "Article vendu")) + " par " + v.nom + (v.plateforme === "AliExpress" ? " sur AliExpress" : " sur la place de marché Decathlon") + ". " +
       (pl ? "Ils sont livrés" : "Il est livré") + " à Fabr'Icam par le vendeur" + (v.delai ? " (" + v.delai + ")" : "") + ", sans retrait en magasin. " +
-      "Les frais de port du vendeur, estimés à " + fmtEUR(v.frais) + " pour toute la commande chez lui, sont compris dans le prix. " +
+      (v.frais > 0 ? "Les frais de port du vendeur, estimés à " + fmtEUR(v.frais) + " pour toute la commande chez lui, sont compris dans le prix. " : v.note ? v.note + " " : "") +
       "Une fois floqué" + (pl ? "s" : "") + ", " + (pl ? "ils ne sont" : "il n'est") + " ni repris ni échangé" + (pl ? "s" : "") + ".";
   }
   // « 2XL seulement », « XS, S et 2XL » ou « XS à 3XL »
@@ -129,13 +129,14 @@
   function newMarquage(empId, prod) {
     var emp = DATA.emplacements[empId], f = emp.formats;
     var big = empId === "dos", tiny = empId === "bas_jambe_g" || /^chaussette/.test(empId), small = /^(manche|cuisse)/.test(empId);
-    var mini = /^(gourde|casquette|bonnet|tour_de_cou|bandeau|ceinture)$/.test(empId);   // accessoires : très petite surface
+    var mini = /^(gourde|casquette|bonnet|tour_de_cou|bandeau|ceinture|ouvre_bouteille|porte_cles)$/.test(empId);   // accessoires : très petite surface
+    var micro = empId === "porte_cles";   // barre de 2 cm de large : texte minuscule
     var txt = darkColor(prod) ? "#ffffff" : "#14213d";
     return {
       actif: false, avecImage: !emp.texteSeul, image: null,
       format: f.length ? (big ? f[f.length - 1] : f[0]) : "A6", orient: "portrait",
-      prenom: { actif: false, hauteur: big ? 4 : tiny ? 2.5 : small ? 1.5 : mini ? 1.2 : 2, police: "Bebas Neue", couleur: txt },
-      numero: { actif: false, hauteur: big ? 14 : tiny ? 3.5 : small ? 4 : mini ? 2.5 : 5, police: "Bebas Neue", couleur: txt },
+      prenom: { actif: false, hauteur: big ? 4 : tiny ? 2.5 : small ? 1.5 : micro ? 0.5 : mini ? 1.2 : 2, police: "Bebas Neue", couleur: txt },
+      numero: { actif: false, hauteur: big ? 14 : tiny ? 3.5 : small ? 4 : micro ? 1 : mini ? 2.5 : 5, police: "Bebas Neue", couleur: txt },
       maj: true, textePos: "dessous",
       bloc: true      // prénom et numéro collés au visuel : un seul transfert, pressé d'un coup (voir moteur, stackFor)
     };
@@ -270,7 +271,8 @@
   }
 
   // Les photos sont liées depuis Decathlon : on demande la taille voulue (largeur en px) dans l'adresse
-  function photoSrc(url, w) { return url + (url.indexOf("?") < 0 ? "?format=auto&f=" + w + "x0" : ""); }
+  // Decathlon redimensionne ses photos à la demande ; une photo d'un autre site (AliExpress) reste telle quelle
+  function photoSrc(url, w) { return url + (url.indexOf("?") < 0 && /mediadecathlon\.com/.test(url) ? "?format=auto&f=" + w + "x0" : ""); }
 
   function photoImg(prod, url, w) {
     return '<img src="' + esc(photoSrc(url, w)) + '" alt="' + esc(prod.nom) + '" loading="lazy" referrerpolicy="no-referrer">';
@@ -340,7 +342,7 @@
   function formatVitrine(item) {
     var emp = DATA.emplacements[(item.vitrine || ["poitrine"])[0]], f = emp && emp.formats || [];
     var id = f.indexOf("A6") >= 0 || !f.length ? "A6" : f[0], d = PRIX.formatsMotif[id];
-    return id === "A6" ? "A6" : id + " (" + d.w + " × " + d.h + " cm)";
+    return id === "A6" ? "A6" : id + " (" + fmtN(d.w) + " × " + fmtN(d.h) + " cm)";
   }
 
   // Quand le vêtement ne coûte pas pareil selon la couleur, le prix de la vitrine est celui de la première couleur
@@ -380,7 +382,7 @@
       (isPack || app ? "" : '<p class="p-liens">' + liensHTML(item, item.couleurs[0]) + '</p>') +
       '<p class="p-meta">' + (app ? "Tu indiques la couleur, la taille et la matière de ton vêtement à l'étape suivante." : (pointures ? "Pointures" : "Tailles") + ' : ' + tailles + '.') + '</p>' +
       '<h4>Prix par ' + (isPack ? "pack" : "pièce") + '</h4>' + priceStrip(item) +
-      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : app ? "marquage" : "article") + ', planche de transfert et livraison compris' + (app ? ", sans vêtement (c'est toi qui l'apportes)" : "") + '. Le prix baisse avec la quantité' + (app && seuilApporte() != null ? ", et dès " + (seuilApporte() + 1) + " vêtements apportés dans une commande, le prix de ces pièces baisse encore" : "") + '.' + prixParCouleurTxt(prods) + '</p>' +
+      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : app ? "marquage" : "article") + (item.technique === "gravure" ? ", gravure ou vinyle thermocollant et livraison compris" : ", planche de transfert et livraison compris") + (app ? ", sans vêtement (c'est toi qui l'apportes)" : "") + (item.technique === "gravure" ? ". Le prix est le même quelle que soit la quantité : rien à partager entre les pièces, ni planche ni livraison de transferts." : '. Le prix baisse avec la quantité' + (app && seuilApporte() != null ? ", et dès " + (seuilApporte() + 1) + " vêtements apportés dans une commande, le prix de ces pièces baisse encore" : "") + '.') + prixParCouleurTxt(prods) + '</p>' +
       prods.filter(function (pr) { return pr.vendeur; }).map(function (pr) { return '<p class="note note-vendeur">' + esc(vendeurTexte(pr)) + '</p>'; }).join("") +
       '<a class="btn btn-primary" href="#/configurer/' + item.id + '">Personnaliser ' + esc(item.demonstratif || "ce produit") + '</a>' +
       '</div></article>';
@@ -681,7 +683,7 @@
     var body = "";
     if (m.actif) {
       var imgGroup = "";
-      var fm = emp.formats.map(function (id) { var f = PRIX.formatsMotif[id]; return '<option value="' + id + '"' + (id === m.format ? " selected" : "") + ">" + f.nom + " : " + f.w + " × " + f.h + " cm</option>"; }).join("");
+      var fm = emp.formats.map(function (id) { var f = PRIX.formatsMotif[id]; return '<option value="' + id + '"' + (id === m.format ? " selected" : "") + ">" + f.nom + " : " + fmtN(f.w) + " × " + fmtN(f.h) + " cm</option>"; }).join("");
       if (!emp.texteSeul) imgGroup = '<div class="grp"><label class="chk"><input type="checkbox" data-k="avecImage"' + (m.avecImage ? " checked" : "") + '> Ajouter un visuel (logo, image)</label>' +
         (m.avecImage ? '<div class="up">' +
           '<label class="filebtn">' + (m.image ? "Changer le fichier" : "Importer le fichier") + '<input type="file" data-upload accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>' +
@@ -744,18 +746,27 @@
       '<p class="hint" id="tech-info"></p>';
   }
 
+  // Pièces gravées au laser ou marquées en vinyle (ouvre-bouteilles, porte-clés) : elles échappent au choix DTF ou sublimation
+  function nGravure() {
+    return S.pieces.filter(function (p) { return E.pieceTechno({ technique: "dtf" }, p, CTX) === "gravure"; }).length;
+  }
+  function gravureTxt() {
+    var g = nGravure();
+    return g ? " " + (g > 1 ? g + " pièces sont gravées au laser ou marquées en vinyle thermocollant" : "1 pièce est gravée au laser ou marquée en vinyle thermocollant") + " : ce choix ne " + (g > 1 ? "les concerne" : "la concerne") + " pas." : "";
+  }
+
   function updateTechniqueInfo() {
     var n = eligibleCount(), info = $("#tech-info"), sub = $("#r-sub input");
     if (!info) return;
     sub.disabled = n === 0;
     $("#r-sub").classList.toggle("off", n === 0);
     if (n === 0) {
-      info.textContent = "La sublimation n'est pas disponible : aucune pièce blanche ou claire en polyester dans ta commande.";
+      info.textContent = "La sublimation n'est pas disponible : aucune pièce blanche ou claire en polyester dans ta commande." + gravureTxt();
       if (S.technique === "sublimation") { S.technique = "dtf"; $('input[name="tech"][value="dtf"]').checked = true; scheduleRefresh(); }
     } else if (S.technique === "sublimation") {
-      info.textContent = n === S.pieces.length ? "La sublimation s'applique sur toutes tes pièces." : "La sublimation s'applique sur " + n + (n > 1 ? " pièces claires" : " pièce claire") + ". Les autres restent en DTF.";
+      info.textContent = (n === S.pieces.length ? "La sublimation s'applique sur toutes tes pièces." : "La sublimation s'applique sur " + n + (n > 1 ? " pièces claires" : " pièce claire") + ". Les autres restent en DTF.") + gravureTxt();
     } else {
-      info.textContent = n + (n > 1 ? " pièces pourraient être en sublimation." : " pièce pourrait être en sublimation.");
+      info.textContent = n + (n > 1 ? " pièces pourraient être en sublimation." : " pièce pourrait être en sublimation.") + gravureTxt();
     }
   }
 
@@ -834,7 +845,8 @@
     t.push("Bonjour,", "", "Demande de flocage pour " + c.asso.trim() + ".", "");
     t.push("Contact : " + c.nom.trim() + ", " + c.email.trim() + (c.tel.trim() ? ", " + c.tel.trim() : ""));
     if (c.date) t.push("Date souhaitée : " + new Date(c.date + "T12:00:00").toLocaleDateString("fr-FR"));
-    t.push("Technique : " + (S.technique === "sublimation" ? "sublimation (polyester clair), DTF sinon" : "DTF"), "");
+    var gv = nGravure(), techBase = S.technique === "sublimation" ? "sublimation (polyester clair), DTF sinon" : "DTF";
+    t.push("Technique : " + (gv === S.pieces.length ? "gravure laser ou vinyle thermocollant" : techBase + (gv ? ", gravure laser ou vinyle thermocollant pour " + gv + (gv > 1 ? " pièces" : " pièce") : "")), "");
     t.push(S.pieces.length + (S.pieces.length > 1 ? " pièces" : " pièce") + " :");
     if (compact) {
       var g = {};
@@ -954,7 +966,7 @@
   }
 
   function fraisVendeurTxt(r) {
-    if (!r.vendeurs || !r.vendeurs.length) return "";
+    if (!r.vendeurs || !r.vendeurs.length || !r.couts.livraisonVendeurs) return "";   // livraison offerte (AliExpress) : rien à ajouter
     var tot = r.couts.livraisonVendeurs;
     return ", ainsi que les frais de port " + (r.vendeurs.length > 1 ? "des vendeurs partenaires" : "du vendeur partenaire") + " (estimés à " + fmtEUR(tot) + ")";
   }
@@ -962,6 +974,7 @@
   // Ce que le prix comprend, selon la part de vêtements que le client apporte
   function inclusTxt() {
     var nApp = S.pieces.filter(function (p) { return prodOf(p).apporte; }).length;
+    if (nGravure() === S.pieces.length) return "articles, gravure ou vinyle thermocollant et livraison compris";
     if (!nApp) return "vêtements, planches de transfert et livraison compris";
     if (nApp === S.pieces.length) return "planches de transfert et livraison compris, sans vêtement (tu apportes les tiens)";
     return "vêtements Decathlon, planches de transfert et livraison compris, sans les " + nApp + (nApp > 1 ? " vêtements" : " vêtement") + " que tu apportes";

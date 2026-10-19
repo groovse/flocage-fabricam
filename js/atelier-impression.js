@@ -271,7 +271,7 @@
     html += '<section class="f-sec long"><h3><span class="f-n">1</span>Vêtements à réunir</h3>' + At.table([{ t: "" }, { t: "Quantité", num: true }, "Article", "Couleur", "Taille", "Source"],
       ach.map(function (a) {
         var v = A.vendeurInfo(a.prod);
-        return [box, '<b class="big">' + a.qty + "</b>", esc(a.prod.nom), At.sw(a.col.hex) + esc(a.col.nom) + (a.matiere ? " <small>(" + esc(a.matiere.court) + ")</small>" : ""), "<b>" + esc(a.taille) + "</b>", a.prod.apporte ? "Apporté par le client" : v ? esc(v.nom) : "Decathlon, magasin"];
+        return [box, '<b class="big">' + a.qty + "</b>", esc(a.prod.nom), At.sw(a.col.hex) + esc(a.col.nom) + (a.matiere ? " <small>(" + esc(a.matiere.court) + ")</small>" : ""), "<b>" + esc(a.taille) + "</b>", a.prod.apporte ? "Apporté par le client" : v ? esc((v.plateforme === "Decathlon" ? "" : v.plateforme + ", ") + v.nom) : "Decathlon, magasin"];
       }), "f-tbl") + "</section>";
 
     // 2. planches
@@ -282,7 +282,7 @@
           return [box, "<b>" + esc(s.code) + "</b> sur " + s.total, esc(A.PRIX.planches[s.techno].nom + ", " + s.sheet.format.nom), s.sheet.placed.length, esc(A.PRIX.fournisseur.nom), box, box];
         }), "f-tbl") +
         '<div class="f-plans">' + st.sheets.map(function (s) { return "<figure>" + sheetSVG(s) + "<figcaption><b>" + esc(s.code) + "</b>, " + esc(s.sheet.format.nom) + "</figcaption></figure>"; }).join("") + "</div>" +
-        '<p class="f-key">Repères : numéro de la pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de jambe, SG et SD chaussettes, SA sac, GO gourde, CA casquette, BO bonnet, TC tour de cou, BA bandeau, CE ceinture, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Un bloc collé (visuel, prénom et numéro sur un seul transfert, à presser d\'un coup) porte plusieurs lettres : 3·Pvpn = visuel, prénom et numéro collés de la poitrine de la pièce 3.</p>';
+        '<p class="f-key">Repères : numéro de la pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de jambe, SG et SD chaussettes, SA sac, GO gourde, CA casquette, BO bonnet, TC tour de cou, BA bandeau, CE ceinture, SE serviette, OB ouvre-bouteille, PC porte-clés, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Un bloc collé (visuel, prénom et numéro sur un seul transfert, à presser d\'un coup) porte plusieurs lettres : 3·Pvpn = visuel, prénom et numéro collés de la poitrine de la pièce 3.</p>';
     } else html += '<p class="empty">Aucune planche : aucun marquage actif.</p>';
     html += "</section>";
 
@@ -309,7 +309,7 @@
         var col = At.colorOf(p), mine = r.motifs.filter(function (m) { return m.pieceId === p.id; }), emps = {}, codes = {};
         mine.forEach(function (m) { (emps[m.emp] = emps[m.emp] || []).push(m.kind === "bloc" ? "bloc " + m.el.items.map(function (i) { return At.KIND[i.kind]; }).join("+") : At.KIND[m.kind]); var sh = st.motifSheet[m.id]; if (sh) codes[sh.code] = 1; });
         var txt = A.EMP_ORDER.filter(function (e) { return emps[e]; }).map(function (e) { return At.ABBR[e] + " " + emps[e].join("+"); }).join(", ");
-        var t = At.presseDe(p).tech === "sublimation" ? ' <span class="tag">sublimation</span>' : "", pk = p.pack ? ' <span class="tag">pack</span>' : "";
+        var tc = At.presseDe(p).tech, t = tc === "sublimation" ? ' <span class="tag">sublimation</span>' : tc === "gravure" ? ' <span class="tag">gravure / vinyle</span>' : "", pk = p.pack ? ' <span class="tag">pack</span>' : "";
         return [box, i + 1, esc(At.prodOf(p).nomCourt) + ", " + esc(col.nom.toLowerCase()) + pk + t, "<b>" + esc(p.taille) + "</b>", esc(p.prenom || ""), esc(p.numero || ""), esc(txt || "rien"), esc(Object.keys(codes).join(", ")), box];
       }), "f-tbl f-pieces") + "</section>";
 
