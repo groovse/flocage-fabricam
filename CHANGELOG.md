@@ -5,6 +5,20 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.3.0 — 19/10/2026
+
+L'en-tête du site client et la navigation du catalogue sont refaits. **Version MINEURE : ni les prix, ni le fichier de commande, ni l'atelier ne changent.**
+
+- **En-tête collé en haut.** Il reste visible pendant qu'on défile, aligné sur la largeur de la page, avec le logo à gauche et deux accès : un menu « Produits » et le bouton « Ma commande ». Sur téléphone, le nom « Flocage » à côté du logo disparaît sous 480 px pour laisser la place au menu. L'aperçu du configurateur se cale sous l'en-tête.
+- **Menu « Produits ».** Il liste les catégories avec le nombre d'articles de chacune. Il s'ouvre au clic, se ferme avec Échap, un clic à côté ou le choix d'une catégorie, et fonctionne aussi depuis le configurateur (il ramène au catalogue, déjà filtré). Sur téléphone, il prend toute la largeur de l'écran.
+- **Barre de catégories collée.** Sur le catalogue, les catégories restent affichées sous l'en-tête pendant qu'on défile (sur plusieurs lignes sur grand écran, sur une ligne qu'on fait glisser sur téléphone). Choisir une catégorie filtre sur place, sans recharger la page, et remonte au début du catalogue si on avait défilé plus bas.
+- **Catégories des produits.** Nouvelle liste `categories` dans `js/data.js` (10 catégories) et nouveau champ `tags.categories` sur chacun des 71 articles et packs (65 articles et 6 packs) : un article peut en avoir plusieurs (le survêtement Joma, l'ensemble Hummel, la serviette, le bandeau, les vêtements apportés, qui sont aussi rangés avec leurs équivalents du catalogue). La première catégorie d'un article est son rayon. Le filtre « Type » (Hauts, Bas…) est remplacé par ces catégories sur le site client ; le champ `type` reste dans les données, l'atelier l'utilise toujours.
+- **Catalogue rangé par rayons.** Sans catégorie choisie, les articles sont classés par rayon, avec un titre devant chacun (un rayon vide à cause des filtres Homme, Femme, Sport ou Casual disparaît). Les étiquettes d'une carte affichent maintenant les catégories de l'article.
+- **Adresses des catégories.** `#/produits` et `#/produits/polos` ouvrent le catalogue au bon endroit, filtré : l'adresse peut se copier et se partager, et suit le choix de l'utilisateur. Une catégorie inconnue affiche tout le catalogue.
+- **Nettoyage du code.** CSS : variables `--gutter`, `--page` et `--header-h`, règles en double regroupées (`.pv-bar`, `.radio b`, `.pieces .col-couleur select`), règles inutilisées supprimées (`.brand .mark`, `.t-lines .rem`, `.pv-card svg`). JS : fonction `uniformPlan` jamais appelée et variable inutilisée de l'aperçu supprimées, routage du site client réécrit proprement (`route`), lien « Ma commande » écrit une fois dans la page au lieu d'être recalculé au démarrage.
+- **À vérifier.** Les catégories ont été choisies d'après le modèle de dessin de chaque article : relis le rangement (par exemple le haut thermique dans « T-shirts et maillots », le bandeau dans « Casquettes et bonnets » et « Équipement ») et dis-moi ce que tu veux déplacer.
+- Tests : 116 en tout (84 sur le moteur et le catalogue, 8 sur les fichiers de l'atelier, 24 sur les fiches de paiement et les factures), dont 1 nouveau : catégories valides, sans doublon, aucune catégorie vide, « Ton vêtement » réservé aux vêtements apportés, packs rangés dans « Packs ».
+
 ## 6.2.0 — 19/10/2026
 
 Le visuel se règle comme un texte : taille libre, rotation et position. **Version MINEURE : un ancien fichier de commande garde son format, sa case et son prix.**

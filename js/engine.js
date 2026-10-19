@@ -130,17 +130,6 @@
     return sheets;
   }
 
-  function uniformPlan(rects, f, gap, rot) {
-    var rest = sortRects(rects), sheets = [];
-    while (rest.length) {
-      var res = packSheet(f.w, f.h, rest, gap, rot);
-      if (!res.placed.length) return null;
-      sheets.push({ format: f, placed: res.placed });
-      rest = res.rest;
-    }
-    return sheets;
-  }
-
   // Remplit des planches de format f ; dès que le reste tient sur une seule planche, on prend la moins chère
   function closingPlan(rects, f, formats, gap, rot) {
     var rest = sortRects(rects), sheets = [];
