@@ -127,7 +127,7 @@ test("la fiche de paiement contient l'IBAN, le BIC, le titulaire, le total, la r
   assert.ok(t.includes("FICHE DE PAIEMENT"));
   assert.ok(t.includes("N° FP-2026-001"));
   assert.ok(t.includes("FR76 1759 8000 0100 0332 1323 381"));
-  assert.ok(t.includes("Antton GARY et Martin ERNST"));
+  assert.ok(t.includes("Fablab Icam 26-29"));
   assert.ok(t.includes("BIC") && t.includes("LYDIFRP2XXX"));
   assert.ok(t.includes("167,60 €"), t);
   assert.ok(t.includes("FP-2026-001 Section basket"));
