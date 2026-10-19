@@ -5,6 +5,14 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.2.1 — 19/10/2026
+
+Titulaire du compte de la fiche de paiement remis à « Fablab Icam 26-29 ». **Version CORRECTIF : aucun prix ne change.**
+
+- Le bloc « Comment payer ? » affiche de nouveau **« Fablab Icam 26-29 »** comme titulaire du compte (choix de Fabr'Icam). Le **BIC `LYDIFRP2XXX`** ajouté en 6.0.1 reste en place, avec l'IBAN.
+- Le RIB Lydia est au nom des deux titulaires du compte commun : si une banque contrôle le nom du bénéficiaire avant le virement, le nom saisi doit être celui du RIB. Le réglage est `titulaire` dans le bloc `CONFIG` de `js/facturation.js`.
+- Tests : la fiche doit contenir « Fablab Icam 26-29 », l'IBAN et le BIC.
+
 ## 6.2.0 — 19/10/2026
 
 Le visuel se règle comme un texte : taille libre, rotation et position. **Version MINEURE : un ancien fichier de commande garde son format, sa case et son prix.**
