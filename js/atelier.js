@@ -52,6 +52,10 @@
   function parseOrderFile(text) {
     var j = JSON.parse(text);
     if (!j || !Array.isArray(j.pieces) || !j.marquages) throw new Error("Ce fichier n'est pas une commande de " + A.DATA.service.nom + ".");
+    // un produit renommé garde l'ancien identifiant dans « anciensId » : la commande déjà envoyée se recharge quand même
+    var ancien = {};
+    A.DATA.produits.forEach(function (pr) { (pr.anciensId || []).forEach(function (id) { ancien[id] = pr.id; }); });
+    j.pieces.forEach(function (p) { if (!A.byId[p.produitId] && ancien[p.produitId]) p.produitId = ancien[p.produitId]; });
     var bad = j.pieces.filter(function (p) { return !A.byId[p.produitId]; })[0];
     if (bad) throw new Error("Un modèle de la commande n'est plus dans le catalogue : " + bad.produitId + ".");
     if (!j.pieces.length) throw new Error("Cette commande ne contient aucune pièce.");
@@ -459,7 +463,14 @@
       ["<b>Coût de revient</b>", "", "<b>" + fmtEUR(r.couts.total) + "</b>"]
     ]);
     pv.groupes.forEach(function (g) {
-      var detail = "coût moyen " + fmtEUR(g.coutMoyen) + ", marge " + (g.plafonne ? "plafonnée à " + fmtEUR(A.PRIX.regles.margeMax) : fmtPct(g.taux)) + (g.pack ? " (une seule pièce du pack)" : "") + ", soit " + fmtEUR(g.unitaire) + " l'unité";
+      var rg = A.PRIX.regles, detail = "coût moyen " + fmtEUR(g.coutMoyen) + ", marge " + fmtEUR(g.margeMoyenne);
+      if (g.pack) {
+        var sans = g.produitIds.some(function (id) { return A.byId[id] && A.byId[id].margePack != null; });
+        detail += " (" + fmtEUR(rg.parPiecePack) + " par pièce" + (sans ? ", chaussettes sans marge" : "") + ")";
+      } else {
+        detail += g.motifs ? " (" + fmtEUR(rg.parMotif) + " par motif" + (rg.maxParPiece != null ? ", " + fmtEUR(rg.maxParPiece) + " au plus par pièce" : "") + ")" : " (aucun motif)";
+      }
+      detail += ", soit " + fmtEUR(g.unitaire) + " l'unité";
       rows.push([esc(A.groupName(g)) + " × " + g.n, detail, fmtEUR(g.total)]);
     });
     rows.push(["<b>Total à facturer</b>", pv.unitaire != null ? r.N + " × " + fmtEUR(pv.unitaire) : "", "<b>" + fmtEUR(pv.total) + "</b>"]);

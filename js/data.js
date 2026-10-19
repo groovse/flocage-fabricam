@@ -1,10 +1,10 @@
 /*
  * CATALOGUE — pour ajouter un vêtement, copie un bloc de « produits » et change :
  * id, nom, prixAchat (TTC), tailles, couleurs, modele (le dessin : polo, sweat, debardeur,
- * maillot, short-basket, short-tennis, short-slim, tshirt, manches-longues, veste, sweat-zip, gilet, gilet-matelasse, robe,
- * pantalon, chaussette, gourde, casquette, bonnet, tour-de-cou, bandeau, sac-tube, sac-sport, sac-a-dos, ceinture), tags (genre, style, type : haut, bas, robe,
+ * maillot, short-basket, short-tennis, short-slim, tshirt, manches-longues, veste, sweat-zip, gilet, gilet-matelasse, ensemble-short,
+ * pantalon, chaussette, gourde, casquette, bonnet, tour-de-cou, bandeau, sac-tube, sac-sport, sac-a-dos, ceinture), tags (genre, style, type : haut, bas,
  * ensemble ou accessoire), vendeur (seulement pour un article de la place de marché Decathlon, voir prix.js), sublimation: false
- * (article qui ne se sublime pas), vitrine (emplacements du prix affiché) et zones. Chaque couleur peut porter ref (référence Decathlon)
+ * (article qui ne se sublime pas), margePack: 0 (pièce sans marge dans un pack, comme les chaussettes, voir prix.js), vitrine (emplacements du prix affiché) et zones. Chaque couleur peut porter ref (référence Decathlon)
  * et lien (la page de cette couleur).
  * Les zones sont en cm sur le dessin du vêtement (90 cm de large) : cx = centre horizontal,
  * top = haut de la zone (ou cy = centre), w/h = taille max de la zone.
@@ -38,11 +38,11 @@ window.DATA = {
 
   // Filtres du catalogue (tags « genre », « style » et « type » de chaque produit ou pack). « sport » (tennis, basket...)
   // n'est qu'une étiquette d'affichage. Un vêtement mixte porte les deux genres. Type « ensemble » : packs de plusieurs pièces
-  // et survêtement vendu en un seul article.
+  // et articles de plusieurs pièces vendus en un seul achat (survêtement, t-shirt et short).
   filtres: {
     genre: { label: "Pour", valeurs: [{ id: "homme", label: "Homme" }, { id: "femme", label: "Femme" }] },
     style: { label: "Style", valeurs: [{ id: "sport", label: "Sport" }, { id: "casual", label: "Casual" }] },
-    type: { label: "Type", valeurs: [{ id: "haut", label: "Hauts" }, { id: "bas", label: "Bas" }, { id: "robe", label: "Robes" }, { id: "ensemble", label: "Ensembles" }, { id: "accessoire", label: "Accessoires" }] }
+    type: { label: "Type", valeurs: [{ id: "haut", label: "Hauts" }, { id: "bas", label: "Bas" }, { id: "ensemble", label: "Ensembles" }, { id: "accessoire", label: "Accessoires" }] }
   },
 
   // Polices proposées pour les prénoms et numéros (Google Fonts, chargées en ligne)
@@ -322,6 +322,7 @@ window.DATA = {
       modele: "chaussette",
       demonstratif: "ces chaussettes",
       tags: { genre: ["homme", "femme"], style: "sport", sport: "Football", type: "accessoire" },
+      margePack: 0,   // dans un pack, les chaussettes ne portent aucune marge (voir prix.js)
       prixAchat: 2.99,
       matiere: "96 % polyester, 3 % élasthanne, 1 % polyamide",
       polyesterPct: 96,
@@ -640,13 +641,14 @@ window.DATA = {
       }
     },
     {
-      id: "robe-hummel",
-      nomCourt: "Robe Hummel",
-      nom: "Robe Hummel à manches courtes",
+      id: "ensemble-hummel",
+      anciensId: ["robe-hummel"],   // ancien identifiant : les fichiers de commande déjà envoyés se rechargent à l'atelier
+      nomCourt: "Ensemble Hummel",
+      nom: "Ensemble t-shirt et short Hummel",
       marque: "Hummel",
-      modele: "robe",
-      demonstratif: "cette robe",
-      tags: { genre: ["femme"], style: "casual", type: "robe" },
+      modele: "ensemble-short",
+      demonstratif: "cet ensemble",
+      tags: { genre: ["femme"], style: "casual", type: "ensemble" },
       vendeur: "sport-et-go-eu",   // vendeur de la place de marché Decathlon : livré à Fabr'Icam, frais de port dans prix.js (livraisonVendeur)
       prixAchat: 23.00,
       matiere: "100 % polyester",
@@ -665,11 +667,14 @@ window.DATA = {
         "https://contents.mediadecathlon.com/m17811454/k$71f14ea01cb7f9bf9bbf7d96aea972fd/picture.jpg",
         "https://contents.mediadecathlon.com/m17811460/k$8c4b5a8c17426688d1a7acb5388fe31c/picture.jpg"
       ],
-      vitrine: ["poitrine"],
-      texteVitrine: "à la poitrine",
+      vitrine: ["poitrine", "cuisse_g"],
+      texteVitrine: "sur la poitrine du t-shirt et une cuisse du short",
+      noteVitrine: "Avec un visuel A6 sur le t-shirt et un autre sur le short.",
       zones: {
         poitrine: { vue: "face", cx: 58, top: 19, w: 14, h: 21, label: "Poitrine, côté cœur" },
-        dos:      { vue: "dos",  cx: 45, top: 13, w: 28, h: 38, label: "Dos" }
+        dos:      { vue: "dos",  cx: 45, top: 13, w: 28, h: 38, label: "Dos" },
+        cuisse_g: { vue: "face", cx: 57.5, top: 88, w: 14, h: 21, label: "Cuisse gauche (short)" },
+        cuisse_d: { vue: "face", cx: 32.5, top: 88, w: 14, h: 21, label: "Cuisse droite (short)" }
       }
     },
     {
@@ -1583,7 +1588,7 @@ window.DATA = {
     }
   ],
 
-  // Packs : plusieurs produits vendus ensemble comme un seul article (une seule marge, voir prix.js)
+  // Packs : plusieurs produits vendus ensemble comme un seul article (1 € de marge par pièce, chaussettes à 0 €, voir prix.js)
   packs: [
     {
       id: "pack-basket",
@@ -1639,6 +1644,17 @@ window.DATA = {
       vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
       texteVitrine: "sur la poitrine de la veste et du haut thermique et une cuisse du pantalon",
       noteVitrine: "Avec un visuel A6 sur la veste, sur le haut thermique et sur le pantalon, et un prénom de 3 cm sur une chaussette."
+    },
+    {
+      id: "pack-hummel",
+      nom: "Pack Hummel : t-shirt et short, veste micropolaire et chaussettes",
+      nomCourt: "Pack Hummel",
+      demonstratif: "ce pack",
+      tags: { genre: ["femme"], style: "casual", type: "ensemble" },
+      produits: ["ensemble-hummel", "veste-micropolaire", "chaussettes-football"],
+      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
+      texteVitrine: "sur la poitrine du t-shirt et de la veste et une cuisse du short",
+      noteVitrine: "Avec un visuel A6 sur le t-shirt, sur la veste et sur le short, et un prénom de 3 cm sur une chaussette."
     }
   ]
 };
