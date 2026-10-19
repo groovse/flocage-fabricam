@@ -25,6 +25,7 @@
     client: { asso: "", contact: "", email: "" },
     lignes: [], dateIso: Fa.aujourdhui(), payeLe: "", refFiche: "",
     num: { fiche: "", facture: "" },     // numéro saisi à la main ; vide = numéro proposé
+    sansMarge: false,                    // production pour Fabr'Icam : lignes au prix coûtant, sans marge
     erreurs: []
   };
 
@@ -34,8 +35,13 @@
     var pv = st.res && st.res.prix;
     if (!pv) return [ligneVide()];
     return pv.groupes.map(function (g) {
-      return { designation: A.groupName(g), qty: g.n, unit: g.unitaire, cle: g.pack ? "pack:" + (g.packType || "") : "produit:" + g.produitId };
+      return { designation: A.groupName(g), qty: g.n, unit: D.sansMarge ? g.coutMoyen : g.unitaire, cle: g.pack ? "pack:" + (g.packType || "") : "produit:" + g.produitId };
     });
+  }
+
+  function coutTotalLignes() {
+    var pv = st.res && st.res.prix;
+    return pv ? pv.groupes.reduce(function (t, g) { return t + g.coutMoyen * g.n; }, 0) : 0;
   }
 
   // Quand une autre commande est chargée (ou fermée), le client et les lignes suivent
@@ -136,6 +142,8 @@
       champ("pay-contact", "Contact", D.client.contact, { attrs: ' autocomplete="off"' }) +
       champ("pay-mail", "E-mail", D.client.email, { type: "email", attrs: ' autocomplete="off"' }) + "</div></div>";
 
+    if (st.order) html += '<div class="a-block"><label class="pay-marge"><input type="checkbox" id="pay-sansmarge"' + (D.sansMarge ? " checked" : "") + '> <b>Retirer la marge</b> (production pour Fabr\'Icam : les prix sont au coût réel)</label>' +
+      '<p class="hint">' + (D.sansMarge ? "Les lignes sont au prix coûtant" + (st.res && st.res.prix ? " : " + esc(A.fmtEUR(coutTotalLignes())) + " au lieu de " + esc(A.fmtEUR(st.res.prix.total)) + " avec la marge" : "") + "." : "Les lignes incluent la marge de Fabr'Icam.") + "</p></div>";
     html += '<div class="a-block"><div class="h-row"><h2>Lignes</h2><div class="a-actions">' +
       (st.order ? '<button type="button" class="btn btn-quiet" id="pay-refill">Remplir depuis la commande</button>' : "") +
       (prixVusDifferents() ? '<button type="button" class="btn btn-quiet" id="pay-vus" title="Le client a vu ' + esc(A.fmtEUR(st.prixAffiche.total)) + ' au moment de commander">Reprendre les prix vus par le client</button>' : "") +
@@ -194,6 +202,7 @@
       el.addEventListener("click", function () { D.lignes.splice(Number(el.dataset.i), 1); if (!D.lignes.length) D.lignes.push(ligneVide()); At.views.paiement(); });
     });
     $("#pay-add").addEventListener("click", function () { D.lignes.push(ligneVide()); At.views.paiement(); var s = $$(".pl-des"); if (s.length) s[s.length - 1].focus(); });
+    var sm = $("#pay-sansmarge"); if (sm) sm.addEventListener("change", function () { D.sansMarge = sm.checked; D.lignes = lignesDepuisCommande(); D.erreurs = []; At.views.paiement(); A.toast(D.sansMarge ? "Marge retirée : prix coûtant." : "Marge remise."); });
     var rf = $("#pay-refill"); if (rf) rf.addEventListener("click", function () { D.lignes = lignesDepuisCommande(); D.erreurs = []; At.views.paiement(); A.toast("Lignes remplies d'après la commande."); });
     var pv = $("#pay-vus"); if (pv) pv.addEventListener("click", function () { var n = appliquerPrixVus(); At.views.paiement(); A.toast(n ? "Prix vus par le client repris." : "Aucun prix à reprendre."); });
 
