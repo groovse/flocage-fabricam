@@ -604,4 +604,72 @@ test("Ton vêtement : une pièce sans motif ne coûte rien, deux motifs font 2 �
   assert.strictEqual(deux.prix.groupes[0].margeMoyenne, 2);
 });
 
+console.log("\nBloc collé : visuel, prénom et numéro sur un seul transfert (version 5.0.0)");
+const txtO = h => ({ actif: true, police: "Bebas Neue", hauteur: h, couleur: "#fff" });
+const marqBloc = bloc => ({ poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait", prenom: txtO(2.5), numero: txtO(4), bloc } });
+const lesPieces = n => pieces(n, "marine", i => ({ prenom: "Léo", numero: String(i + 1) }));
+test("bloc collé : un seul motif par pièce, ses éléments empilés et centrés, écart de prix.js entre eux", () => {
+  const r = E.computeOrder({ pieces: lesPieces(1), marquages: marqBloc(true), technique: "dtf" }, ctx);
+  assert.strictEqual(r.motifs.length, 1);
+  const m = r.motifs[0];
+  assert.strictEqual(m.kind, "bloc"); assert.strictEqual(m.avecImage, true);
+  assert.deepStrictEqual(m.el.items.map(i => i.kind), ["image", "prenom", "numero"]);
+  const [v, p, n] = m.el.items, ecart = PRIX.placement.ecartBloc;
+  assert.strictEqual(ecart, 0.5);
+  assert.ok(Math.abs(p.dy - (v.h + ecart)) < 1e-9 && Math.abs(n.dy - (p.dy + p.h + ecart)) < 1e-9, "empilés à " + ecart + " cm");
+  assert.strictEqual(m.w, 10);   // la largeur du visuel A6
+  assert.ok(Math.abs(m.h - (n.dy + n.h)) < 1e-9);
+  m.el.items.forEach(i => assert.ok(Math.abs(i.dx - (m.w - i.w) / 2) < 1e-9, "centré"));
+  assert.ok(E.motifImage(m) === v && E.motifImage({ kind: "image", el: v }) === v && E.motifImage({ kind: "prenom", el: p }) === null);
+});
+test("bloc collé : 1 € de marge au lieu de 2 €, mais un bloc entier tient moins bien sur les planches", () => {
+  const sep = n => E.computeOrder({ pieces: lesPieces(n), marquages: marqBloc(false), technique: "dtf" }, ctx);
+  const blo = n => E.computeOrder({ pieces: lesPieces(n), marquages: marqBloc(true), technique: "dtf" }, ctx);
+  assert.strictEqual(sep(1).prix.unitaire, 20.39); assert.strictEqual(blo(1).prix.unitaire, 19.39);
+  assert.strictEqual(sep(10).prix.unitaire, 11.88); assert.strictEqual(blo(10).prix.unitaire, 11.28);
+  assert.strictEqual(sep(10).couts.planchesTTC, 14); assert.strictEqual(blo(10).couts.planchesTTC, 18);
+  assert.strictEqual(blo(30).prix.unitaire, 10.36);
+  assert.strictEqual(blo(10).prix.groupes[0].motifs, 10); assert.strictEqual(blo(10).prix.groupes[0].margeMoyenne, 1);
+  assert.strictEqual(sep(10).prix.groupes[0].motifs, 30);
+});
+test("bloc collé : sans la case (anciens fichiers) ou décochée, rien ne change : trois motifs", () => {
+  [undefined, false].forEach(b => {
+    const r = E.computeOrder({ pieces: lesPieces(1), marquages: marqBloc(b), technique: "dtf" }, ctx);
+    assert.strictEqual(r.motifs.length, 3); assert.deepStrictEqual(r.motifs.map(m => m.kind), ["image", "prenom", "numero"]);
+    assert.ok(r.motifs.every(m => m.avecImage === (m.kind === "image")));
+  });
+});
+test("bloc collé : il faut au moins deux éléments, un visuel seul ou un prénom seul reste un motif simple", () => {
+  const seul = E.computeOrder({ pieces: pieces(1, "marine", () => ({ prenom: "", numero: "" })), marquages: marqBloc(true), technique: "dtf" }, ctx);
+  assert.deepStrictEqual(seul.motifs.map(m => m.kind), ["image"]);
+  const deux = E.computeOrder({ pieces: pieces(1, "marine", () => ({ prenom: "", numero: "7" })), marquages: marqBloc(true), technique: "dtf" }, ctx);
+  assert.deepStrictEqual(deux.motifs.map(m => m.kind), ["bloc"]); assert.deepStrictEqual(deux.motifs[0].el.items.map(i => i.kind), ["image", "numero"]);
+  const dessus = E.computeOrder({ pieces: lesPieces(1), marquages: { poitrine: Object.assign(marqBloc(true).poitrine, { textePos: "dessus" }) }, technique: "dtf" }, ctx);
+  assert.deepStrictEqual(dessus.motifs[0].el.items.map(i => i.kind), ["prenom", "numero", "image"], "le texte au-dessus du visuel");
+});
+test("bloc collé : un emplacement de texte seul (dos sans visuel) colle le prénom et le numéro ensemble", () => {
+  const dos = { dos: { actif: true, avecImage: false, bloc: true, prenom: txtO(4), numero: txtO(14), maj: true } };
+  const r = E.computeOrder({ pieces: lesPieces(1), marquages: dos, technique: "dtf" }, ctx);
+  assert.strictEqual(r.motifs.length, 1); assert.strictEqual(r.motifs[0].kind, "bloc"); assert.strictEqual(r.motifs[0].avecImage, false);
+  assert.strictEqual(E.motifImage(r.motifs[0]), null);
+  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 1);
+});
+test("bloc collé : trop grand pour le plateau (visuel A4 et texte), les éléments restent séparés avec un avertissement", () => {
+  const grand = { poitrine: { actif: true, avecImage: true, format: "A4", orient: "portrait", prenom: txtO(3), bloc: true } };
+  const r = E.computeOrder({ pieces: pieces(1, "marine", () => ({ prenom: "Léo" })), marquages: grand, technique: "dtf" }, ctx);
+  assert.deepStrictEqual(r.motifs.map(m => m.kind), ["image", "prenom"]);
+  assert.ok(r.warnings.some(w => /bloc .* trop grand pour le plateau/.test(w)), r.warnings.join(" | "));
+  const pile = E.stackFor("poitrine", grand.poitrine, { prenom: "Léo", numero: "" }, produits["polo-essential"], ctx);
+  assert.strictEqual(pile.bloc, false); assert.strictEqual(pile.tropGrand, true);
+  assert.ok(Math.abs(pile.items[1].dy - (pile.items[0].h + E.STACK_GAP)) < 1e-9, "écart d'avant le bloc");
+});
+test("bloc collé : un pack garde sa marge de pièce, le bloc ne change que les planches", () => {
+  const pk = ids => ids.map((id, i) => ({ id: "k" + i, produitId: id, couleurId: produits[id].couleurs[0].id, taille: produits[id].tailles[0], prenom: "Léo", numero: "7", pack: "pk1", packType: "pack-basket" }));
+  const un = b => E.computeOrder({ pieces: pk(["maillot-basket", "short-basket"]), marquages: { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait", prenom: txtO(2.5), bloc: b } }, technique: "dtf" }, ctx);
+  assert.strictEqual(un(true).prix.groupes[0].pack, true);
+  assert.strictEqual(un(true).motifs.filter(m => m.kind === "bloc").length, 1);
+  assert.strictEqual(un(true).prix.groupes[0].margeMoyenne, 2);   // 1 € par pièce du pack, avec ou sans bloc
+  assert.strictEqual(un(false).prix.groupes[0].margeMoyenne, 2);
+});
+
 console.log("\n" + ok + " tests passés");

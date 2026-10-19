@@ -150,9 +150,10 @@
 
   // Résolution effective d'un visuel raster une fois posé dans sa case, en points par pouce
   function dpiVisuel(emp) {
-    var info = st.imgs[emp], m = st.res && st.res.motifs.filter(function (x) { return x.emp === emp && x.kind === "image"; })[0];
-    if (!info || !info.img || info.vector || !m || !info.nw || !info.nh) return null;
-    return Math.round(2.54 / Math.min(m.w / info.nw, m.h / info.nh));
+    var info = st.imgs[emp], m = st.res && st.res.motifs.filter(function (x) { return x.emp === emp && x.avecImage; })[0];
+    var vis = m && E.motifImage(m);      // le visuel, seul ou dans un bloc collé : c'est sa taille qui compte
+    if (!info || !info.img || info.vector || !vis || !info.nw || !info.nh) return null;
+    return Math.round(2.54 / Math.min(vis.w / info.nw, vis.h / info.nh));
   }
 
   function alertes() {
@@ -160,7 +161,7 @@
     Object.keys(o.marquages).forEach(function (e) {
       var m = o.marquages[e], emp = A.DATA.emplacements[e];
       if (!m || !m.actif || m.avecImage === false || !emp || emp.texteSeul) return;
-      var usedBy = r.motifs.some(function (x) { return x.emp === e && x.kind === "image"; });
+      var usedBy = r.motifs.some(function (x) { return x.emp === e && x.avecImage; });
       if (!usedBy) return;
       var nom = emp.label;
       var info = st.imgs[e];
@@ -288,7 +289,7 @@
       if (!prod.zones[e]) return;
       var mine = r.motifs.filter(function (m) { return m.pieceId === piece.id && m.emp === e; });
       if (!mine.length) return;
-      var order = { image: 0, prenom: 1, numero: 2 };
+      var order = { bloc: 0, image: 0, prenom: 1, numero: 2 };
       mine.sort(function (a, b) { return order[a.kind] - order[b.kind]; });
       out.push({ emp: e, label: (prod.zones[e] && prod.zones[e].label) || A.DATA.emplacements[e].label, items: mine });
     });
@@ -296,13 +297,19 @@
   }
 
   // Description lisible d'un motif : « Visuel A6, 10 × 14 cm », « Prénom LÉO, Bebas Neue, 4 cm »
+  function elementTexte(el, cfg) {
+    if (el.kind === "image") return "Visuel " + esc(cfg.format || "") + (cfg.orient === "paysage" ? " en paysage" : "") + ", " + fmtN(el.w) + " × " + fmtN(el.h) + " cm";
+    return (el.kind === "prenom" ? "Prénom " : "Numéro ") + "<b>" + esc(el.text) + "</b>, " + esc(el.police) + ", " + fmtN(el.hauteur) + " cm de haut";
+  }
+  // Un bloc collé : « Bloc collé, 10 × 23,1 cm : visuel A6 + prénom LÉO + numéro 7 », éléments centrés, de haut en bas
   function motifTexte(m) {
     var cfg = st.order.marquages[m.emp] || {};
-    if (m.kind === "image") return "Visuel " + esc(cfg.format || "") + (cfg.orient === "paysage" ? " en paysage" : "") + ", " + fmtN(m.w) + " × " + fmtN(m.h) + " cm";
-    var o = cfg[m.kind] || {};
-    return (m.kind === "prenom" ? "Prénom " : "Numéro ") + "<b>" + esc(m.el.text) + "</b>, " + esc(m.el.police) + ", " + fmtN(m.el.hauteur) + " cm de haut";
+    if (m.kind !== "bloc") return elementTexte(m.el, cfg);
+    return "<b>Bloc collé</b>, " + fmtN(m.w) + " × " + fmtN(m.h) + " cm, à presser d'un coup" +
+      '<ul class="bloc-liste">' + m.el.items.map(function (it) { return "<li>" + elementTexte(it, cfg) + "</li>"; }).join("") + "</ul>";
   }
-  function codeMotif(m) { return (m.pieceIdx + 1) + "·" + ABBR[m.emp] + KIND[m.kind]; }
+  // Repère d'un motif : numéro de la pièce, emplacement, puis une lettre par élément (un bloc en porte plusieurs : 3·Pvpn)
+  function codeMotif(m) { return (m.pieceIdx + 1) + "·" + ABBR[m.emp] + (m.kind === "bloc" ? m.el.items.map(function (i) { return KIND[i.kind]; }).join("") : KIND[m.kind]); }
 
   /* =================================================================== */
   /* PORTE                                                               */
@@ -595,9 +602,10 @@
       return "<tr><th scope=\"row\">" + esc(g.label) + "</th><td>" + g.items.map(function (m) {
         var sh = st.motifSheet[m.id];
         var cfg = o.marquages[m.emp] || {}, vis = "";
-        if (m.kind === "image" && cfg.image && cfg.image.dataUrl) vis = '<img class="mini" src="' + esc(cfg.image.dataUrl) + '" alt="">';
-        else if (m.kind !== "image") vis = '<span class="chip-c" style="background:' + esc(m.el.couleur) + '"></span>';
-        return '<div class="mo">' + vis + "<span>" + motifTexte(m) + "</span></div>";
+        var imgEl = E.motifImage(m), txtEl = m.kind === "bloc" ? m.el.items.filter(function (i) { return i.kind !== "image"; })[0] : (m.kind !== "image" ? m.el : null);
+        if (imgEl && cfg.image && cfg.image.dataUrl) vis = '<img class="mini" src="' + esc(cfg.image.dataUrl) + '" alt="">';
+        if (txtEl) vis += '<span class="chip-c" style="background:' + esc(txtEl.couleur) + '"></span>';
+        return '<div class="mo">' + vis + "<div>" + motifTexte(m) + "</div></div>";
       }).join("") + "</td><td>" + g.items.map(function (m) {
         var sh = st.motifSheet[m.id];
         return '<div class="mo">' + (sh ? "<b>" + esc(sh.code) + "</b> <span class=\"muted\">case " + esc(codeMotif(m)) + "</span>" : "–") + "</div>";

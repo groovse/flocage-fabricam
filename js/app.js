@@ -136,7 +136,8 @@
       format: f.length ? (big ? f[f.length - 1] : f[0]) : "A6", orient: "portrait",
       prenom: { actif: false, hauteur: big ? 4 : tiny ? 2.5 : small ? 1.5 : mini ? 1.2 : 2, police: "Bebas Neue", couleur: txt },
       numero: { actif: false, hauteur: big ? 14 : tiny ? 3.5 : small ? 4 : mini ? 2.5 : 5, police: "Bebas Neue", couleur: txt },
-      maj: true, textePos: "dessous"
+      maj: true, textePos: "dessous",
+      bloc: true      // prénom et numéro collés au visuel : un seul transfert, pressé d'un coup (voir moteur, stackFor)
     };
   }
 
@@ -663,6 +664,16 @@
     return "Résolution : " + dpi + " dpi, trop faible. Utilise une image plus grande (300 dpi minimum).";
   }
 
+  // Case « collés » : visible quand l'emplacement porte au moins deux éléments (visuel, prénom, numéro)
+  function blocOption(m, emp) {
+    var visuel = m.avecImage && !emp.texteSeul, n = (visuel ? 1 : 0) + (m.prenom.actif ? 1 : 0) + (m.numero.actif ? 1 : 0);
+    if (n < 2) return "";
+    var qui = m.prenom.actif && m.numero.actif ? "Prénom et numéro" : m.prenom.actif ? "Prénom" : "Numéro";
+    return '<div class="bloc-opt"><label class="chk"><input type="checkbox" data-k="bloc"' + (m.bloc ? " checked" : "") + '> ' +
+      (visuel ? qui + " collé" + (m.prenom.actif && m.numero.actif ? "s" : "") + " au visuel" : "Prénom et numéro collés") + ' : un seul transfert, posé d\'un coup</label>' +
+      '<p class="hint">Fabr\'Icam presse le bloc en une fois, ce qui compte pour un seul motif dans le prix.</p></div>';
+  }
+
   function empCard(empId) {
     var m = S.marquages[empId], emp = DATA.emplacements[empId];
     var prod = DATA.produits.filter(function (p) { return p.zones[empId]; })[0];
@@ -682,6 +693,7 @@
         '<div class="grp">' + textBlock(m, "prenom", "Prénom de chaque pièce") + textBlock(m, "numero", "Numéro de chaque pièce") +
         ((m.prenom.actif || m.numero.actif) ? '<div class="row2"><label class="chk"><input type="checkbox" data-k="maj"' + (m.maj ? " checked" : "") + '> Majuscules</label>' +
           ((m.avecImage && !emp.texteSeul) ? '<label>Texte placé<select data-k="textePos"><option value="dessous"' + (m.textePos === "dessous" ? " selected" : "") + '>Sous le visuel</option><option value="dessus"' + (m.textePos === "dessus" ? " selected" : "") + '>Au-dessus du visuel</option></select></label>' : "") + '</div>' : "") +
+        blocOption(m, emp) +
         '</div></div>';
     }
     var here = [];
@@ -840,7 +852,7 @@
       var d = [];
       if (m.avecImage) d.push("visuel " + m.format + (m.orient === "paysage" ? " paysage" : "") + (m.image ? " (" + m.image.nom + ")" : ""));
       ["prenom", "numero"].forEach(function (k) { if (m[k].actif) d.push((k === "prenom" ? "prénom" : "numéro") + " en " + m[k].police + ", " + fmtN(m[k].hauteur) + " cm, " + m[k].couleur); });
-      t.push("- " + DATA.emplacements[e].label + " : " + d.join(" + "));
+      t.push("- " + DATA.emplacements[e].label + " : " + d.join(" + ") + (m.bloc && d.length > 1 ? " (collés en un seul bloc)" : ""));
     });
     if (r && r.prix) { t.push(""); prixLignes(r).forEach(function (l) { t.push(l); }); }
     if (c.message.trim()) t.push("", c.message.trim());

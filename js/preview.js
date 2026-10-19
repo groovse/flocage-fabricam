@@ -411,8 +411,7 @@
         out += '<text x="0" y="' + (zy + 1.9) + '" text-anchor="middle" font-size="1.6" fill="#6d8077" font-family="Hanken Grotesk, sans-serif">' + esc(emplLabel(opts, empId)) + '</text>';
       }
       if (actif && opts.piece) {
-        var els = E.elementsFor(empId, cfg, opts.piece, prod, opts.ctx);
-        var lay = E.layoutStack(els);
+        var lay = E.stackFor(empId, cfg, opts.piece, prod, opts.ctx);   // bloc collé : écart réduit entre le visuel et le texte
         var y0 = sleeve ? -lay.H / 2 : 0;
         lay.items.forEach(function (it) {
           if (it.kind === "image") it.src = cfg.image ? (cfg.image.url || cfg.image.dataUrl) : null;
