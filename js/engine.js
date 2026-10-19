@@ -2,7 +2,7 @@
  * MOTEUR DE CALCUL
  * - construit la liste des motifs à presser (un par pièce, par emplacement, par élément)
  * - les range sur les planches du fournisseur au moindre coût (rotation autorisée, écart entre motifs)
- * - calcule coûts TTC, prix unitaire (marge en pourcentage du coût) et marge
+ * - calcule coûts TTC, prix unitaire (coût moyen + marge par motif ou par pièce de pack) et marge
  * Fonctionne dans le navigateur (window.Engine) et sous Node (tests).
  */
 (function (root, factory) {
@@ -315,19 +315,29 @@
   /* ------------------------------------------------------------------ */
   /* Prix de vente                                                       */
   /* ------------------------------------------------------------------ */
-  // Fixe le prix unitaire de chaque article (groupes : { n, cout, pieces } avec cout = coût total du groupe).
-  // Prix = coût moyen de l'article + marge (regles.marge, en pourcentage du coût, plafonnée à regles.margeMax en euros par article),
-  // arrondi au supérieur de regles.pas.
-  // Un article de plusieurs pièces (pack) ne porte la marge que d'une seule pièce : le taux est divisé par le nombre de pièces.
+  // Marge d'une pièce vendue hors pack : regles.parMotif (1 €) par motif à presser (visuel, prénom ou numéro),
+  // au plus regles.maxParPiece (2 €) par pièce. Une pièce sans motif ne porte aucune marge.
+  function margePiece(nbMotifs, r) {
+    var m = nbMotifs * r.parMotif;
+    if (r.maxParPiece != null && m > r.maxParPiece) m = r.maxParPiece;
+    return round2(m);
+  }
+
+  // Marge d'une pièce vendue dans un pack : un montant fixe, quel que soit le nombre de motifs.
+  // regles.parPiecePack (1 €), sauf pour un produit qui déclare sa propre valeur (margePack : 0 pour les chaussettes).
+  function margePiecePack(prod, r) {
+    return prod && prod.margePack != null ? prod.margePack : r.parPiecePack;
+  }
+
+  // Fixe le prix unitaire de chaque article (groupes : { n, cout, margeTotale } avec cout = coût total du groupe
+  // et margeTotale = somme des marges de ses n articles).
+  // Prix = coût moyen de l'article + marge moyenne, arrondi au supérieur de regles.pas : un prix moyen par produit.
   function fixerPrix(groupes, coutTotal, r) {
     var total = 0;
     groupes.forEach(function (g) {
       g.coutMoyen = g.cout / g.n;
-      g.taux = r.marge / (g.pieces || 1);
-      var marge = g.coutMoyen * g.taux;
-      g.plafonne = r.margeMax != null && marge > r.margeMax + 1e-9;
-      if (g.plafonne) marge = r.margeMax;
-      g.brut = g.coutMoyen + marge;
+      g.margeMoyenne = g.margeTotale / g.n;
+      g.brut = g.coutMoyen + g.margeMoyenne;
       g.unitaire = round2(Math.ceil(g.brut / r.pas - 1e-9) * r.pas);
       g.total = round2(g.unitaire * g.n);
       total += g.total;
@@ -336,9 +346,9 @@
     return { total: total, marge: round2(total - coutTotal) };
   }
 
-  // Cas d'un seul produit : cout = coût total, N = nombre de pièces
-  function calcPrix(cout, N, r) {
-    var g = [{ n: N, cout: cout }];
+  // Cas d'un seul produit : cout = coût total, N = nombre de pièces, motifs = nombre de motifs de chaque pièce (1 par défaut)
+  function calcPrix(cout, N, r, motifs) {
+    var g = [{ n: N, cout: cout, margeTotale: N * margePiece(motifs == null ? 1 : motifs, r) }];
     var res = fixerPrix(g, cout, r);
     return { brut: round2(g[0].brut), unitaire: g[0].unitaire, total: res.total, marge: res.marge };
   }
@@ -411,13 +421,16 @@
       coutPieces[p.id] = { achat: prod.prixAchat, planches: pl, livraison: li, livraisonVendeur: lvp, total: prod.prixAchat + pl + li + lvp };
     });
 
-    // Un pack complet (au moins deux pièces avec le même identifiant de pack) est un seul article, avec un seul prix
-    // et une seule marge. Les autres pièces forment un groupe par produit.
+    // Un pack complet (au moins deux pièces avec le même identifiant de pack) est un seul article, avec un seul prix.
+    // Sa marge est la somme des marges fixes de ses pièces (1 € par pièce, 0 € pour les chaussettes).
+    // Les autres pièces forment un groupe par produit, avec 1 € de marge par motif (2 € au plus par pièce).
+    var nbMotifs = {};
+    motifs.forEach(function (m) { nbMotifs[m.pieceId] = (nbMotifs[m.pieceId] || 0) + 1; });
     var parPack = {};
     order.pieces.forEach(function (p) { if (p.pack && coutPieces[p.id]) (parPack[p.pack] = parPack[p.pack] || []).push(p); });
     var groupes = [], gi = {}, nbPacks = 0;
     function groupe(cle, base) {
-      var g = gi[cle]; if (!g) { g = gi[cle] = Object.assign({ n: 0, cout: 0 }, base); groupes.push(g); } return g;
+      var g = gi[cle]; if (!g) { g = gi[cle] = Object.assign({ n: 0, cout: 0, margeTotale: 0, motifs: 0 }, base); groupes.push(g); } return g;
     }
     order.pieces.forEach(function (p) {
       if (!coutPieces[p.id]) return;
@@ -427,10 +440,11 @@
         var ids = pk.map(function (x) { return x.produitId; });
         var g = groupe("pack:" + (p.packType || ids.slice().sort().join("+")), { pack: true, packType: p.packType || null, produitIds: ids, pieces: pk.length });
         g.n++; nbPacks++;
-        pk.forEach(function (x) { g.cout += coutPieces[x.id].total; });
+        pk.forEach(function (x) { g.cout += coutPieces[x.id].total; g.margeTotale += margePiecePack(ctx.produits[x.produitId], prix.regles); });
       } else {
         var g2 = groupe("produit:" + p.produitId, { pack: false, produitId: p.produitId, pieces: 1 });
         g2.n++; g2.cout += coutPieces[p.id].total;
+        g2.motifs += nbMotifs[p.id] || 0; g2.margeTotale += margePiece(nbMotifs[p.id] || 0, prix.regles);
       }
     });
 
@@ -443,7 +457,7 @@
         unitaire: seul ? groupes[0].unitaire : null,   // un seul prix par pièce seulement s'il n'y a qu'un produit et pas de pack
         groupes: groupes.map(function (g) {
           return { pack: g.pack, produitId: g.produitId || null, packType: g.packType || null, produitIds: g.produitIds || null, n: g.n, pieces: g.pieces,
-            coutMoyen: round2(g.coutMoyen), taux: g.taux, plafonne: g.plafonne, unitaire: g.unitaire, total: g.total };
+            coutMoyen: round2(g.coutMoyen), margeMoyenne: round2(g.margeMoyenne), motifs: g.pack ? null : g.motifs, unitaire: g.unitaire, total: g.total };
         }),
         packs: { n: nbPacks },
         total: fx.total, marge: fx.marge
@@ -493,7 +507,7 @@
   return {
     round2: round2, packSheet: packSheet, planSheets: planSheets, costSheets: costSheets,
     elementsFor: elementsFor, layoutStack: layoutStack, buildMotifs: buildMotifs,
-    pieceTechno: pieceTechno, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
+    pieceTechno: pieceTechno, margePiece: margePiece, margePiecePack: margePiecePack, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
     approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP
   };
 });

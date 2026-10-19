@@ -40,16 +40,23 @@ window.PRIX = {
   },
 
   // Règle de prix de vente : chaque produit a son propre prix unitaire, égal au coût moyen de ses pièces
-  // (vêtement + part des planches + part de la livraison) augmenté de la marge, arrondi au supérieur de `pas`.
-  //   marge    : 0.20 = 20 % du coût de la pièce (une pièce qui coûte 10 € est vendue 12 €)
-  //   margeMax : 2.00 = la marge d'un article ne dépasse jamais 2 € (une pièce qui coûte 30 € est vendue 32 €, pas 36 €).
-  //              Un pack compte pour un seul article : 2 € au maximum pour tout le pack. Mets null pour supprimer le plafond.
-  //   pas      : 0.01 = on arrondit au centime supérieur (mets 0.5 pour arrondir de 50 centimes en 50 centimes)
-  // Un pack (maillot + short + chaussettes) est vendu comme un seul article : il ne porte que la marge d'une seule pièce,
-  // soit 20 % du coût moyen d'une pièce du pack (par exemple 6,7 % du coût du pack pour trois pièces), puis le plafond.
+  // (vêtement + part des planches + part de la livraison) augmenté de la marge moyenne, arrondi au supérieur de `pas`.
+  //
+  // Une pièce vendue seule : 1 € de marge par motif à presser, 2 € au maximum par pièce.
+  //   parMotif    : 1.00 = chaque élément posé sur la pièce compte (un visuel, un prénom, un numéro : trois motifs = 3 €, plafonnés à 2 €).
+  //                 Une pièce sans aucun motif ne porte aucune marge.
+  //   maxParPiece : 2.00 = la marge d'une pièce ne dépasse jamais 2 €. Mets null pour supprimer le plafond.
+  //
+  // Une pièce vendue dans un pack : 1 € de marge par pièce, quel que soit son nombre de motifs.
+  //   parPiecePack : 1.00 = un pack de trois pièces (sans compter les chaussettes) porte donc 3 € de marge.
+  //   Les chaussettes ne portent aucune marge dans un pack : leur fiche produit (data.js) déclare `margePack: 0`.
+  //   Un produit peut déclarer sa propre marge de pack avec `margePack` ; sans cette ligne, c'est parPiecePack.
+  //
+  //   pas : 0.01 = on arrondit au centime supérieur (mets 0.5 pour arrondir de 50 centimes en 50 centimes)
   regles: {
-    marge: 0.20,
-    margeMax: 2.00,
+    parMotif: 1.00,
+    maxParPiece: 2.00,
+    parPiecePack: 1.00,
     pas: 0.01
   },
 

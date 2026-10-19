@@ -64,9 +64,18 @@
   function tshirtSegs(back) {
     return { start: [45, back ? 8.5 : 12], segs: [["Q", 51, back ? 8.5 : 12, 54, 6.5], ["L", 71, 11.5], ["L", 87, 24.5], ["L", 77, 36], ["L", 69, 28], ["L", 69, 75], ["Q", 58, 77, 45, 77]] };
   }
-  // robe : haut de t-shirt, puis jupe évasée (le dessin est plus haut que les autres : h = 100)
-  function robeSegs(back) {
-    return { start: [45, back ? 8.5 : 12], segs: [["Q", 51, back ? 8.5 : 12, 54, 6.5], ["L", 71, 11.5], ["L", 87, 24.5], ["L", 77, 36], ["L", 69, 28], ["L", 67, 50], ["L", 76, 94], ["Q", 60, 96.5, 45, 96.5]] };
+  // décale vers le bas un contour décrit par symPath (toutes les ordonnées de dy cm)
+  function descendre(g, dy) {
+    return { start: [g.start[0], g.start[1] + dy], segs: g.segs.map(function (sg) {
+      var c = sg.slice();
+      for (var i = 2; i < c.length; i += 2) c[i] += dy;
+      return c;
+    }) };
+  }
+  // ensemble t-shirt et short : le t-shirt en haut, le short dessous (le dessin est plus haut que les autres : h = 126)
+  var ENSEMBLE_DY = 68;   // décalage du short sous le t-shirt, en cm
+  function shortEnsembleSegs() {
+    return descendre({ start: [45, 13], segs: [["L", 67, 13], ["L", 69.5, 50], ["L", 50.5, 51.5], ["L", 45, 33]] }, ENSEMBLE_DY);
   }
   // haut ajusté à manches longues (sous-vêtement thermique)
   function longSegs(back) {
@@ -105,13 +114,19 @@
         return neckband(y, stroke, collar, 6.5) + line("M21 72 Q45 74.4 69 72", stroke, 0.3, 'opacity=".8"') + both(line("M85.2 22.7 L75.2 34.2", stroke, 0.3, 'opacity=".8"'));
       }
     },
-    robe: {
-      h: 100,
-      path: function (vue) { var g = robeSegs(vue === "dos"); return symPath(g.start, g.segs); },
+    "ensemble-short": {
+      h: 126,
+      path: function (vue) {
+        var t = tshirtSegs(vue === "dos"), sh = shortEnsembleSegs();
+        return symPath(t.start, t.segs) + " " + symPath(sh.start, sh.segs);
+      },
       details: function (vue, stroke, collar) {
-        var y = vue === "dos" ? 8.5 : 12;
-        return neckband(y, stroke, collar, 6.5) + both(line("M85.2 22.7 L75.2 34.2", stroke, 0.3, 'opacity=".8"')) +
-          line("M23.5 48 Q45 50 66.5 48", stroke, 0.3, 'opacity=".7"') + line("M14.6 91 Q45 94.2 75.4 91", stroke, 0.3, 'opacity=".8"');
+        var y = vue === "dos" ? 8.5 : 12, dy = ENSEMBLE_DY;
+        var haut = neckband(y, stroke, collar, 6.5) + line("M21 72 Q45 74.4 69 72", stroke, 0.3, 'opacity=".8"') + both(line("M85.2 22.7 L75.2 34.2", stroke, 0.3, 'opacity=".8"'));
+        var bas = both('<path d="M45 13 L67 13 L67.2 18.2 L45 18.2 Z" fill="' + collar + '" stroke="' + stroke + '" stroke-width=".25"/>') +
+          (vue === "dos" ? "" : line("M45 18.2 L45 22", stroke, 0.3) + both(line("M43.2 19.5 Q44.5 24 44 27.5", stroke, 0.35))) +
+          both(line("M50.8 47.2 L69.3 46", stroke, 0.3, 'opacity=".7"'));
+        return haut + '<g transform="translate(0 ' + dy + ')">' + bas + '</g>';
       }
     },
     "manches-longues": {
