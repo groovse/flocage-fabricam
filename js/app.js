@@ -229,24 +229,81 @@
       else {
         S.pieces = S.pieces.concat(item.produits ? newPack(item, null) : [newPiece(item, coul)]);
         S.addModel = item.id;
-        toast((item.nomCourt || item.nom) + " ajouté à ta commande.");
+        toast((item.nomCourt || item.nom) + " ajouté à la configuration en cours.");
       }
     } else if (S.marquages && coul && !S.pieces.some(function (x) { return x.produitId === item.id && x.couleurId === coul.couleurId; })) {
       // Retour sur le même article dans une autre couleur : une commande vierge change de couleur, sinon la pièce s'ajoute
       if (pristine()) S.pieces.forEach(function (x) { if (x.produitId === item.id && !x.pack) x.couleurId = coul.couleurId; });
-      else { S.pieces.push(newPiece(item, coul)); toast((item.nomCourt || item.nom) + " ajouté à ta commande."); }
+      else { S.pieces.push(newPiece(item, coul)); toast((item.nomCourt || item.nom) + " ajouté à la configuration en cours."); }
     }
     ensureState(item);
     S.entryId = item.id;
   }
 
   function orderOf() { return { pieces: S.pieces, marquages: S.marquages, technique: S.technique }; }
+
+  /* ---------------- panier : plusieurs configurations dans une seule demande ---------------- */
+  // Une ligne du panier = une configuration terminée { id, order: { pieces, marquages, technique } }.
+  // Le panier est gardé dans le navigateur (localStorage), avec les coordonnées saisies.
+  var CLE_PANIER = "fabricam-panier-v1";
+  var PANIER = { lignes: [], next: 1, edit: null };   // edit : id de la ligne en cours de modification
+
+  function sansUrl(k, v) { return k === "url" ? undefined : v; }
+  // Copie profonde d'une configuration ; l'adresse temporaire des visuels est refaite depuis leur contenu
+  function cloneOrder(o) {
+    var c = JSON.parse(JSON.stringify(o, sansUrl));
+    Object.keys(c.marquages).forEach(function (e) { var m = c.marquages[e]; if (m && m.image && m.image.dataUrl) m.image.url = m.image.dataUrl; });
+    return c;
+  }
+  var panierAverti = false;
+  function panierSauve() {
+    try { window.localStorage.setItem(CLE_PANIER, JSON.stringify({ lignes: PANIER.lignes, next: PANIER.next, contact: S.contact }, sansUrl)); }
+    catch (_) { if (!panierAverti) { panierAverti = true; toast("Le panier est trop lourd pour être gardé dans ce navigateur : il sera perdu si tu fermes la page."); } }
+  }
+  function ligneValide(l) {
+    return !!(l && l.order && Array.isArray(l.order.pieces) && l.order.pieces.length && l.order.marquages &&
+      l.order.pieces.every(function (p) { return byId[p.produitId]; }));
+  }
+  function panierCharge() {
+    var d = null;
+    try { var v = window.localStorage.getItem(CLE_PANIER); d = v ? JSON.parse(v) : null; } catch (_) { d = null; }
+    if (!d || !Array.isArray(d.lignes)) return;
+    PANIER.lignes = d.lignes.filter(ligneValide).map(function (l) { return { id: l.id, order: cloneOrder(l.order) }; });
+    PANIER.next = PANIER.lignes.reduce(function (m, l) { return Math.max(m, l.id + 1); }, d.next || 1);
+    if (d.contact) Object.keys(S.contact).forEach(function (k) { if (typeof d.contact[k] === "string") S.contact[k] = d.contact[k]; });
+  }
+  function indexLigne(id) { for (var i = 0; i < PANIER.lignes.length; i++) if (PANIER.lignes[i].id === id) return i; return -1; }
+  function resultatLigne(l) { try { return E.computeOrder(l.order, CTX); } catch (_) { return null; } }
+  function totauxPanier() {
+    var t = { total: 0, pieces: 0, lignes: PANIER.lignes.length };
+    PANIER.lignes.forEach(function (l) { var r = resultatLigne(l); t.pieces += l.order.pieces.length; if (r && r.prix) t.total += r.prix.total; });
+    return t;
+  }
+  function majBadgePanier() {
+    var b = $("#panier-n"); if (!b) return;
+    var n = PANIER.lignes.length;
+    b.textContent = n; b.hidden = !n;
+    var a = $("[data-nav=panier]"); if (a) a.setAttribute("aria-label", "Panier" + (n ? ", " + n + (n > 1 ? " configurations" : " configuration") : ", vide"));
+  }
+  // Repart d'une configuration vierge (après un ajout au panier)
+  function razConfig() {
+    S.pieces = []; S.marquages = null; S.technique = "dtf"; S.addModel = null; S.entryId = null; S.previewId = null; S.sel = null;
+    S.nextId = 1; S.nextPack = 1; S.result = null;
+  }
+  // Les identifiants de pièces et de packs d'une configuration rechargée ne doivent pas être réutilisés
+  function reprendIds() {
+    var n = 0, k = 0;
+    S.pieces.forEach(function (p) { n = Math.max(n, parseInt(String(p.id).replace(/\D/g, ""), 10) || 0); if (p.pack) k = Math.max(k, parseInt(String(p.pack).replace(/\D/g, ""), 10) || 0); });
+    S.nextId = n + 1; S.nextPack = k + 1;
+  }
+  function configEnCours() { return !!(S.marquages && S.pieces.length); }
   function prodOf(piece) { return byId[piece.produitId]; }
   function colorOf(piece) { var pr = prodOf(piece); return pr.couleurs.filter(function (c) { return c.id === piece.couleurId; })[0] || pr.couleurs[0]; }
 
-  function usedEmps() {
+  function usedEmps(c) {
+    c = c || S;
     var set = {};
-    S.pieces.forEach(function (p) { Object.keys(prodOf(p).zones).forEach(function (k) { set[k] = 1; }); });
+    c.pieces.forEach(function (p) { Object.keys(prodOf(p).zones).forEach(function (k) { set[k] = 1; }); });
     return EMP_ORDER.filter(function (k) { return set[k]; });
   }
   function anyText(kind) {
@@ -630,7 +687,7 @@
   function viewConfigurator(id) {
     var item = id ? (itemOf(id) || DATA.produits[0]) : (S.entryId ? itemOf(S.entryId) : DATA.produits[0]);
     if (id || !S.marquages) enter(item); else ensureState(item);
-    var titre = S.pieces.some(function (p) { return prodOf(p).id !== S.pieces[0].produitId; }) ? "Ta commande" : item.nom;
+    var titre = S.pieces.some(function (p) { return prodOf(p).id !== S.pieces[0].produitId; }) ? "Ta configuration" : item.nom;
     app.innerHTML =
       '<div class="cfg" data-view="cfg">' +
       '<div class="cfg-head"><a class="back" href="#/">Catalogue</a><h1>' + esc(titre) + '</h1></div>' +
@@ -639,7 +696,7 @@
       '<section class="step" id="s-pieces"><h2><span class="n">1</span>Tes pièces</h2><div id="pieces"></div></section>' +
       '<section class="step" id="s-marq"><h2><span class="n">2</span>Les marquages</h2><div id="marquages"></div></section>' +
       '<section class="step" id="s-tech"><h2><span class="n">3</span>La technique</h2><div id="technique"></div></section>' +
-      '<section class="step" id="s-devis"><h2><span class="n">4</span>Ta demande</h2><div id="devis"></div></section>' +
+      '<section class="step" id="s-devis"><h2><span class="n">4</span>Ton panier</h2><div id="devis"></div></section>' +
       '</div>' +
       '<aside class="cfg-side"><div class="pv-card">' +
       '<div class="pv-bar"><div class="seg" role="group" aria-label="Vue"><button type="button" data-vue="face">Face</button><button type="button" data-vue="dos">Dos</button></div>' +
@@ -648,7 +705,7 @@
       '<div id="pv"></div><p class="pv-note" id="pv-note" hidden></p><p class="pv-lien p-liens" id="pv-lien" hidden></p></div>' +
       '<div class="total" id="total" aria-live="polite"></div></aside>' +
       '</div></div>';
-    renderPieces(); renderMarquages(); renderTechnique(); renderDevis();
+    renderPieces(); renderMarquages(); renderTechnique(); renderAjout();
     refresh();
   }
 
@@ -911,8 +968,8 @@
   }
 
   // Pièces gravées au laser ou marquées en vinyle (ouvre-bouteilles, porte-clés) : elles échappent au choix DTF ou sublimation
-  function nGravure() {
-    return S.pieces.filter(function (p) { return E.pieceTechno({ technique: "dtf" }, p, CTX) === "gravure"; }).length;
+  function nGravure(c) {
+    return (c || S).pieces.filter(function (p) { return E.pieceTechno({ technique: "dtf" }, p, CTX) === "gravure"; }).length;
   }
   function gravureTxt() {
     var g = nGravure();
@@ -935,7 +992,19 @@
   }
 
   /* ---------- 4. demande ---------- */
-  function renderDevis() {
+  // Étape 4 du configurateur : la configuration part dans le panier
+  function renderAjout() {
+    var edit = PANIER.edit != null && indexLigne(PANIER.edit) >= 0, n = PANIER.lignes.length;
+    $("#devis").innerHTML =
+      '<p class="hint">' + (edit ? "Tu modifies la configuration n° " + (indexLigne(PANIER.edit) + 1) + " du panier." : "Quand cette configuration est prête, mets-la au panier. Tu pourras ensuite en configurer d'autres, puis tout envoyer d'un coup.") + '</p>' +
+      '<div class="cart-actions"><button type="button" class="btn btn-primary" data-act="cart">' + (edit ? "Mettre à jour le panier" : "Ajouter au panier") + '</button>' +
+      (edit ? '<button type="button" class="btn btn-quiet" data-act="pncancel">Annuler la modification</button>' : "") +
+      '<a class="btn btn-quiet" href="#/panier">Voir le panier' + (n ? " (" + n + ")" : "") + '</a></div>' +
+      '<div class="issues" id="issues" aria-live="polite"></div>';
+  }
+
+  // Coordonnées et envoi, dans la page du panier
+  function renderContact() {
     var c = S.contact;
     var field = function (id, label, type, extra) { return '<label>' + label + '<input id="c-' + id + '" data-c="' + id + '" type="' + (type || "text") + '" value="' + esc(c[id]) + '" ' + (extra || "") + '></label>'; };
     $("#devis").innerHTML =
@@ -944,23 +1013,81 @@
       field("date", "Date souhaitée (facultatif)", "date") + '</div>' +
       '<label>Un message pour nous (facultatif)<textarea id="c-message" data-c="message" rows="3">' + esc(c.message) + '</textarea></label>' +
       '<ol class="send">' +
-      '<li><button type="button" class="btn btn-primary" data-act="dl">Télécharger mon fichier de commande</button><span class="hint">Il contient tes pièces et tes visuels. Tu le joins au mail.</span></li>' +
+      '<li><button type="button" class="btn btn-primary" data-act="dl">Télécharger mon fichier de commande</button><span class="hint">Il contient toutes les configurations du panier, avec tes visuels. Tu le joins au mail.</span></li>' +
       '<li><button type="button" class="btn btn-primary" data-act="mail">Écrire le mail à Fabr\'Icam</button><span class="hint">Gmail s\'ouvre dans un nouvel onglet, le message est déjà rempli. N\'oublie pas d\'y joindre le fichier.</span></li></ol>' +
       '<p><button type="button" class="linkbtn" data-act="copy">Pas de Gmail ? Copier le texte du mail</button></p>' +
       '<div class="issues" id="issues" aria-live="polite"></div>';
   }
 
+  /* ---------- le panier ---------- */
+  function resumeLigne(l) {
+    var g = {}, ordre = [];
+    l.order.pieces.forEach(function (p) {
+      var k = prodOf(p).nomCourt + (prodOf(p).apporte ? "" : " " + colorOf(p).nom.toLowerCase());
+      if (!g[k]) { g[k] = { n: 0, hex: prodOf(p).apporte ? null : colorOf(p).hex }; ordre.push(k); }
+      g[k].n++;
+    });
+    return ordre.map(function (k) { return { nom: k, n: g[k].n, hex: g[k].hex }; });
+  }
+  function ligneHTML(l, i) {
+    var r = resultatLigne(l), res = resumeLigne(l), emps = usedEmps(l.order).filter(function (e) { return l.order.marquages[e].actif; });
+    var edit = PANIER.edit === l.id;
+    return '<li class="pn-ligne' + (edit ? " editing" : "") + '" data-lid="' + l.id + '">' +
+      '<div class="pn-main"><h3>Configuration ' + (i + 1) + (edit ? ' <span class="pn-tag">en cours de modification</span>' : "") + '</h3>' +
+      '<ul class="pn-res">' + res.map(function (x) { return "<li>" + (x.hex ? '<span class="sw" style="background:' + x.hex + '"></span>' : "") + x.n + " × " + esc(x.nom) + "</li>"; }).join("") + '</ul>' +
+      '<p class="pn-sub">' + emps.map(function (e) { return esc(DATA.emplacements[e].label); }).join(", ") + (l.order.technique === "sublimation" ? " · sublimation" : " · DTF") + '</p></div>' +
+      '<div class="pn-prix"><b>' + (r && r.prix ? fmtEUR(r.prix.total) : "–") + '</b><span>' + l.order.pieces.length + (l.order.pieces.length > 1 ? " pièces" : " pièce") + ', TTC</span></div>' +
+      '<div class="pn-actions"><button type="button" class="btn btn-quiet" data-act="pnedit" data-lid="' + l.id + '">Modifier</button>' +
+      '<button type="button" class="btn btn-quiet" data-act="pndup" data-lid="' + l.id + '">Dupliquer</button>' +
+      '<button type="button" class="btn btn-quiet" data-act="pndel" data-lid="' + l.id + '">Retirer</button></div></li>';
+  }
+  function viewPanier() {
+    var lignes = PANIER.lignes, tot = totauxPanier();
+    var encours = configEnCours() && PANIER.edit == null
+      ? '<p class="pn-encours">Une configuration est en cours (' + S.pieces.length + (S.pieces.length > 1 ? " pièces" : " pièce") + '). <a href="#/configurer">La reprendre</a></p>' : "";
+    if (!lignes.length) {
+      app.innerHTML = '<div class="panier" data-view="panier"><div class="cfg-head"><a class="back" href="#/produits">Catalogue</a><h1>Ton panier</h1></div>' + encours +
+        '<div class="pn-vide"><p>Ton panier est vide. Choisis un article, configure-le, puis ajoute-le au panier : tu peux en mettre autant que tu veux, tout part dans une seule demande.</p>' +
+        '<a class="btn btn-primary" href="#/produits">Voir le catalogue</a></div></div>';
+      return;
+    }
+    app.innerHTML = '<div class="panier" data-view="panier"><div class="cfg-head"><a class="back" href="#/produits">Catalogue</a><h1>Ton panier</h1></div>' + encours +
+      '<div class="pn-grid"><div class="pn-liste"><ol class="pn-lignes">' + lignes.map(ligneHTML).join("") + '</ol>' +
+      '<p><a class="btn btn-quiet" href="#/produits">Ajouter un autre article</a></p></div>' +
+      '<aside class="pn-side"><div class="total"><div class="t-main"><span class="t-big">' + fmtEUR(tot.total) + '</span><span class="t-unit">au total, TTC</span></div>' +
+      '<p class="t-sub">' + tot.pieces + (tot.pieces > 1 ? " pièces" : " pièce") + ' en ' + tot.lignes + (tot.lignes > 1 ? " configurations" : " configuration") + '</p>' +
+      '<p class="t-note">Chaque configuration est chiffrée séparément. Tout part dans une seule demande : Fabr\'Icam confirme le devis et regroupe la commande avant toute fabrication.</p></div></aside></div>' +
+      '<section class="step pn-envoi"><h2>Envoyer ma demande</h2><div id="devis"></div></section></div>';
+    renderContact();
+  }
+
+
+  // Ce qui empêche d'ajouter une configuration au panier (ou de l'envoyer)
+  function problemesConfig(c) {
+    var out = [], actifs = usedEmps(c).filter(function (e) { return c.marquages[e].actif; });
+    if (!actifs.length) out.push("Active au moins un marquage.");
+    else {
+      var r = resultatLigne({ order: c });
+      if (r && r.motifs && !r.motifs.length) out.push("Il n'y a encore rien à presser : ajoute un visuel, ou écris les prénoms ou les numéros des pièces.");
+    }
+    var manque = actifs.filter(function (e) { var m = c.marquages[e]; return m.avecImage && !m.image; });
+    if (manque.length) out.push("Il manque le fichier du visuel : " + manque.map(function (e) { return DATA.emplacements[e].label.toLowerCase(); }).join(", ") + ". Tu peux aussi le joindre au mail à la main.");
+    return out;
+  }
+  function triProblemes(out) {
+    var info = function (t) { return /il manque le fichier/i.test(t); };   // le fichier d'un visuel peut aussi être joint au mail à la main : pas bloquant
+    return { bloquants: out.filter(function (t) { return !info(t); }), infos: out.filter(info) };
+  }
   function problems() {
-    var out = [], c = S.contact;
+    var out = [], c = S.contact, n = PANIER.lignes.length;
+    if (!n) out.push("Le panier est vide : ajoute au moins une configuration.");
     if (!c.asso.trim()) out.push("Indique le nom de ton association.");
     if (!c.nom.trim()) out.push("Indique ton nom.");
     if (!/^\S+@\S+\.\S+$/.test(c.email.trim())) out.push("Indique une adresse e-mail valide.");
-    var actifs = usedEmps().filter(function (e) { return S.marquages[e].actif; });
-    if (!actifs.length) out.push("Active au moins un marquage.");
-    else if (S.result && S.result.motifs && !S.result.motifs.length) out.push("Il n'y a encore rien à presser : ajoute un visuel, ou écris les prénoms ou les numéros des pièces.");
-    var manque = actifs.filter(function (e) { var m = S.marquages[e]; return m.avecImage && !m.image; });
-    if (manque.length) out.push("Il manque le fichier du visuel : " + manque.map(function (e) { return DATA.emplacements[e].label.toLowerCase(); }).join(", ") + ". Tu peux aussi le joindre au mail à la main.");
-    return { bloquants: out.filter(function (t) { return t.indexOf("Il manque le fichier") !== 0; }), infos: out.filter(function (t) { return t.indexOf("Il manque le fichier") === 0; }) };
+    PANIER.lignes.forEach(function (l, i) {
+      problemesConfig(l.order).forEach(function (t) { out.push(n > 1 ? "Configuration " + (i + 1) + " : " + t.charAt(0).toLowerCase() + t.slice(1) : t); });
+    });
+    return triProblemes(out);
   }
 
   function showIssues(pb) {
@@ -969,19 +1096,23 @@
       (pb.infos.length ? '<ul class="warn">' + pb.infos.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>" : "");
   }
 
-  function orderPayload() {
-    var r = S.result;
+  function lignePayload(l) {
+    var o = l.order, r = resultatLigne(l);
     return {
-      version: 2, service: DATA.service.nom, creeLe: new Date().toISOString(),
-      contact: S.contact, technique: S.technique,
-      pieces: S.pieces,
-      marquages: JSON.parse(JSON.stringify(S.marquages, function (k, v) { return k === "url" ? undefined : v; })),
+      version: 2, technique: o.technique, pieces: o.pieces,
+      marquages: JSON.parse(JSON.stringify(o.marquages, sansUrl)),
       prixAffiche: r && r.prix ? {
         unitaire: r.prix.unitaire, total: r.prix.total, pieces: r.N,
         parProduit: r.prix.groupes.map(function (g) { return { produitId: g.produitId, packType: g.packType, n: g.n, unitaire: g.unitaire }; }),
         packs: r.prix.packs.n
       } : null
     };
+  }
+  // Une seule configuration : le même fichier qu'avant (version 2). Plusieurs : version 3, une entrée par configuration.
+  function orderPayload() {
+    var tete = { service: DATA.service.nom, creeLe: new Date().toISOString(), contact: S.contact };
+    if (PANIER.lignes.length === 1) return Object.assign({}, tete, lignePayload(PANIER.lignes[0]));
+    return Object.assign({ version: 3 }, tete, { commandes: PANIER.lignes.map(lignePayload) });
   }
   function fileName() {
     var d = new Date(), z = function (n) { return ("0" + n).slice(-2); };
@@ -1004,40 +1135,53 @@
     return out;
   }
 
-  function mailText(compact) {
-    var c = S.contact, r = S.result, t = [];
-    t.push("Bonjour,", "", "Demande de flocage pour " + c.asso.trim() + ".", "");
-    t.push("Contact : " + c.nom.trim() + ", " + c.email.trim() + (c.tel.trim() ? ", " + c.tel.trim() : ""));
-    if (c.date) t.push("Date souhaitée : " + new Date(c.date + "T12:00:00").toLocaleDateString("fr-FR"));
-    var gv = nGravure(), techBase = S.technique === "sublimation" ? "sublimation (polyester clair), DTF sinon" : "DTF";
-    t.push("Technique : " + (gv === S.pieces.length ? "gravure laser ou vinyle thermocollant" : techBase + (gv ? ", gravure laser ou vinyle thermocollant pour " + gv + (gv > 1 ? " pièces" : " pièce") : "")), "");
-    t.push(S.pieces.length + (S.pieces.length > 1 ? " pièces" : " pièce") + " :");
+  // Le texte d'une configuration : pièces, technique, marquages, prix
+  function configTexte(c, r, compact) {
+    var t = [], gv = nGravure(c), techBase = c.technique === "sublimation" ? "sublimation (polyester clair), DTF sinon" : "DTF";
+    t.push("Technique : " + (gv === c.pieces.length ? "gravure laser ou vinyle thermocollant" : techBase + (gv ? ", gravure laser ou vinyle thermocollant pour " + gv + (gv > 1 ? " pièces" : " pièce") : "")), "");
+    t.push(c.pieces.length + (c.pieces.length > 1 ? " pièces" : " pièce") + " :");
     if (compact) {
       var g = {};
-      S.pieces.forEach(function (p) { var k = prodOf(p).nomCourt + " " + colorOf(p).nom.toLowerCase() + " " + p.taille + (prodOf(p).apporte ? " (" + matiereDe(p).court + ")" : ""); g[k] = (g[k] || 0) + 1; });
+      c.pieces.forEach(function (p) { var k = prodOf(p).nomCourt + " " + colorOf(p).nom.toLowerCase() + " " + p.taille + (prodOf(p).apporte ? " (" + matiereDe(p).court + ")" : ""); g[k] = (g[k] || 0) + 1; });
       Object.keys(g).forEach(function (k) { t.push("- " + g[k] + " × " + k); });
-      t.push("(liste détaillée avec prénoms et numéros dans le fichier de commande joint)");
     } else {
-      S.pieces.forEach(function (p, i) { t.push(pieceLine(p, i)); });
+      c.pieces.forEach(function (p, i) { t.push(pieceLine(p, i)); });
     }
-    var nApp = S.pieces.filter(function (p) { return prodOf(p).apporte; }).length;
+    var nApp = c.pieces.filter(function (p) { return prodOf(p).apporte; }).length;
     if (nApp) t.push("", nApp + (nApp > 1 ? " pièces sont des vêtements que j'apporte" : " pièce est un vêtement que j'apporte") + " : merci de m'indiquer où et quand les déposer.");
     t.push("", "Marquages :");
-    usedEmps().forEach(function (e) {
-      var m = S.marquages[e]; if (!m.actif) return;
+    usedEmps(c).forEach(function (e) {
+      var m = c.marquages[e]; if (!m.actif) return;
       var d = [];
       if (m.avecImage) d.push("visuel " + E.descriptionVisuel(m, CTX) + (m.image ? " (" + m.image.nom + ")" : ""));
       ["prenom", "numero"].forEach(function (k) { if (m[k].actif) d.push((k === "prenom" ? "prénom" : "numéro") + " en " + m[k].police + ", " + fmtN(m[k].hauteur) + " cm, " + m[k].couleur); });
       t.push("- " + DATA.emplacements[e].label + " : " + d.join(" + ") + (m.bloc && d.length > 1 ? " (collés en un seul bloc)" : ""));
     });
     if (r && r.prix) { t.push(""); prixLignes(r).forEach(function (l) { t.push(l); }); }
+    return t;
+  }
+
+  function mailText(compact) {
+    var c = S.contact, t = [], lignes = PANIER.lignes, n = lignes.length, tot = totauxPanier();
+    t.push("Bonjour,", "", "Demande de flocage pour " + c.asso.trim() + (n > 1 ? " (" + n + " configurations)" : "") + ".", "");
+    t.push("Contact : " + c.nom.trim() + ", " + c.email.trim() + (c.tel.trim() ? ", " + c.tel.trim() : ""));
+    if (c.date) t.push("Date souhaitée : " + new Date(c.date + "T12:00:00").toLocaleDateString("fr-FR"));
+    t.push("");
+    lignes.forEach(function (l, i) {
+      if (n > 1) t.push("=== Configuration " + (i + 1) + " sur " + n + " ===");
+      configTexte(l.order, resultatLigne(l), compact).forEach(function (x) { t.push(x); });
+      t.push("");
+    });
+    if (compact) t.push("(liste détaillée avec prénoms et numéros dans le fichier de commande joint)", "");
+    if (n > 1) t.push("Total du panier : " + fmtEUR(tot.total) + " TTC pour " + tot.pieces + " pièces.");
     if (c.message.trim()) t.push("", c.message.trim());
     t.push("", "Je joins le fichier de commande (" + fileName() + ")" + ".", "", "Merci,", c.nom.trim());
     return t.join("\n");
   }
 
   function mailHref() {
-    var subject = "Demande de flocage, " + S.contact.asso.trim() + ", " + S.pieces.length + (S.pieces.length > 1 ? " pièces" : " pièce");
+    var tot = totauxPanier();
+    var subject = "Demande de flocage, " + S.contact.asso.trim() + ", " + tot.pieces + (tot.pieces > 1 ? " pièces" : " pièce") + (tot.lignes > 1 ? " en " + tot.lignes + " configurations" : "");
     var body = mailText(false);
     if (encodeURIComponent(body).length > 1700) body = mailText(true);
     return gmailHref(DATA.service.email, subject, body);
@@ -1249,13 +1393,43 @@
     if (t.id === "pv-piece") { S.previewId = t.value; scheduleRefresh(); return; }
     if (t.id === "addmodel") { S.addModel = t.value; return; }
     if (t.name === "tech") { S.technique = t.value; scheduleRefresh(); return; }
-    if (t.dataset.c) { S.contact[t.dataset.c] = t.value; }
+    if (t.dataset.c) { S.contact[t.dataset.c] = t.value; panierSauve(); }
   }
 
   function onChange(e) {
     var t = e.target;
     if (t.matches("[data-vis] [data-k]")) { var c0 = t.closest("[data-emp]"); if (c0) majChampsVisuel(c0.dataset.emp); return; }
     if (t.matches("[data-upload]")) { var card = t.closest("[data-emp]"); handleUpload(card.dataset.emp, t.files && t.files[0]); }
+  }
+
+  function ajouteAuPanier() {
+    var pb = triProblemes(problemesConfig(S)); showIssues(pb);
+    if (pb.bloquants.length) return;
+    var ordre = cloneOrder(orderOf()), i = PANIER.edit != null ? indexLigne(PANIER.edit) : -1, modif = i >= 0;
+    if (modif) PANIER.lignes[i].order = ordre;
+    else PANIER.lignes.push({ id: PANIER.next++, order: ordre });
+    PANIER.edit = null;
+    razConfig(); panierSauve(); majBadgePanier();
+    toast(modif ? "Panier mis à jour." : "Ajouté au panier. Tu peux configurer un autre article.");
+    location.hash = modif ? "#/panier" : "#/produits";
+  }
+  function actionLigne(act, id) {
+    var i = indexLigne(id); if (i < 0) return;
+    if (act === "pndel") {
+      PANIER.lignes.splice(i, 1);
+      if (PANIER.edit === id) { PANIER.edit = null; razConfig(); }
+      panierSauve(); majBadgePanier(); viewPanier(); toast("Configuration retirée du panier.");
+    } else if (act === "pndup") {
+      PANIER.lignes.splice(i + 1, 0, { id: PANIER.next++, order: cloneOrder(PANIER.lignes[i].order) });
+      panierSauve(); majBadgePanier(); viewPanier(); toast("Configuration dupliquée.");
+    } else {
+      if (configEnCours() && !pristine() && PANIER.edit == null) { toast("Une configuration est déjà en cours : ajoute-la au panier avant d'en modifier une autre."); return; }
+      var o = cloneOrder(PANIER.lignes[i].order);
+      S.pieces = o.pieces; S.marquages = o.marquages; S.technique = o.technique; S.previewId = null; S.sel = null; S.addModel = o.pieces[0].packType || o.pieces[0].produitId;
+      S.entryId = o.pieces[0].packType || o.pieces[0].produitId;
+      reprendIds(); PANIER.edit = id;
+      location.hash = "#/configurer";
+    }
   }
 
   function onClick(e) {
@@ -1298,6 +1472,9 @@
       renderEmp(emp1); refresh();
     }
     else if (act === "rmimg") { var card = b.closest("[data-emp]"); S.marquages[card.dataset.emp].image = null; renderEmp(card.dataset.emp); refresh(); }
+    else if (act === "cart") ajouteAuPanier();
+    else if (act === "pncancel") { PANIER.edit = null; razConfig(); panierSauve(); location.hash = "#/panier"; }
+    else if (act === "pnedit" || act === "pndup" || act === "pndel") actionLigne(act, parseInt(b.dataset.lid, 10));
     else if (act === "dl") {
       var pb1 = problems(); showIssues(pb1);
       if (pb1.bloquants.length) return;
@@ -1401,9 +1578,12 @@
     var h = location.hash || "#/";
     if (h.indexOf("#catalogue") === 0) return;
     if (h.indexOf("#/atelier") === 0) { location.replace("atelier.html"); return; }   // anciens liens vers l'atelier
-    var cfg = h.match(/^#\/configurer(?:\/(.+))?$/), prod = h.match(/^#\/produits(?:\/([\w-]+))?$/);
+    var cfg = h.match(/^#\/configurer(?:\/(.+))?$/), prod = h.match(/^#\/produits(?:\/([\w-]+))?$/), pan = h === "#/panier";
     if (cfg) {
       viewConfigurator(cfg[1]);
+      window.scrollTo(0, 0);
+    } else if (pan) {
+      viewPanier();
       window.scrollTo(0, 0);
     } else {
       FILTRE.categorie = prod && prod[1] && categorieValide(prod[1]) ? prod[1] : "";
@@ -1411,7 +1591,7 @@
       if (prod) defileVersCatalogue(); else window.scrollTo(0, 0);
     }
     $$("[data-nav]").forEach(function (el) {
-      var actif = el.dataset.nav === (cfg ? "cfg" : "vitrine");
+      var actif = el.dataset.nav === (pan ? "panier" : cfg ? "cfg" : "vitrine");
       el.classList.toggle("on", actif);
       if (actif) el.setAttribute("aria-current", "page"); else el.removeAttribute("aria-current");
     });
@@ -1420,6 +1600,7 @@
 
   function start() {
     app = $("#app");
+    panierCharge(); majBadgePanier();
     document.addEventListener("input", onInput);
     document.addEventListener("change", onChange);
     document.addEventListener("click", onClick);

@@ -5,6 +5,15 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.5.0 — 19/10/2026
+
+Le site public a un panier. **Version MINEUR : aucun prix ne change ; le fichier de commande gagne une version 3 quand le panier contient plusieurs configurations.**
+
+- **Panier.** Le dernier bouton du configurateur devient « Ajouter au panier » (ou « Mettre à jour le panier » quand on modifie une ligne). La configuration part dans le panier et on revient au catalogue pour en configurer d'autres.
+- **Page « Panier ».** Liste des configurations (articles, couleurs, marquages, prix), avec Modifier, Dupliquer et Retirer ; total du panier ; coordonnées et envoi en une seule fois. Le panier et les coordonnées sont gardés dans le navigateur. L'en-tête affiche le nombre de configurations.
+- **Un seul envoi.** Un seul mail et un seul fichier pour tout le panier. Avec une seule configuration le fichier reste identique à avant (version 2) ; avec plusieurs c'est un fichier version 3 qui contient une commande par configuration.
+- **Atelier.** Il lit les fichiers version 3 : des boutons « Configuration 1, 2… » en haut de la commande passent de l'une à l'autre (achats, planches et fiche de paiement se font configuration par configuration).
+
 ## 6.4.0 — 19/10/2026
 
 Atelier, vue « Paiement et facture » : option pour retirer la marge. **Aucun prix du site public ne change.**
