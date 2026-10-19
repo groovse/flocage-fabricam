@@ -80,8 +80,18 @@
   }
 
   /* ---------- lecture du fichier de commande ---------- */
+  // Fichier à plusieurs configurations (version 3, panier du site) : une commande par entrée, commune au contact
   function parseOrderFile(text) {
     var j = JSON.parse(text);
+    if (j && Array.isArray(j.commandes)) {
+      if (!j.commandes.length) throw new Error("Cette commande ne contient aucune configuration.");
+      var lots = j.commandes.map(function (c) { return parseOne(Object.assign({}, c, { contact: j.contact || c.contact, creeLe: j.creeLe || c.creeLe })); });
+      lots.forEach(function (o, i) { o.lots = lots; o.lot = i; });
+      return lots[0];
+    }
+    return parseOne(j);
+  }
+  function parseOne(j) {
     if (!j || !Array.isArray(j.pieces) || !j.marquages) throw new Error("Ce fichier n'est pas une commande de " + A.DATA.service.nom + ".");
     // un produit renommé garde l'ancien identifiant dans « anciensId » : la commande déjà envoyée se recharge quand même
     var ancien = {};
@@ -196,11 +206,13 @@
   var saveWarned = false;
   function save() {
     if (!st.order) { lset(CLE_CMD, null); return; }
-    var ok = lset(CLE_CMD, JSON.stringify({ order: st.order, contact: st.contact, prixAffiche: st.prixAffiche, creeLe: st.creeLe, fichier: st.fichier }));
+    var ok = lset(CLE_CMD, JSON.stringify({ order: st.order, contact: st.contact, prixAffiche: st.prixAffiche, creeLe: st.creeLe, fichier: st.fichier,
+      lots: st.lots ? st.lots.map(function (o) { return { order: o.order, contact: o.contact, prixAffiche: o.prixAffiche, creeLe: o.creeLe }; }) : null, lot: st.lot }));
     if (!ok && !saveWarned) { saveWarned = true; A.toast("La commande est trop lourde pour être gardée dans ce navigateur : recharge le fichier si tu rafraîchis la page."); }
   }
 
   function setLoaded(obj, fichier, silent) {
+    st.lots = obj.lots || null; st.lot = obj.lot || 0;
     st.order = obj.order; st.contact = obj.contact || {}; st.prixAffiche = obj.prixAffiche || null; st.creeLe = obj.creeLe || null; st.fichier = fichier || "";
     return prepare().then(function () {
       save();
@@ -210,6 +222,7 @@
   }
 
   function closeOrder() {
+    st.lots = null; st.lot = 0;
     st.order = null; st.contact = {}; st.prixAffiche = null; st.creeLe = null; st.fichier = ""; st.imgs = {};
     recompute(); save(); route();
   }
@@ -346,7 +359,11 @@
     $("#at-tools").hidden = false;
     var saved = lget(CLE_CMD);
     if (saved && !st.order) {
-      try { var j = JSON.parse(saved); setLoaded({ order: j.order, contact: j.contact, prixAffiche: j.prixAffiche, creeLe: j.creeLe }, j.fichier, true).then(route); return; }
+      try {
+        var j = JSON.parse(saved), lots = Array.isArray(j.lots) ? j.lots : null;
+        if (lots) lots.forEach(function (o, i) { o.lots = lots; o.lot = i; });
+        setLoaded({ order: j.order, contact: j.contact, prixAffiche: j.prixAffiche, creeLe: j.creeLe, lots: lots, lot: j.lot || 0 }, j.fichier, true).then(route); return;
+      }
       catch (e) { lset(CLE_CMD, null); }
     }
     route();
@@ -401,6 +418,8 @@
       (c.nom ? esc(c.nom) : "") + (c.email ? ", " + lien(A.gmailHref(c.email, "Ta commande de flocage"), esc(c.email)) : "") + (c.tel ? ", " + esc(c.tel) : "") + "</p>" +
       (c.date ? '<p class="a-date">Pour le <b>' + esc(fmtDate(c.date)) + "</b> " + joursRestants(c.date) + "</p>" : "") +
       (c.message ? "<blockquote>" + esc(c.message) + "</blockquote>" : "") + "</div>" +
+      (st.lots ? '<div class="a-lots" role="group" aria-label="Configurations de la demande"><span>Configuration</span>' + st.lots.map(function (o, k) {
+        return '<button type="button" class="chip" data-lot="' + k + '" aria-pressed="' + (k === st.lot) + '">' + (k + 1) + " · " + plur(o.order.pieces.length, "pièce", "pièces") + "</button>"; }).join("") + "</div>" : "") +
       '<div class="a-actions"><label class="filebtn">Charger une autre commande<input id="a-file" type="file" accept=".json,application/json"></label>' +
       '<button type="button" class="btn btn-quiet" id="a-close">Fermer la commande</button></div></section>';
 
@@ -417,6 +436,12 @@
     app.innerHTML = html;
 
     $("#a-file").addEventListener("change", function (e) { readFile(e.target.files && e.target.files[0]); });
+    $$("[data-lot]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var k = Number(b.dataset.lot), o = st.lots[k];
+        setLoaded({ order: o.order, contact: o.contact, prixAffiche: o.prixAffiche, creeLe: o.creeLe, lots: st.lots, lot: k }, st.fichier);
+      });
+    });
     $("#a-close").addEventListener("click", function () { if (window.confirm("Fermer cette commande ? Elle ne sera plus gardée dans ce navigateur. Le fichier reçu par mail reste valable.")) closeOrder(); });
     $$("[data-scroll]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); var t = $(b.dataset.scroll); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }); });
     var cp = $("#a-copy"); if (cp) cp.addEventListener("click", copierAchats);

@@ -334,6 +334,29 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; }
 }
+/* ---------- panier ---------- */
+.nav-badge { display: inline-grid; place-items: center; min-width: 1.4rem; height: 1.4rem; padding: 0 .35rem; margin-left: .1rem; border-radius: 999px; background: var(--heat-strong); color: #fff; font: 700 .8rem/1 var(--body); font-variant-numeric: tabular-nums; }
+.nav-cta:hover .nav-badge, .nav-cta.on .nav-badge { background: #fff; color: var(--ink); }
+.cart-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .9rem; }
+.panier { padding-bottom: 3rem; }
+.pn-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 400px); gap: clamp(1.5rem, 3vw, 3rem); align-items: start; margin-bottom: 1rem; }
+.pn-side { position: sticky; top: calc(var(--header-h) + 1rem); }
+.pn-lignes { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .8rem; }
+.pn-ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .5rem 1.2rem; padding: 1rem 1.1rem; border: 1px solid var(--line, rgba(20, 33, 61, .2)); border-radius: var(--r); background: #fff; }
+.pn-ligne.editing { border-color: var(--heat-strong); box-shadow: inset 0 0 0 1px var(--heat-strong); }
+.pn-ligne h3 { margin: 0 0 .4rem; }
+.pn-tag { font: 600 .8rem/1 var(--body); color: var(--heat-strong); margin-left: .4rem; }
+.pn-res { list-style: none; margin: 0; padding: 0; display: grid; gap: .2rem; }
+.pn-res li { display: flex; align-items: center; gap: .45rem; }
+.pn-sub { margin: .5rem 0 0; color: var(--muted); font-size: .92rem; }
+.pn-prix { text-align: right; display: grid; align-content: start; gap: .1rem; }
+.pn-prix b { font: 800 1.9rem/1 var(--display); font-variant-numeric: tabular-nums; }
+.pn-prix span { color: var(--muted); font-size: .85rem; }
+.pn-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: .5rem; }
+.pn-encours { margin: 0 0 1rem; padding: .7rem 1rem; background: var(--film); border-radius: var(--r); }
+.pn-vide { padding: 2rem 0; max-width: 36rem; display: grid; gap: 1rem; justify-items: start; }
+@media (max-width: 860px) { .pn-grid { grid-template-columns: 1fr; } .pn-side { position: static; order: -1; } }
+
 @media print {
   .top-note, .cat-bar, .filtres, .f-count, .p-zoom, .lightbox, .site-header, .site-footer, .cfg-head, .toast, .skip { display: none !important; }
   body { background: #fff; }
