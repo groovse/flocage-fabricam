@@ -149,6 +149,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .lien-ext { color: var(--ink); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .lien-ext::after { content: " \2197"; text-decoration: none; display: inline-block; }
 .lien-ext:hover { color: var(--heat-strong); }
+.rupt-note { flex-basis: 100%; font-size: .88rem; color: var(--warn-ink); background: var(--warn-bg); border-left: 3px solid var(--warn-bar); padding: .3rem .6rem; border-radius: 2px; }
 .pv-lien { margin: 0; padding: .55rem .8rem .65rem; border-top: 1px solid var(--line); }
 .p-info h4 { margin: 1.2rem 0 .5rem; }
 .prices { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; border: 1px solid var(--ink); border-radius: var(--r); overflow: hidden; }

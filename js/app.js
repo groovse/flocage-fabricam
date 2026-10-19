@@ -93,9 +93,11 @@
     return out;
   }
   function liensHTML(prod, col) {
+    var rupt = col && col.rupture && /^\d{4}-\d{2}-\d{2}$/.test(col.rupture)
+      ? '<span class="rupt-note">Cette couleur était en rupture de stock chez Decathlon le ' + esc(col.rupture.slice(8) + "/" + col.rupture.slice(5, 7)) + " : Fabr'Icam confirme sa disponibilité avant de commander.</span>" : "";
     return liensVendeur(prod, col).map(function (l) {
       return '<a class="lien-ext" href="' + esc(l.href) + '" target="_blank" rel="noopener noreferrer">' + esc(l.texte) + '<span class="sr"> (nouvelle fenêtre)</span></a>';
-    }).join("");
+    }).join("") + rupt;
   }
   // Texte d'information pour un ou plusieurs articles d'un même vendeur (noms : liste de noms à citer en tête, facultatif)
   function vendeurTexte(prod, noms) {

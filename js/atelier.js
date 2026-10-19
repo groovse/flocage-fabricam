@@ -46,6 +46,10 @@
   function ruptureTag(col) {
     return col && col.rupture ? ' <span class="tag rupt" title="Signalée en rupture de stock sur Decathlon le ' + esc(fmtDateCourte(col.rupture)) + '. Vérifie le stock avant de commander.">rupture au ' + esc(fmtDateCourte(col.rupture)) + "</span>" : "";
   }
+  // Nom de la couleur tel que Decathlon l'affiche, quand il diffère du nom du catalogue (« bleu acier » pour notre « Marine »)
+  function nomDecTag(col) {
+    return col && col.nomDec && norm(col.nomDec) !== norm(col.nom) ? ' <span class="muted">(Decathlon : ' + esc(col.nomDec) + ")</span>" : "";
+  }
   function fmtDateCourte(iso) { return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.slice(8) + "/" + iso.slice(5, 7) : String(iso); }
   // Fourchette de prix d'achat d'un article dont les couleurs ne coûtent pas toutes pareil
   function prixAchatTxt(prod) {
@@ -427,7 +431,7 @@
       var liens = liensAchat(a.prod, a.col);
       return '<div class="art">' + photo(a) + "<div><b>" + esc(a.prod.nom) + "</b>" + (a.col.ref ? ' <span class="muted">réf. ' + esc(a.col.ref) + "</span>" : "") + ruptureTag(a.col) + "<br>" + (liens.length ? liens.join(" · ") : '<span class="muted">pas de lien</span>') + "</div></div>";
     };
-    var coul = function (a) { return sw(a.col.hex) + esc(a.col.nom); };
+    var coul = function (a) { return sw(a.col.hex) + esc(a.col.nom) + nomDecTag(a.col); };
     var prixConnus = function (list) { return list.map(function (a) { return a.prod.nom + (a.prod.couleurs.length > 1 && prixAchatTxt(a.prod).indexOf("de ") === 0 ? ", " + a.col.nom.toLowerCase() : "") + " " + fmtEUR(achatDe(a.prod, a.col)); }).filter(function (v, i, arr) { return arr.indexOf(v) === i; }).map(esc).join(", "); };
     if (magasin.length) {
       html += "<h3>En magasin</h3>" + table(["Article", "Couleur", "Taille", { t: "Quantité", num: true }, { t: "Prix", num: true }],
@@ -617,7 +621,7 @@
   function baseMatch(prod) {
     if (baseFiltre.type && (prod.tags || {}).type !== baseFiltre.type) return false;
     if (!baseFiltre.q) return true;
-    var hay = norm([prod.nom, prod.nomCourt, prod.marque, prod.id, prod.matiere, prod.vendeur, typeNom(prod)].concat(prod.couleurs.map(function (c) { return c.nom + " " + (c.ref || ""); })).join(" "));
+    var hay = norm([prod.nom, prod.nomCourt, prod.marque, prod.id, prod.matiere, prod.vendeur, typeNom(prod)].concat(prod.couleurs.map(function (c) { return c.nom + " " + (c.nomDec || "") + " " + (c.ref || ""); })).join(" "));
     return norm(baseFiltre.q).split(/\s+/).every(function (w) { return hay.indexOf(w) >= 0; });
   }
 
@@ -672,7 +676,7 @@
         var href = c.lien || "", mini = photoDe(prod, c);
         var diff = achatDe(prod, c) !== prod.prixAchat ? ' <span class="muted">' + esc(fmtEUR(achatDe(prod, c))) + "</span>" : "";
         return '<li>' + (c.photos && c.photos.length && mini ? '<img class="thumb thumb-c" src="' + esc(photoSrc(mini, 80)) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : "") +
-          sw(c.hex) + (href ? lien(href, esc(c.nom)) : esc(c.nom)) + (c.ref ? ' <span class="muted">réf. ' + esc(c.ref) + "</span>" : "") + diff + ruptureTag(c) + "</li>";
+          sw(c.hex) + (href ? lien(href, esc(c.nom)) : esc(c.nom)) + nomDecTag(c) + (c.ref ? ' <span class="muted">réf. ' + esc(c.ref) + "</span>" : "") + diff + ruptureTag(c) + "</li>";
       }).join("");
       var noColLinks = !prod.couleurs.some(function (c) { return c.lien; });
       return [
