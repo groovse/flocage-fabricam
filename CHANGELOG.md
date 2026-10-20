@@ -5,6 +5,16 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 6.6.0 — 20/10/2026
+
+Atelier : guide des méthodes de fabrication et fiches PDF par matière. **Version MINEUR : aucun prix ne change, le format du fichier de commande ne change pas.**
+
+- **Guide des méthodes.** En haut de l'onglet « Fiche de fabrication » : on choisit un article (ou une matière) et sa couleur, et le guide donne toutes les méthodes applicables (DTF, sublimation, vinyle, gravure laser) avec réglages et précautions. Il tient compte de la couleur (sublimation seulement sur clair), de la composition de l'article et des vêtements apportés.
+- **Fiches PDF.** 15 fiches A4 paysage à imprimer dans `fiches/`, une par matière (textiles, métal, verre), générées par `python3 outils/fiches-pdf.py` depuis `outils/fiches_donnees.py`.
+- **Réglages.** DTF : tableau de pose de DTF Print (coton 150 °C, polyester 135 °C, mélange 145 °C, nylon 135 °C). Sublimation : 190 à 200 °C, 40 à 60 s. Vinyles : tous les types, flex standard en stock. Laser : prudent, par type (CO2, diode, fibre), avec une grille d'essai ; le métal nu n'est gravable qu'avec un laser fibre, à confirmer sur le xTool.
+- **À valider par un essai.** Polaire, microfibre, enduit, acrylique, casquette, imperméable, coton extensible, vinyle métallisé, et toutes les valeurs laser.
+- Nouveau test : `tests/methodes.test.js`.
+
 ## 6.5.0 — 19/10/2026
 
 Le site public a un panier. **Version MINEUR : aucun prix ne change ; le fichier de commande gagne une version 3 quand le panier contient plusieurs configurations.**

@@ -256,9 +256,33 @@
   /* =================================================================== */
   /* FICHE DE FABRICATION                                                */
   /* =================================================================== */
+  // Guide des méthodes (js/methodes.js) : raccourcis vers les pièces de la commande chargée, une ligne par article et couleur
+  function guidePieces() {
+    if (!st.order) return [];
+    var vus = {}, out = [];
+    st.order.pieces.forEach(function (p) {
+      var prod = At.prodOf(p), col = At.colorOf(p), mat = prod.apporte && A.matiereDe ? A.matiereDe(p) : null, k = prod.id + "|" + col.id + "|" + (mat ? mat.id : "");
+      if (vus[k]) return;
+      vus[k] = 1;
+      out.push({ libelle: prod.nomCourt + ", " + col.nom.toLowerCase() + (mat ? " (" + mat.court + ")" : ""), produitId: prod.id, couleurId: col.id, matiere: mat ? mat.id : "" });
+    });
+    return out;
+  }
+  // Pose le guide au-dessus du contenu de la vue : renvoie le html complet et la fonction qui branche le guide une fois la page écrite
+  function avecGuide(app, html) {
+    if (!window.Methodes) return { html: html, lier: function () {} };
+    var opts = { pieces: guidePieces() };
+    return { html: window.Methodes.guideHtml(opts) + html, lier: function () { window.Methodes.lier(app, opts); } };
+  }
+
   At.views.fabrication = function () {
     var app = $("#app");
-    if (!st.order) { app.innerHTML = At.empty("Fiche de fabrication", "Charge un fichier de commande : la fiche à imprimer se remplit toute seule, avec les quantités à acheter, les planches et les pièces à presser."); return; }
+    if (!st.order) {
+      var vide = avecGuide(app, At.empty("Fiche de fabrication", "Charge un fichier de commande : la fiche à imprimer se remplit toute seule, avec les quantités à acheter, les planches et les pièces à presser."));
+      app.innerHTML = vide.html;
+      vide.lier();
+      return;
+    }
     var o = st.order, r = st.res, c = st.contact, pv = r.prix;
     var box = '<span class="box" aria-hidden="true"></span>';
     var today = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
@@ -332,7 +356,9 @@
     if (st.alertes.length) html += '<section class="f-sec"><h3>À vérifier avant de commencer</h3><ul class="notes">' + st.alertes.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul></section>";
 
     html += '<footer class="f-foot"><div>Pressé par<span class="line"></span></div><div>Contrôlé par<span class="line"></span></div><div>Remis le<span class="line"></span></div></footer></article>';
-    app.innerHTML = html;
+    var page = avecGuide(app, html);
+    app.innerHTML = page.html;
+    page.lier();
     $("#f-print").addEventListener("click", function () { window.print(); });
   };
 })();
