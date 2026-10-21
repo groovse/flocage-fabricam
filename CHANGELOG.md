@@ -5,6 +5,16 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 7.1.0 — 21/10/2026
+
+Les packs sont supprimés. **Version MINEUR : le fichier de commande reste compatible.**
+
+- **Plus de packs.** Les 6 packs (basket, fitness femme, jogging femme, football, entraîneur, Hummel) disparaissent du catalogue, du configurateur, de l'atelier et des règles de prix (`parPiecePack`, `margePack`). Tous les articles qui les composaient restent en vente à l'unité.
+- **Prix.** Une ligne par produit, 3 € de marge par pièce, arrondi à l'euro pair : rien d'autre ne change.
+- **Anciennes commandes.** Un fichier ou un panier enregistré avec des pièces de pack s'ouvre toujours ; ses pièces sont chiffrées une par une, au prix unitaire de chaque article.
+- La catégorie « Ensembles » reste pour le survêtement Joma et l'ensemble Hummel.
+- Tests : 147 (90 moteur, 8 fichiers, 24 facturation, 25 méthodes).
+
 ## 7.0.0 — 21/10/2026
 
 Nouvelle règle de prix, vinyle thermocollant et texte à orientation libre. **Version MAJEUR : tous les prix changent (marge et arrondi) ; le fichier de commande reste compatible.**

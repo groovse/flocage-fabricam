@@ -35,7 +35,7 @@
     var pv = st.res && st.res.prix;
     if (!pv) return [ligneVide()];
     return pv.groupes.map(function (g) {
-      return { designation: A.groupName(g), qty: g.n, unit: D.sansMarge ? g.coutMoyen : g.unitaire, cle: g.pack ? "pack:" + (g.packType || "") : "produit:" + g.produitId };
+      return { designation: A.groupName(g), qty: g.n, unit: D.sansMarge ? g.coutMoyen : g.unitaire, cle: "produit:" + g.produitId };
     });
   }
 
@@ -63,7 +63,7 @@
     var pa = st.prixAffiche, n = 0;
     D.lignes.forEach(function (l) {
       if (!l.cle) return;
-      var m = pa.parProduit.filter(function (x) { return (x.packType ? "pack:" + x.packType : "produit:" + x.produitId) === l.cle; })[0];
+      var m = pa.parProduit.filter(function (x) { return "produit:" + x.produitId === l.cle; })[0];
       if (m && m.unitaire != null) { l.unit = m.unitaire; n++; }
     });
     return n;

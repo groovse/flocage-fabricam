@@ -101,8 +101,6 @@
 .sl-n { margin: 0; font-weight: 600; color: var(--muted); }
 .sl-spec h2 { font-size: clamp(1.9rem, 3vw, 2.7rem); margin: .1rem 0 .5rem; }
 .sl-line { margin: 0 0 .4rem; font-size: 1.1rem; }
-.sl-pack { margin: .2rem 0 0; }
-.pk { display: inline-block; font-size: .72rem; font-weight: 700; line-height: 1; padding: .22rem .4rem; border-radius: 3px; background: var(--mat); color: #fff; margin-right: .35rem; vertical-align: .1em; }
 .sl-who { display: flex; align-items: baseline; flex-wrap: wrap; gap: .3rem 1.2rem; margin: .7rem 0 0; font: 800 clamp(2.8rem, 5vw, 4.4rem)/1 var(--display); letter-spacing: .01em; }
 .sl-who .num { color: var(--heat-strong); }
 .sl-tab { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .95rem; }

@@ -154,12 +154,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .tags li.mp { color: var(--warn-ink); background: var(--warn-bg); border-color: var(--warn-bar); font-weight: 600; }
 .note-vendeur { border-left: 3px solid var(--warn-bar); padding-left: .7rem; color: var(--warn-ink); }
 .p-photo { position: relative; background: #f7f9f8; border: 1px solid var(--line); border-radius: var(--r); display: grid; place-items: center; min-height: 230px; overflow: hidden; }
-.p-photo.duo { grid-template-columns: 1fr 1fr; align-items: center; }
 .p-photo .cell { position: relative; display: grid; place-items: center; min-width: 0; }
-.p-photo.duo .cell + .cell { border-left: 1px solid var(--line); }
-.p-photo.duo[data-n="3"] { grid-template-columns: repeat(3, 1fr); }
-.p-photo.duo[data-n="4"] .cell:nth-child(n+3) { border-top: 1px solid var(--line); }
-.p-photo.duo[data-n="4"] .cell:nth-child(3) { border-left: 0; }
 .p-media { min-width: 0; }
 .p-thumbs { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .5rem; }
 .p-thumbs button { width: 46px; height: 46px; padding: 0; border: 1px solid var(--line); border-radius: var(--r); background: #f7f9f8; cursor: pointer; overflow: hidden; }
@@ -366,9 +361,6 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 }
 
 /* ---------- pack, total par produit, divers ---------- */
-.pk { display: inline-block; font-size: .72rem; font-weight: 700; line-height: 1; padding: .22rem .4rem; border-radius: 3px; background: var(--mat); color: #fff; margin-right: .35rem; vertical-align: .1em; }
-.pieces tr.inpack td { background: #f1f7f4; }
-.pieces tr.inpack .idx { box-shadow: inset 3px 0 0 var(--mat); }
 .pieces .col-modele { white-space: nowrap; }
 .toolbar select { max-width: 15rem; }
 .emp-for { margin: .1rem 0 .4rem; }
