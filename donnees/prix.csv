@@ -1,0 +1,14 @@
+﻿reglage;valeur;explication
+marge_piece;3;Marge ajoutée à chaque pièce qui porte au moins un motif (€)
+arrondi_pas;2;Le prix de vente est arrondi au multiple supérieur de ce pas (2 = prix pairs)
+apporte_seuil;5;Vêtements apportés par le client : la remise joue au-delà de ce nombre de pièces
+apporte_facteur;1;Facteur appliqué à la marge des vêtements apportés au-delà du seuil (1 = pas de remise, 0,5 = marge divisée par 2)
+tva;20 %;TVA (20 % ou 0,2). Ajoutée seulement si les prix de planches sont hors taxes
+planches_prix_hors_taxes;non;oui si les prix de planches de planches.csv sont hors taxes, non s'ils sont TTC
+livraison_offerte_des;100;Livraison des planches offerte à partir de ce montant TTC de transferts (€)
+livraison_planches;4,9;Frais de livraison des planches sous ce seuil (€, estimation)
+livraison_vendeur_defaut;4,99;Frais de port d'un vendeur absent de vendeurs.csv (€)
+vinyle_cout_cm2;0,008;Prix du vinyle thermocollant au cm² (€)
+vinyle_chute;1,3;Coefficient de chute de découpe du vinyle (1,3 = 30 % de plus que le motif)
+ecart_motifs;0;Écart de coupe entre deux motifs sur une planche (cm)
+ecart_bloc;0,5;Écart entre visuel, prénom et numéro d'un bloc collé (cm)

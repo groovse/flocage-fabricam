@@ -1,0 +1,432 @@
+﻿article;couleur;nom;hex;prix_achat;visible;rupture;lien;nom_decathlon;ref;clair
+polo-essential;marine;Marine;#243b5e;;oui;;https://www.decathlon.fr/p/polo-de-tennis-manches-courtes-homme-essential-marine/103242/c364m8336032;bleu acier;8336032;non
+polo-essential;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/polo-de-tennis-manches-courtes-homme-essential-blanc/103242/c227m8336028;blanc ultra;8336028;oui
+sweat-molleton;bleu-fonce;Bleu foncé;#2e4663;;oui;;https://www.decathlon.fr/p/sweat-chaud-en-molleton-homme-bleu-fonce/351127/c364m9004710;bleu acier;9004710;non
+sweat-molleton;kaki;Kaki;#6f6b4e;;oui;;https://www.decathlon.fr/p/sweat-chaud-en-molleton-homme-kaki/351127/c109m8961058;vert kaki;8961058;non
+sweat-molleton;gris;Gris;#9ea2a7;;oui;;https://www.decathlon.fr/p/sweat-chaud-en-molleton-homme-gris/351127/c251m8883261;gris;8883261;non
+sweat-molleton;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/sweat-chaud-en-molleton-homme-noir/351127/c378m8873617;noir ultra;8873617;non
+maillot-basket;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-blanc/362058/c227c382m8941322;blanc ultra / noir fumé;8941322;oui
+maillot-basket;marine;Marine;#243b5e;;oui;;https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-navy/362058/c188c227m8935974;indigo nuit. / blanc ultra;8935974;non
+maillot-basket;bleu;Bleu;#2d4f9e;;oui;;https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-bleu/362058/c59c227m8941324;bleu indigo / blanc ultra;8941324;non
+maillot-basket;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-noir/362058/c382c227m8941321;noir fumé / blanc ultra;8941321;non
+maillot-basket;rouge;Rouge;#c4252b;;oui;2026-10-19;https://www.decathlon.fr/p/maillot-de-basketball-sans-manche-homme-femme-tank-100-rouge/362058/c221c227m8941325;rouge piment / blanc ultra;8941325;non
+short-basket;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-blanc/362074/c227c382m8941327;blanc ultra / noir fumé;8941327;oui
+short-basket;marine;Marine;#1f2b4a;;oui;;https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-navy/362074/c188c227m8946323;indigo nuit. / blanc ultra;8946323;non
+short-basket;rouge;Rouge;#c4252b;;oui;;https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-rouge/362074/c221c227m8941329;rouge piment / blanc ultra;8941329;non
+short-basket;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-noir/362074/c382c227m8941326;noir fumé / blanc ultra;8941326;non
+short-basket;bleu;Bleu;#2d4f9e;;oui;;https://www.decathlon.fr/p/short-de-basketball-homme-femme-short-100-bleu/362074/c59c227m8941328;bleu indigo / blanc ultra;8941328;non
+short-tennis;marine;Marine;#243b5e;;oui;;https://www.decathlon.fr/p/short-de-tennis-homme-essential-marine/300096/c364c344m962194;bleu acier / -;962194;non
+short-tennis;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/short-de-tennis-homme-essential-noir/300096/c382m962201;noir fumé;962201;non
+debardeur-fitness;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/debardeur-extensible-fitness-homme-500-blanc/335335/c227c344m8667062;blanc ultra / -;8667062;oui
+debardeur-fitness;noir;Noir;#1c1c1f;7,99;oui;;https://www.decathlon.fr/p/debardeur-extensible-fitness-homme-500-noir/335335/c378c344m8667061;noir ultra / -;8667061;non
+veste-sans-manches;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/mp/veste-sans-manches-homme-noir/45725556-d2a9-4eac-a6e8-d3bd17349f6e/c1c49;noir / vert urbain;;non
+veste-sans-manches;bleu-marine;Bleu marine;#1f2b4a;32,78;oui;;https://www.decathlon.fr/p/mp/veste-sans-manches-homme-bleu-marine/45725556-d2a9-4eac-a6e8-d3bd17349f6e/c145;bleu navy;;non
+veste-sans-manches;rouge;Rouge;#c4252b;32,78;oui;;https://www.decathlon.fr/p/mp/veste-sans-manches-regatta-professional-softshell-rouge-legere-extensible/45725556-d2a9-4eac-a6e8-d3bd17349f6e/c14c245;rouge / rouge coquelicot.;;non
+veste-sans-manches;gris;Gris;#8d9196;32,78;oui;;https://www.decathlon.fr/p/mp/veste-softshell-regatta-professional-gris-sans-manches-extensible/45725556-d2a9-4eac-a6e8-d3bd17349f6e/c230c193c182;gris comète / gris rivière / gris aimant;;non
+chaussettes-football;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/chaussettes-de-football-essentiel-adulte-blanche/141410/c227c210m8350117;blanc ultra / gris fonte;8350117;oui
+chaussettes-football;bleu-indigo;Bleu indigo;#2b3f7a;;oui;;https://www.decathlon.fr/p/chaussettes-de-football-essentiel-adulte-bleue/141410/c59m8526961;bleu indigo;8526961;non
+doudoune-sans-manche;marine;Marine;#243b5e;;oui;;https://www.decathlon.fr/p/mp/doudoune-sans-manche-result-core/9079bea6-3f9c-43ea-8442-340f85dd035b/c5c145;bleu / bleu navy;;non
+doudoune-sans-manche;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/mp/doudoune-sans-manche-result-core/9079bea6-3f9c-43ea-8442-340f85dd035b/c1;noir;;non
+doudoune-sans-manche;rouge;Rouge;#c4252b;25;oui;;https://www.decathlon.fr/p/mp/doudoune-sans-manche-result-core/9079bea6-3f9c-43ea-8442-340f85dd035b/c14;rouge;;non
+doudoune-sans-manche;gris;Gris;#8d9196;25;oui;;https://www.decathlon.fr/p/mp/doudoune-sans-manches-result-core/9079bea6-3f9c-43ea-8442-340f85dd035b/c251;gris;;non
+doudoune-sans-manche;bleu-et-marine;Bleu et marine;#2a4a7a;25;oui;;https://www.decathlon.fr/p/mp/doudoune-sans-manche-result-core/9079bea6-3f9c-43ea-8442-340f85dd035b/c5c195;bleu / bleu marine.;;non
+veste-micropolaire;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/mp/veste-kariban-micropolaire-zippee/62a52383-7af9-4e14-9a8e-0f1d90f24456/c1;noir;;non
+veste-micropolaire;rouge;Rouge;#c4252b;19,41;oui;;https://www.decathlon.fr/p/mp/veste-kariban-micropolaire-zippee/62a52383-7af9-4e14-9a8e-0f1d90f24456/c14;rouge;;non
+veste-micropolaire;gris;Gris;#8d9196;20,1;oui;;https://www.decathlon.fr/p/mp/veste-kariban-micropolaire-zippee/62a52383-7af9-4e14-9a8e-0f1d90f24456/c251c3;gris / gris fonce;;non
+veste-micropolaire;marine;Marine;#243b5e;20,1;oui;;https://www.decathlon.fr/p/mp/veste-kariban-micropolaire-zippee/62a52383-7af9-4e14-9a8e-0f1d90f24456/c5c145;bleu / bleu navy;;non
+veste-micropolaire;bleu-royal;Bleu royal;#2450b0;20,1;oui;;https://www.decathlon.fr/p/mp/veste-kariban-micropolaire-zippee/62a52383-7af9-4e14-9a8e-0f1d90f24456/c5c218c236;bleu / bleu royal / bleu atlantis;;non
+short-2-en-1-fitness;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/short-2-en-1-fitness-femme-noir/337725/c382m8733482;noir fumé;8733482;non
+short-2-en-1-fitness;vert-eucalyptus;Vert eucalyptus;#6f9d86;7,99;oui;;https://www.decathlon.fr/p/short-2-en-1-fitness-femme-vert-fonce/337725/c261m8999018;vert eucalyptus;8999018;non
+short-slim-fitness;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/short-slim-fitness-femme-500-noir/303051/c378m8511787;noir ultra;8511787;non
+short-slim-fitness;gris-fonte;Gris fonte;#5a5d63;3,99;oui;;https://www.decathlon.fr/p/short-slim-fitness-femme-500-gris/303051/c210m8611683;gris fonte;8611683;non
+jogging-femme;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/pantalon-de-jogging-droit-chaud-et-doux-femme-noir/333231/c378m8759127;;8759127;non
+tshirt-coton-femme;marine;Marine;#243b5e;;oui;;https://www.decathlon.fr/p/t-shirt-coton-femme-essentiel-bleu-marine/382034/c364m9021066;;9021066;non
+tshirt-femme-noir;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/t-shirt-manches-courtes-femme-noir/365650/c382m8943116;;8943116;non
+tshirt-fitness-femme;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/t-shirt-fitness-femme-100-blanc-glacier/339063/c227c344m8737886;;8737886;oui
+thermique-femme;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/sous-vetement-thermique-de-ski-chaud-et-confort-femme-bl100-haut-noir/302806/c382m8510031;noir fumé;8510031;non
+thermique-femme;ecru;Écru;#e6dcc8;;oui;;https://www.decathlon.fr/p/sous-vetement-de-ski-thermique-chaud-et-confort-femme-100-blanc-greige/302806/c335m8807917;non teint;8807917;oui
+ensemble-hummel;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c4;blanc;;oui
+ensemble-hummel;noir;Noir;#1c1c1f;21;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c1;noir;;non
+ensemble-hummel;bleu-electrique;Bleu électrique;#1e5bff;22,5;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c121;bleu électrique;;non
+ensemble-hummel;bleu-marine;Bleu marine;#1f2b4a;22,5;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c189;bleu marine;;non
+ensemble-hummel;bleu-atlantis;Bleu atlantis;#2a8bb5;25;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c236;bleu atlantis;;non
+ensemble-hummel;bleu;Bleu;#2d4f9e;22,5;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c5;bleu;;non
+ensemble-hummel;rouge-ecarlate;Rouge écarlate;#d3202f;18,5;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c61;rouge écarlate;;non
+ensemble-hummel;rouge;Rouge;#c4252b;25;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c14;rouge;;non
+ensemble-hummel;jaune-fluo-marine;Jaune fluo et marine;#e8f23a;35,8;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c132c189;jaune acide fluo / bleu marine;;non
+ensemble-hummel;rose-orange;Rose framboise et orange;#d6336c;35,9;oui;;https://www.decathlon.fr/p/mp/fermeture-a-cordon-robe-hmllogo-adulte/d4bcd79a-369a-476f-9174-bb24d8d83781/c85c187;rose framboise / orange mandarine;;non
+survetement-joma;marine;Marine;#243b5e;;oui;;https://www.decathlon.fr/p/mp/survetement-football-homme-joma-eco-championship-bleu-marine/92b4c8d5-a513-4f8f-b7a2-53cfba92be7d/c5c145;bleu / bleu navy;;non
+survetement-joma;marine-orange;Marine et orange;#243b5e;28,5;oui;;https://www.decathlon.fr/p/mp/survetement-football-homme-joma-eco-championship-bleu-marine/92b4c8d5-a513-4f8f-b7a2-53cfba92be7d/c5c145c20;bleu / bleu navy / orange;;non
+survetement-joma;noir-azur-vert;Noir, bleu azur et vert;#1c1c1f;45,75;oui;;https://www.decathlon.fr/p/mp/survetement-football-homme-joma-eco-championship-noir/92b4c8d5-a513-4f8f-b7a2-53cfba92be7d/c1c86c9;noir / bleu azur / vert;;non
+survetement-joma;jaune;Jaune;#f4cf1e;;oui;;https://www.decathlon.fr/p/mp/survetement-football-homme-joma-eco-championship-jaune/92b4c8d5-a513-4f8f-b7a2-53cfba92be7d/c22;jaune;;non
+survetement-joma;bleu-royal;Bleu royal;#2450b0;28,5;oui;;https://www.decathlon.fr/p/mp/survetement-football-homme-joma-eco-championship-bleu-roi/92b4c8d5-a513-4f8f-b7a2-53cfba92be7d/c5c218;bleu / bleu royal;;non
+survetement-joma;noir-rouge;Noir et rouge;#2a1a1c;60,79;oui;;https://www.decathlon.fr/p/mp/survetement-football-homme-joma-eco-championship-noir/92b4c8d5-a513-4f8f-b7a2-53cfba92be7d/c1c14;noir / rouge;;non
+survetement-joma;noir-gris;Noir et gris charbon;#2b2c30;89,77;oui;;https://www.decathlon.fr/p/mp/survetement-football-homme-joma-eco-championship-noir/92b4c8d5-a513-4f8f-b7a2-53cfba92be7d/c1c76;noir / gris charbon;;non
+survetement-joma;vert;Vert;#2f7d4f;28,5;oui;;https://www.decathlon.fr/p/mp/survetement-football-homme-joma-eco-championship-vert/92b4c8d5-a513-4f8f-b7a2-53cfba92be7d/c9;vert;;non
+sweat-viralto-axton;gris-noir;Gris et noir;#3a3c40;;oui;;https://www.decathlon.fr/p/sweat-de-football-1-2-zip-viralto-club-gris-carbone-et-noir/332733/c382c383m8651183;noir fumé / gris graphite;8651183;non
+sweat-viralto-axton;gris-rouge;Gris et rouge;#4b4e53;;oui;;https://www.decathlon.fr/p/sweat-de-football-1-2-zip-viralto-club-gris-anthracite-et-rouge/332733/c383c221m8651181;gris graphite / rouge piment;8651181;non
+sweat-viralto-axton;vert-gris;Vert et gris;#1b7a50;;oui;;https://www.decathlon.fr/p/sweat-de-football-1-2-zip-viralto-club-gris-carbone-et-vert/332733/c122c383m8812425;vert émeraude / gris graphite;8812425;non
+sweat-viralto-axton;marine-bleu;Marine et bleu;#2b3f7a;;oui;;https://www.decathlon.fr/p/sweat-de-football-1-2-zip-viralto-club-marine-et-bleu/332733/c364c59m8651182;bleu acier / bleu indigo;8651182;non
+sweat-football-t100;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/sweat-de-football-t100-noir/310366/c382c383m8560131;noir fumé / gris graphite;8560131;non
+sweat-football-t100;bleu-indigo;Bleu indigo;#2b3f7a;;oui;;https://www.decathlon.fr/p/sweat-de-football-t100-bleu-fonce/310366/c364c59m8560130;bleu acier / bleu indigo;8560130;non
+polo-golf-mw500;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-noir/324952/c378m8732677;noir ultra;8732677;non
+polo-golf-mw500;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-blanc/324952/c227m8732660;blanc ultra;8732660;oui
+polo-golf-mw500;bleu-abysse;Bleu abysse;#1a2f55;;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-bleu-ardoise/324952/c246m8733618;bleu abysse;8733618;non
+polo-golf-mw500;gris;Gris;#b4b7bb;;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-gris-clair/324952/c251m8785692;gris;8785692;oui
+polo-golf-mw500;jaune-limonade;Jaune limonade;#efe27a;9,99;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-jaune/324952/c339m8970035;jaune limonade;8970035;oui
+polo-golf-mw500;bordeaux;Bordeaux;#6e1e2c;;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-rouge-fonce/324952/c361m8732663;rouge bordeaux;8732663;non
+polo-golf-mw500;bleu-cosmos;Bleu cosmos;#2a4a7a;;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-bleu-marine/324952/c43m8732655;bleu cosmos;8732655;non
+polo-golf-mw500;rose-bonbon;Rose bonbon;#f2b4cf;;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-rose/324952/c69m8828073;rose bonbon pastel;8828073;oui
+polo-golf-mw500;rouge-tomate;Rouge tomate;#d6392b;;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-rouge/324952/c77m8842809;rouge tomate;8842809;non
+polo-golf-mw500;vieux-violet;Vieux violet;#8b6a8f;9,99;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-rose-fonce/324952/c272m8927647;vieux violet;8927647;non
+polo-golf-mw500;vert-eucalyptus;Vert eucalyptus;#6f9d86;9,99;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-vert/324952/c261m8732673;vert eucalyptus;8732673;non
+polo-golf-mw500;bleu-turquoise;Bleu turquoise;#1fa3b8;;oui;;https://www.decathlon.fr/p/polo-de-golf-en-coton-polyester-manches-courtes-homme-mw500-turquoise/324952/c41m8970038;bleu turquoise;8970038;non
+thermique-homme;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/sous-vetement-thermique-de-ski-chaud-et-confort-homme-bl100-haut-noir/302821/c382m8510029;noir fumé;8510029;non
+thermique-homme;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/sous-vetement-thermique-de-ski-chaud-et-confort-homme-bl100-haut-blanc/302821/c227c335m8807428;blanc ultra / non teint;8807428;oui
+tshirt-coton-homme;bleu-fonce;Bleu foncé;#2e4663;;oui;;https://www.decathlon.fr/p/t-shirt-de-sport-en-coton-col-rond-homme-bleu-fonce/387248/c364m9033996;;9033996;non
+tshirt-homme-gris;gris;Gris;#b4b7bb;;oui;;https://www.decathlon.fr/p/tee-shirt-manche-courte-homme-gris/360199/c200m9005972;gris perle;9005972;oui
+tshirt-homme-gris;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/tee-shirt-manche-courte-homme-noir/360199/c378m8927828;noir ultra;8927828;non
+jogging-homme;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/jogging-molleton-homme-noir/375529/c1m8974121;noir;8974121;non
+jogging-homme;bleu-acier;Bleu acier;#55708f;;oui;;https://www.decathlon.fr/p/jogging-molleton-homme-bleu-fonce/375529/c364m9001530;bleu acier;9001530;non
+short-football-essentiel;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/short-de-football-adulte-essentiel-noir/108306/c382m8327267;noir fumé;8327267;non
+short-football-essentiel;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/short-de-football-adulte-essentiel-blanc/108306/c227m8327265;blanc ultra;8327265;oui
+short-football-essentiel;bleu-acier;Bleu acier;#55708f;;oui;;https://www.decathlon.fr/p/short-de-football-adulte-essentiel-bleu-marine/108306/c364m8525866;bleu acier;8525866;non
+short-football-essentiel;bleu-indigo;Bleu indigo;#2b3f7a;;oui;;https://www.decathlon.fr/p/short-de-football-adulte-essentiel-bleu/108306/c59m8525867;bleu indigo;8525867;non
+short-football-essentiel;rouge-piment;Rouge piment;#c4252b;;oui;;https://www.decathlon.fr/p/short-de-football-adulte-essentiel-rouge/108306/c221m8407483;rouge piment;8407483;non
+short-football-essentiel;vert-emeraude;Vert émeraude;#1b7a50;;oui;;https://www.decathlon.fr/p/short-de-football-adulte-essentiel-vert/108306/c122m8407485;vert émeraude;8407485;non
+short-football-essentiel;jaune-citron;Jaune citron;#e6dc3c;;oui;;https://www.decathlon.fr/p/short-de-football-adulte-essentiel-jaune/108306/c165m8407484;jaune citron;8407484;non
+short-football-essentiel;orange-flamme;Orange fluo;#ff6a13;;oui;;https://www.decathlon.fr/p/short-de-football-adulte-essentiel-orange/108306/c125m8383071;orange flamme fluo;8383071;non
+chasuble-football;jaune-fluo;Jaune fluo;#dff21b;;oui;;https://www.decathlon.fr/p/chasuble-adulte-jaune-fluo/2856/c132m8526946;jaune acide fluo;8526946;non
+chasuble-football;orange-fluo;Orange fluo;#ff6a13;;oui;;https://www.decathlon.fr/p/chasuble-adulte-orange-fluo/2856/c125m8526947;orange flamme fluo;8526947;non
+chasuble-football;rouge;Rouge;#c4252b;;oui;;https://www.decathlon.fr/p/chasuble-adulte-rouge/2856/c221m8526950;rouge piment;8526950;non
+chasuble-football;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/chasuble-adulte-blanc/2856/c335m8526948;non teint;8526948;oui
+chasuble-football;bleu-acier;Bleu acier;#55708f;;oui;;https://www.decathlon.fr/p/chasuble-adulte-bleu-fonce/2856/c364m8526949;bleu acier;8526949;non
+chasuble-football;turquoise;Turquoise;#14a6a0;;oui;;https://www.decathlon.fr/p/chasuble-adulte-turquoise/2856/c74m8526951;vert caraïbes;8526951;non
+gourde-alu-1l;bleu-canard;Bleu canard;#1f6f7d;;oui;;https://www.decathlon.fr/p/gourde-alu-1l-avec-bouchon-instantane-composee-a-100percent-d-alu-recycle-bleu/330041/c98m8612536;bleu canard;8612536;non
+gourde-alu-1l;vert-eucalyptus;Vert eucalyptus;#6f9d86;;oui;;https://www.decathlon.fr/p/gourde-alu-1l-avec-bouchon-instantane-composee-a-100percent-d-alu-recycle-vert/330041/c261m8914342;vert eucalyptus;8914342;non
+gourde-alu-1l;orange-abricot;Orange abricot;#f2a15f;;oui;;https://www.decathlon.fr/p/gourde-alu-1l-avec-bouchon-instantane-composee-a-100percent-d-alu-recycle-orange/330041/c329m8914343;orange abricot;8914343;non
+gourde-fitness-750;bleu-marine;Bleu marine;#1f2b4a;;oui;;https://www.decathlon.fr/p/gourde-de-fitness-training-aluminium-750-ml-bleu/345015/c195m8796697;bleu marine.;8796697;non
+gourde-fitness-750;vert-sauge;Vert sauge;#9db5a0;;oui;;https://www.decathlon.fr/p/gourde-de-fitness-training-aluminium-750-ml-kaki/345015/c219m8796696;vert sauge;8796696;non
+gourde-verre;transparent;Transparent;#d5e6ea;;oui;;https://www.decathlon.fr/p/gourde-en-verre-avec-ouverture-facile/366458/c1m8946490;;8946490;oui
+casquette-hike-100;bleu;Bleu;#2f5f9c;;oui;;https://www.decathlon.fr/p/casquette-de-randonnee-hike-100-bleu/302963/c43m8969347;;8969347;non
+casquette-chasse-100;orange-fluo;Orange fluo;#f26b1d;;oui;;https://www.decathlon.fr/p/casquette-chasse-orange-100/6457/c379m8070067;;8070067;non
+casquette-tennis-tc100;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/casquette-tennis-artengo-tc-100-noir/330799/c382m8618832;noir fumé;8618832;non
+casquette-tennis-tc100;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/casquette-tennis-artengo-tc-100-blanc/330799/c227m8618831;blanc ultra;8618831;oui
+bonnet-rider-500;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-noir/353824/c382m8940552;noir fumé;8940552;non
+bonnet-rider-500;marron-caramel;Marron caramel;#a8703a;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-camel/353824/c152m8940513;marron caramel;8940513;non
+bonnet-rider-500;blanc-coton;Blanc coton;#f1efe6;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-blanc/353824/c183m8940507;blanc coton;8940507;oui
+bonnet-rider-500;violet-fume;Violet fumé;#5d4a7a;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-lilas/353824/c368m8940511;violet fumé;8940511;non
+bonnet-rider-500;rose-tendre;Rose tendre;#f0b8c8;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-rose/353824/c391m8940512;rose tendre;8940512;oui
+bonnet-rider-500;jaune-vanille;Jaune vanille;#f1e08a;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-jaune/353824/c269m8992939;jaune vanille;8992939;oui
+bonnet-rider-500;blanc-beige-curry;Blanc, beige et curry;#e9e1cc;4,99;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-tricolor/353824/c183c179c290m8946286;blanc coton / beige lin / jaune curry;8946286;oui
+bonnet-rider-500;vert-trefle;Vert trèfle;#2e8b4a;4,99;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-vert/353824/c186m8940510;vert trèfle;8940510;non
+bonnet-rider-500;zebre-rose;Zèbre rose;#e8c4cc;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-zebre-marron-et-rose/353824/c206c116m8993400;rose pale / rose perle;8993400;oui
+bonnet-rider-500;kaki-violet-blanc;Kaki, violet et blanc;#6f6b4e;4,99;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-tricolor/353824/c337c368c183m8946283;khaki mangrove / violet fumé / blanc coton;8946283;non
+bonnet-rider-500;bleu-gris;Bleu et gris;#2a4a7a;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-bleu-noir/353824/c5c76c43m8940509;bleu/gris charbon/bleu cosmos;8940509;non
+bonnet-rider-500;gris-noir;Gris et noir;#4b4e53;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-gris/353824/c71c76c382m8940508;gris carbone/gris charbon/noir fumé;8940508;non
+bonnet-rider-500;zebre-bleu;Zèbre bleu;#8aa2b8;;oui;;https://www.decathlon.fr/p/bonnet-a-revers-adulte-rider-500-zebre-bleu/353824/c7c193m8993402;bleu gris/gris rivière;8993402;non
+bonnet-running-seamless;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/bonnet-running-seamless-adulte-kiprun-noir/157211/c382m8368935;noir fumé;8368935;non
+bonnet-running-seamless;gris-beton;Gris béton;#a3a5a8;;oui;;https://www.decathlon.fr/p/bonnet-running-seamless-adulte-kiprun-gris-chine/157211/c208m8920402;gris béton;8920402;oui
+bonnet-running-seamless;violet-charbon;Violet charbon;#4b3a5c;;oui;;https://www.decathlon.fr/p/bonnet-running-seamless-adulte-kiprun-burgundi-chine/157211/c89m8920404;violet charbon;8920404;non
+tour-de-cou-morf;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-white-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c4;blanc;;oui
+tour-de-cou-morf;rouge;Rouge;#c4252b;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-classic-red-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c14;rouge;;non
+tour-de-cou-morf;jaune-fluo;Jaune fluo;#e8f23a;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-fluorescent-yellow-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c142;jaune neon fluo;;non
+tour-de-cou-morf;fuchsia;Fuchsia;#d02a82;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-fuchsia-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c144;rose fuchsia;;non
+tour-de-cou-morf;bordeaux;Bordeaux;#6e1e2c;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-burgundy-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c15;bordeaux;;non
+tour-de-cou-morf;violet;Violet;#6a3d98;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-purple-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c16;violet;;non
+tour-de-cou-morf;bleu-marine;Bleu marine;#1f2b4a;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-french-navy-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c189;bleu marine;;non
+tour-de-cou-morf;orange;Orange;#f26b1d;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-orange-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c20;orange;;non
+tour-de-cou-morf;vert-foret;Vert forêt;#1f5a3a;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-bottle-green-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c211;vert forêt;;non
+tour-de-cou-morf;bleu-royal;Bleu royal;#2450b0;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-bright-royal-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c218;bleu royal;;non
+tour-de-cou-morf;jaune;Jaune;#f4cf1e;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-yellow-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c22;jaune;;non
+tour-de-cou-morf;gris-graphite;Gris graphite;#4a4d52;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-graphite-grey-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c383;gris graphite;;non
+tour-de-cou-morf;vert-citron;Vert citron;#b9d61e;;oui;;https://www.decathlon.fr/p/mp/tour-de-cou-morf-original-lime-green-one-size/ebff02ea-b01b-47fc-9a11-96387dce6de2/c78;vert citron;;non
+sac-tube-move-100;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/sac-tube-pliable-move-100-30l/11233/c382c382m8200579;noir fumé / noir fumé;8200579;non
+sac-tube-move-100;bleu-marine;Bleu marine;#1f2b4a;;oui;;https://www.decathlon.fr/p/sac-tube-pliable-move-100-30l/11233/c195m8841252;bleu marine.;8841252;non
+sac-sport-club-100;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/sac-de-sport-pliable-a-bandouliere-club-100-20l/324098/c1c344m8917221;noir / -;8917221;non
+sac-sport-club-100;bleu-indigo;Bleu indigo;#2b3f7a;;oui;;https://www.decathlon.fr/p/sac-de-sport-pliable-a-bandouliere-club-100-20l/324098/c59c1c344m8917223;bleu indigo / noir / -;8917223;non
+sac-sport-club-100;violet-amethyste;Violet améthyste;#6b4a8f;;oui;;https://www.decathlon.fr/p/sac-de-sport-pliable-a-bandouliere-club-100-20l/324098/c95c190m8917226;violet améthyste / violet nuit;8917226;non
+sac-a-dos-arpenaz-50;bleu-cosmos;Bleu cosmos;#2a4a7a;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-50-bleu/301684/c43m8502149;bleu cosmos;8502149;non
+sac-a-dos-arpenaz-50;beige-cendre;Beige cendré;#cdbfa8;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-50-beige/301684/c407m8988229;beige cendré;8988229;oui
+sac-a-dos-travel-100;vert-acide;Vert acide;#b5d62b;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-vert/309861/c34m8576231;vert acide.;8576231;non
+sac-a-dos-travel-100;gris-fonte;Gris fonte;#5a5d63;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-gris/309861/c210m8576230;gris fonte;8576230;non
+sac-a-dos-travel-100;bleu-acier-noir;Bleu acier et noir;#3f5878;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-bleu/309861/c364c382m8560404;bleu acier / noir fumé;8560404;non
+sac-a-dos-travel-100;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-noir/309861/c382c382m8560403;noir fumé / noir fumé;8560403;non
+sac-a-dos-travel-100;violet-pourpre-noir;Violet pourpre et noir;#5c2d6e;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-violet/309861/c403c382m8560406;violet pourpre / noir fumé;8560406;non
+sac-a-dos-travel-100;bleu-cendre-noir;Bleu cendré et noir;#7a93ad;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-poche-pliable-10l-travel-100-bleu/309861/c340c382m9039490;bleu cendré / noir fumé;9039490;non
+sac-a-dos-arpenaz-100;bleu-abysse;Bleu abysse;#1a2f55;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-bleu/344147/c246m8775637;bleu abysse;8775637;non
+sac-a-dos-arpenaz-100;violet-cerise;Violet cerise;#8a2b5f;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-violet/344147/c271m8844353;violet cerise;8844353;non
+sac-a-dos-arpenaz-100;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-noir/344147/c382m8775634;noir fumé;8775634;non
+sac-a-dos-arpenaz-100;blanc-vert;Blanc et vert;#e3ebe4;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-fleur/344147/c4c311m8971381;blanc / vert fumé;8971381;oui
+sac-a-dos-arpenaz-100;marron-dore;Marron doré;#b0803a;6,99;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-marron/344147/c356m8971382;marron doré;8971382;non
+sac-a-dos-arpenaz-100;vert-cedre;Vert cèdre;#3b5f4a;;oui;2026-10-19;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-vert/344147/c273c328m8919991;vert cèdre / vert abysse;8919991;non
+sac-a-dos-arpenaz-100;orange-terracotta;Orange terracotta;#c4623a;6,99;oui;2026-10-19;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-10l-arpenaz-100-orange/344147/c275c322m8971384;orange terracotta / marron cannelle;8971384;non
+sac-a-dos-arpenaz-500;gris-carbone;Gris carbone;#4b4e53;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-20l-arpenaz-500-gris/350154/c71m8971389;gris carbone;8971389;non
+sac-a-dos-arpenaz-500;jaune-ocre;Jaune ocre;#d4a017;29,99;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-20l-arpenaz-500-jaune/350154/c247m8971390;jaune ocre;8971390;non
+sac-a-dos-mh100;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/sac-a-dos-de-randonnee-montagne-20l-mh100-noir/331022/c382m8649476;;8649476;non
+bandeau-running-v2;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/bandeau-running-v2-homme-femme-kiprun-noir/352680/c382m8871353;noir fumé;8871353;non
+bandeau-running-v2;blanc;Blanc;#f3f3f0;;oui;;https://www.decathlon.fr/p/bandeau-running-homme-femme-kiprun-blanc/352680/c227m8883077;blanc ultra;8883077;oui
+ceinture-running-basique-2;jaune-vanille;Jaune vanille;#f1e08a;;oui;;https://www.decathlon.fr/p/ceinture-de-running-smartphone-homme-femme-kiprun-basique-2-jaune/334226/c269c255m8945385;jaune vanille / multicolore;8945385;oui
+ceinture-running-basique-2;bleu-brumeux;Bleu brumeux;#9fb7cc;;oui;;https://www.decathlon.fr/p/ceinture-de-running-smartphone-homme-femme-kiprun-basique-2-gris/334226/c143m8913258;bleu brumeux;8913258;oui
+ceinture-running-basique-2;vert-givre;Vert givré;#b7d8c3;;oui;;https://www.decathlon.fr/p/ceinture-de-running-smartphone-unisexe-2-vert/334226/c241m8945014;vert givré;8945014;oui
+ceinture-running-basique-2;bleu-abysse;Bleu abysse;#1a2f55;;oui;;https://www.decathlon.fr/p/ceinture-de-running-smartphone-homme-femme-kiprun-basique-2-bleu-whale/334226/c246m8913259;bleu abysse;8913259;non
+ceinture-running-basique-2;noir;Noir;#1c1c1f;;oui;;https://www.decathlon.fr/p/ceinture-de-running-smartphone-unisexe-2-noir/334226/c382m8648869;noir fumé;8648869;non
+serviette-microfibre-l;noir;Noir;#25262b;;oui;;https://www.decathlon.fr/p/serviette-de-bain-microfibre-taille-l-80-x-130-cm-noir/158325/c382c108m8926376;noir fumé / bleu cobalt;8926376;non
+serviette-microfibre-l;rose;Rose;#d9488a;;oui;;https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-rose/158325/c144c209m8982010;rose fuchsia / bleu de prusse;8982010;non
+serviette-microfibre-l;bleu;Bleu;#1d5b86;;oui;;https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-bleu/158325/c209c125m8584433;bleu de prusse / orange flamme fluo;8584433;non
+serviette-microfibre-l;vert;Vert;#2f6f58;;oui;;https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-vert/158325/c273c192m8543246;vert cèdre / vert aquamarine;8543246;non
+serviette-microfibre-l;violet-lilas;Violet lilas;#a78bd0;;oui;;https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-lila/158325/c338c190m8797394;violet lilas / violet nuit;8797394;non
+serviette-microfibre-l;orange;Orange;#f08a1c;;oui;;https://www.decathlon.fr/p/serviette-de-bain-microfibre-ultra-compacte-taille-l-80-x-130-cm-orange/158325/c353c199m8982011;orange kumquat / orange pastel corail;8982011;non
+ouvre-bouteille-carte;noir-pique;Noir, pique;#1c1c1f;;oui;;https://fr.aliexpress.com/item/1005005906667194.html;Black;;non
+ouvre-bouteille-carte;argent-pique;Argent, pique;#c9ccd1;1,91;oui;;https://fr.aliexpress.com/item/1005005906667194.html;Silver;;oui
+ouvre-bouteille-carte;anthracite-decapsuleur;Anthracite, décapsuleur;#2e3035;2,08;oui;;https://fr.aliexpress.com/item/1005005906667194.html;A;;non
+ouvre-bouteille-carte;argent-trefle;Argent, trèfle;#c9ccd1;2,12;oui;;https://fr.aliexpress.com/item/1005005906667194.html;B;;oui
+ouvre-bouteille-carte;noir-trefle;Noir, trèfle;#1c1c1f;2,12;oui;;https://fr.aliexpress.com/item/1005005906667194.html;C;;non
+porte-cles-decapsuleur;argent;Argent;#c8ccd2;;oui;;https://fr.aliexpress.com/item/1005001781443550.html;SL;;oui
+porte-cles-decapsuleur;noir;Noir;#1c1c1f;1,66;oui;;https://fr.aliexpress.com/item/1005001781443550.html;BK;;non
+porte-cles-decapsuleur;rose-fuchsia;Rose fuchsia;#d6246e;1,64;oui;;https://fr.aliexpress.com/item/1005001781443550.html;rose rouge;;non
+porte-cles-decapsuleur;jaune-dore;Jaune doré;#f0a81c;1,61;oui;;https://fr.aliexpress.com/item/1005001781443550.html;YE;;non
+porte-cles-decapsuleur;violet;Violet;#8a2fc0;1,62;oui;;https://fr.aliexpress.com/item/1005001781443550.html;PR;;non
+porte-cles-decapsuleur;rouge;Rouge;#c4252b;1,59;oui;;https://fr.aliexpress.com/item/1005001781443550.html;RE;;non
+porte-cles-decapsuleur;vert;Vert;#1f9e4a;1,56;oui;;https://fr.aliexpress.com/item/1005001781443550.html;GR;;non
+porte-cles-decapsuleur;bleu;Bleu;#2447c4;1,66;oui;;https://fr.aliexpress.com/item/1005001781443550.html;BL;;non
+apporte-tshirt;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-tshirt;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-tshirt;gris;Gris;#8d9196;;oui;;;;;non
+apporte-tshirt;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-tshirt;marine;Marine;#243b5e;;oui;;;;;non
+apporte-tshirt;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-tshirt;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-tshirt;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-tshirt;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-tshirt;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-tshirt;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-tshirt;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-tshirt;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-tshirt;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-tshirt;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-polo;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-polo;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-polo;gris;Gris;#8d9196;;oui;;;;;non
+apporte-polo;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-polo;marine;Marine;#243b5e;;oui;;;;;non
+apporte-polo;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-polo;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-polo;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-polo;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-polo;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-polo;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-polo;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-polo;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-polo;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-polo;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-sweat;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-sweat;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-sweat;gris;Gris;#8d9196;;oui;;;;;non
+apporte-sweat;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-sweat;marine;Marine;#243b5e;;oui;;;;;non
+apporte-sweat;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-sweat;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-sweat;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-sweat;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-sweat;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-sweat;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-sweat;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-sweat;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-sweat;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-sweat;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-manches-longues;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-manches-longues;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-manches-longues;gris;Gris;#8d9196;;oui;;;;;non
+apporte-manches-longues;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-manches-longues;marine;Marine;#243b5e;;oui;;;;;non
+apporte-manches-longues;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-manches-longues;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-manches-longues;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-manches-longues;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-manches-longues;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-manches-longues;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-manches-longues;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-manches-longues;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-manches-longues;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-manches-longues;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-maillot;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-maillot;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-maillot;gris;Gris;#8d9196;;oui;;;;;non
+apporte-maillot;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-maillot;marine;Marine;#243b5e;;oui;;;;;non
+apporte-maillot;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-maillot;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-maillot;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-maillot;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-maillot;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-maillot;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-maillot;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-maillot;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-maillot;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-maillot;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-veste;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-veste;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-veste;gris;Gris;#8d9196;;oui;;;;;non
+apporte-veste;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-veste;marine;Marine;#243b5e;;oui;;;;;non
+apporte-veste;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-veste;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-veste;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-veste;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-veste;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-veste;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-veste;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-veste;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-veste;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-veste;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-sweat-zip;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-sweat-zip;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-sweat-zip;gris;Gris;#8d9196;;oui;;;;;non
+apporte-sweat-zip;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-sweat-zip;marine;Marine;#243b5e;;oui;;;;;non
+apporte-sweat-zip;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-sweat-zip;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-sweat-zip;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-sweat-zip;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-sweat-zip;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-sweat-zip;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-sweat-zip;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-sweat-zip;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-sweat-zip;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-sweat-zip;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-gilet;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-gilet;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-gilet;gris;Gris;#8d9196;;oui;;;;;non
+apporte-gilet;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-gilet;marine;Marine;#243b5e;;oui;;;;;non
+apporte-gilet;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-gilet;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-gilet;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-gilet;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-gilet;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-gilet;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-gilet;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-gilet;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-gilet;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-gilet;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-short;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-short;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-short;gris;Gris;#8d9196;;oui;;;;;non
+apporte-short;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-short;marine;Marine;#243b5e;;oui;;;;;non
+apporte-short;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-short;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-short;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-short;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-short;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-short;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-short;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-short;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-short;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-short;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-pantalon;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-pantalon;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-pantalon;gris;Gris;#8d9196;;oui;;;;;non
+apporte-pantalon;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-pantalon;marine;Marine;#243b5e;;oui;;;;;non
+apporte-pantalon;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-pantalon;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-pantalon;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-pantalon;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-pantalon;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-pantalon;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-pantalon;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-pantalon;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-pantalon;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-pantalon;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-casquette;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-casquette;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-casquette;gris;Gris;#8d9196;;oui;;;;;non
+apporte-casquette;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-casquette;marine;Marine;#243b5e;;oui;;;;;non
+apporte-casquette;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-casquette;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-casquette;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-casquette;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-casquette;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-casquette;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-casquette;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-casquette;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-casquette;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-casquette;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-bonnet;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-bonnet;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-bonnet;gris;Gris;#8d9196;;oui;;;;;non
+apporte-bonnet;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-bonnet;marine;Marine;#243b5e;;oui;;;;;non
+apporte-bonnet;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-bonnet;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-bonnet;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-bonnet;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-bonnet;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-bonnet;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-bonnet;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-bonnet;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-bonnet;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-bonnet;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-sac-a-dos;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-sac-a-dos;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-sac-a-dos;gris;Gris;#8d9196;;oui;;;;;non
+apporte-sac-a-dos;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-sac-a-dos;marine;Marine;#243b5e;;oui;;;;;non
+apporte-sac-a-dos;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-sac-a-dos;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-sac-a-dos;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-sac-a-dos;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-sac-a-dos;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-sac-a-dos;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-sac-a-dos;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-sac-a-dos;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-sac-a-dos;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-sac-a-dos;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-sac-sport;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-sac-sport;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-sac-sport;gris;Gris;#8d9196;;oui;;;;;non
+apporte-sac-sport;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-sac-sport;marine;Marine;#243b5e;;oui;;;;;non
+apporte-sac-sport;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-sac-sport;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-sac-sport;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-sac-sport;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-sac-sport;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-sac-sport;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-sac-sport;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-sac-sport;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-sac-sport;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-sac-sport;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-gourde;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-gourde;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-gourde;gris;Gris;#8d9196;;oui;;;;;non
+apporte-gourde;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-gourde;marine;Marine;#243b5e;;oui;;;;;non
+apporte-gourde;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-gourde;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-gourde;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-gourde;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-gourde;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-gourde;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-gourde;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-gourde;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-gourde;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-gourde;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non
+apporte-tour-de-cou;blanc;Blanc;#f3f3f0;;oui;;;;;oui
+apporte-tour-de-cou;gris-clair;Gris clair;#cdd1d5;;oui;;;;;oui
+apporte-tour-de-cou;gris;Gris;#8d9196;;oui;;;;;non
+apporte-tour-de-cou;noir;Noir;#1c1c1f;;oui;;;;;non
+apporte-tour-de-cou;marine;Marine;#243b5e;;oui;;;;;non
+apporte-tour-de-cou;bleu;Bleu;#2d4f9e;;oui;;;;;non
+apporte-tour-de-cou;rouge;Rouge;#c4252b;;oui;;;;;non
+apporte-tour-de-cou;bordeaux;Bordeaux;#6e1e2c;;oui;;;;;non
+apporte-tour-de-cou;vert;Vert;#2f7d4f;;oui;;;;;non
+apporte-tour-de-cou;kaki;Kaki;#6f6b4e;;oui;;;;;non
+apporte-tour-de-cou;jaune;Jaune;#f4cf1e;;oui;;;;;non
+apporte-tour-de-cou;orange;Orange;#f26b1d;;oui;;;;;non
+apporte-tour-de-cou;rose;Rose;#e58fb2;;oui;;;;;non
+apporte-tour-de-cou;autre-clair;Autre couleur claire;#e4dfd2;;oui;;;;;oui
+apporte-tour-de-cou;autre-fonce;Autre couleur foncée;#3a3d42;;oui;;;;;non

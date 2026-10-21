@@ -18,7 +18,7 @@
 
   var MDP = "2024";
   var CLE_OK = "fabricam-atelier-ok", CLE_CMD = "fabricam-atelier-commande";
-  var VUES = ["commande", "pieces", "fabrication", "planches", "paiement", "base"];
+  var VUES = ["commande", "pieces", "fabrication", "planches", "paiement", "base", "reglages"];
   var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD", cuisse_g: "CG", cuisse_d: "CD", bas_jambe_g: "BJ", chaussette_g: "SG", chaussette_d: "SD", sac: "SA", gourde: "GO", casquette: "CA", bonnet: "BO", tour_de_cou: "TC", bandeau: "BA", ceinture: "CE", serviette: "SE", ouvre_bouteille: "OB", porte_cles: "PC" };
   var KIND = { image: "v", prenom: "p", numero: "n" };
   var KIND_NOM = { image: "visuel", prenom: "prénom", numero: "numéro" };
@@ -383,7 +383,7 @@
   /* =================================================================== */
   /* NAVIGATION                                                          */
   /* =================================================================== */
-  var LABELS = { commande: "Commande", pieces: "Pièces", fabrication: "Fiche de fabrication", planches: "Planches à envoyer", paiement: "Paiement et facture", base: "Base d'achats" };
+  var LABELS = { commande: "Commande", pieces: "Pièces", fabrication: "Fiche de fabrication", planches: "Planches à envoyer", paiement: "Paiement et facture", base: "Base d'achats", reglages: "Catalogue et prix" };
   function renderNav(v) {
     var n = st.order ? st.order.pieces.length : 0, s = st.sheets.length;
     var count = { pieces: n ? n : "", planches: s ? s : "" };
