@@ -8,7 +8,7 @@
  *   porte son propre prixAchat (voir data.js).
  */
 window.PRIX = {
-  maj: "2026-10-18",
+  maj: "2026-10-21",
 
   // Fournisseur des planches de transfert (affiché dans l'espace atelier)
   fournisseur: {
@@ -50,33 +50,30 @@ window.PRIX = {
     }
   },
 
-  // Règle de prix de vente : chaque produit a son propre prix unitaire, égal au coût moyen de ses pièces
-  // (vêtement + part des planches + part de la livraison) augmenté de la marge moyenne, arrondi au supérieur de `pas`.
+  // Règle de prix de vente (version 7.0.0) : chaque produit a son propre prix unitaire, égal au coût moyen de ses pièces
+  // (vêtement + part des planches + part de la livraison + vinyle) augmenté de la marge, arrondi à l'euro PAIR supérieur.
   //
-  // Une pièce vendue seule : 1 € de marge par motif à presser, 2 € au maximum par pièce.
-  //   parMotif    : 1.00 = chaque élément posé sur la pièce compte (un visuel, un prénom, un numéro : trois motifs = 3 €, plafonnés à 2 €).
-  //                 Une pièce sans aucun motif ne porte aucune marge.
-  //   maxParPiece : 2.00 = la marge d'une pièce ne dépasse jamais 2 €. Mets null pour supprimer le plafond.
+  // Une pièce vendue seule : `margePiece` (3 €) de marge, quel que soit son nombre de motifs. Une pièce sans motif ne porte aucune marge.
+  //   Le prix est ensuite arrondi au multiple de `pas` supérieur (2 € : 20, 22, 24...) : la marge réelle est donc toujours d'au moins 3 €.
   //
-  // Une pièce vendue dans un pack : 1 € de marge par pièce, quel que soit son nombre de motifs.
-  //   parPiecePack : 1.00 = un pack de trois pièces (sans compter les chaussettes) porte donc 3 € de marge.
+  // Une pièce vendue dans un pack : la moitié de la marge, `parPiecePack` (1,50 €), quel que soit son nombre de motifs.
   //   Les chaussettes ne portent aucune marge dans un pack : leur fiche produit (data.js) déclare `margePack: 0`.
   //   Un produit peut déclarer sa propre marge de pack avec `margePack` ; sans cette ligne, c'est parPiecePack.
   //
-  // Vêtements apportés par le client (« Ton vêtement ») : au-delà de `seuil` pièces apportées dans la commande (tous articles apportés
-  // confondus, les vêtements Decathlon ne comptent pas), la marge de TOUTES les pièces apportées est multipliée par `facteur`.
-  //   seuil : 5 = la règle joue à partir de 6 pièces apportées ; à 5 pièces ou moins, rien ne change.
-  //   facteur : 0.5 = la marge est divisée par 2 : 0,50 € par motif et 1 € au plus par pièce (parMotif et maxParPiece × facteur).
-  //   Mets facteur à 1 pour supprimer la règle. Elle ne touche ni les articles Decathlon ni les packs.
-  //
-  //   pas : 0.01 = on arrondit au centime supérieur (mets 0.5 pour arrondir de 50 centimes en 50 centimes)
+  // Vêtements apportés par le client (« Ton vêtement ») : même marge que les autres pièces. La remise au-delà de 5 pièces apportées
+  // (6.0.0) est supprimée : `facteur: 1`. Remets 0.5 pour la rétablir (marge de ces pièces divisée par 2 au-delà de `seuil` pièces).
   regles: {
-    parMotif: 1.00,
-    maxParPiece: 2.00,
-    parPiecePack: 1.00,
-    apporte: { seuil: 5, facteur: 0.5 },
-    pas: 0.01
+    margePiece: 3.00,
+    parPiecePack: 1.50,
+    apporte: { seuil: 5, facteur: 1 },
+    pas: 2
   },
+
+  // Vinyle thermocollant (flex) découpé à l'atelier : ni planche DTF ni livraison de transferts, seulement la matière.
+  // coutCm2 : prix du flex au cm² (30 cm de large). Relevé le 21/10/2026 chez des revendeurs français : flex standard
+  // 0,002 à 0,005 €/cm² ; stretch, flock, métallisé, pailleté 0,003 à 0,008 €/cm². On prend la fourchette haute pour tous les types.
+  // chute : coefficient pour les chutes de découpe (1,3 = 30 % de plus que la surface du motif).
+  vinyle: { coutCm2: 0.008, chute: 1.3 },
 
   // Placement des motifs sur les planches.
   // ecart = marge de coupe entre deux motifs, en cm. À 0, quatre A6 tiennent exactement sur une A4
@@ -133,6 +130,7 @@ window.PRIX = {
     dtf_polyester: "DTF sur polyester ou nylon : 135 °C pendant 10 s, pression moyenne (DTF Print). Sportswear fin (lycra, softshell) : descends à 120-125 °C. Teinture sensible (marine, noir, rouge) : fais d'abord un essai sur une chute ou un polo d'essai.",
     dtf_autre: "DTF sur coton : 150 °C pendant 10 à 15 s ; mélange coton et polyester : 145 °C pendant 12 s. Mets une feuille de protection sur le transfert.",
     sublimation: "Sublimation : polyester blanc ou très clair uniquement (DTF Print admet dès 65 % de polyester, ce site exige 90 % pour un rendu net), visuel sans blanc. 190-200 °C pendant 40 à 60 s, pression moyenne à forte, face imprimée contre le vêtement. Envoie le fichier à l'endroit.",
+    vinyle: "Vinyle thermocollant (flex) découpé au plotter ou au laser : miroir (à l'envers) avant la découpe, face collante vers le vêtement, réglages selon le type de vinyle (voir la fiche de la matière). Sans planche DTF : seul le coût du vinyle est compté.",
     gravure: "Gravure laser ou vinyle thermocollant (ouvre-bouteilles en métal), sans planche DTF : un visuel simple, en une couleur, en vecteur (SVG) de préférence. Fais un essai sur une pièce avant la série : réglage du laser (puissance, vitesse), ou vinyle découpé au plotter et pressé à la température indiquée par son fabricant. Le métal chauffe : utilise une pince et laisse refroidir avant de manipuler."
   }
 };

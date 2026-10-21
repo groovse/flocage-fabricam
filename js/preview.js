@@ -429,8 +429,10 @@
       return '<g' + tf + '><rect x="' + x + '" y="' + top + '" width="' + w0 + '" height="' + h0 + '" fill="rgba(255,255,255,.18)" stroke="#e8451e" stroke-width=".25" stroke-dasharray=".9 .7"/>' +
         '<text x="' + cx + '" y="' + (cy + 0.55) + '" text-anchor="middle" font-size="' + Math.max(0.5, Math.min(1.7, w0 / 5)) + '" fill="#e8451e" font-family="Hanken Grotesk, sans-serif" font-weight="600">ton visuel</text></g>';
     }
-    return '<text x="' + ux + '" y="' + (y + uy + el.asc) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
-      '" fill="' + esc(el.couleur) + '" style="paint-order:stroke;stroke:rgba(0,0,0,.28);stroke-width:.09px">' + esc(el.text) + '</text>';
+    // texte tourné : sa case (w × h) est le rectangle qui l'englobe ; le texte à l'endroit (w0 × h0) est tourné autour du centre de cette case
+    var h0 = el.h0 != null ? el.h0 : el.h, cyT = y + uy + el.h / 2, rotT = el.rot || 0;
+    return '<text x="' + ux + '" y="' + (cyT - h0 / 2 + el.asc) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
+      '" fill="' + esc(el.couleur) + '"' + (rotT ? ' transform="rotate(' + rotT + ' ' + ux + ' ' + cyT + ')"' : '') + ' style="paint-order:stroke;stroke:rgba(0,0,0,.28);stroke-width:.09px">' + esc(el.text) + '</text>';
   }
 
   // Poignées du visuel choisi, dans le repère de la zone : un coin pour l'agrandir (data-pv-resize), un bouton rond pour le tourner d'un quart de tour

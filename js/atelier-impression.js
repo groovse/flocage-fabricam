@@ -33,8 +33,10 @@
             out += '<image href="' + esc(img.dataUrl) + '" x="' + (cx - w0 / 2) + '" y="' + (cy - h0 / 2) + '" width="' + w0 + '" height="' + h0 + '" preserveAspectRatio="xMidYMid meet"' + (el.rot ? ' transform="rotate(' + el.rot + " " + cx + " " + cy + ')"' : "") + "/>";
           }
         } else {
-          out += '<text x="' + (c.x + el.w / 2) + '" y="' + (c.y + el.asc) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
-            '" fill="' + esc(el.couleur) + '" style="paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.08px">' + esc(el.text) + "</text>";
+          // texte tourné : la case (w × h) englobe le texte, qui est tourné autour de son centre
+          var h0 = el.h0 != null ? el.h0 : el.h, cxT = c.x + el.w / 2, cyT = c.y + el.h / 2;
+          out += '<text x="' + cxT + '" y="' + (cyT - h0 / 2 + el.asc) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
+            '" fill="' + esc(el.couleur) + '"' + (el.rot ? ' transform="rotate(' + el.rot + " " + cxT + " " + cyT + ')"' : "") + ' style="paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.08px">' + esc(el.text) + "</text>";
         }
       });
       out += '<text x=".4" y="1.5" font-size="1.4" fill="#14213d" font-family="Hanken Grotesk, sans-serif" font-weight="700" opacity=".8">' + esc(At.codeMotif(mo)) + "</text></g>";
@@ -84,10 +86,14 @@
         } else {
           ctx.font = (el.fontCm * ppcm) + 'px "' + el.police + '", Impact, sans-serif';
           ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-          var tx = (c.x + el.w / 2) * ppcm, ty = (c.y + el.asc) * ppcm;
+          var h0 = el.h0 != null ? el.h0 : el.h;
+          ctx.save(); ctx.translate((c.x + el.w / 2) * ppcm, (c.y + el.h / 2) * ppcm);
+          if (el.rot) ctx.rotate(el.rot * Math.PI / 180);
+          var tx = 0, ty = (-h0 / 2 + el.asc) * ppcm;
           if (annot) { ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 0.08 * ppcm; ctx.strokeText(el.text, tx, ty); }
           ctx.fillStyle = el.couleur;
           ctx.fillText(el.text, tx, ty);
+          ctx.restore();
         }
       });
       if (annot) {
@@ -346,7 +352,7 @@
         var col = At.colorOf(p), mine = r.motifs.filter(function (m) { return m.pieceId === p.id; }), emps = {}, codes = {};
         mine.forEach(function (m) { (emps[m.emp] = emps[m.emp] || []).push(m.kind === "bloc" ? "bloc " + m.el.items.map(function (i) { return At.KIND[i.kind]; }).join("+") : At.KIND[m.kind]); var sh = st.motifSheet[m.id]; if (sh) codes[sh.code] = 1; });
         var txt = A.EMP_ORDER.filter(function (e) { return emps[e]; }).map(function (e) { return At.ABBR[e] + " " + emps[e].join("+"); }).join(", ");
-        var tc = At.presseDe(p).tech, t = tc === "sublimation" ? ' <span class="tag">sublimation</span>' : tc === "gravure" ? ' <span class="tag">gravure / vinyle</span>' : "", pk = p.pack ? ' <span class="tag">pack</span>' : "";
+        var tc = At.presseDe(p).tech, t = tc === "sublimation" ? ' <span class="tag">sublimation</span>' : tc === "gravure" ? ' <span class="tag">gravure / vinyle</span>' : tc === "vinyle" ? ' <span class="tag">vinyle</span>' : "", pk = p.pack ? ' <span class="tag">pack</span>' : "";
         return [box, i + 1, esc(At.prodOf(p).nomCourt) + ", " + esc(col.nom.toLowerCase()) + pk + t, "<b>" + esc(p.taille) + "</b>", esc(p.prenom || ""), esc(p.numero || ""), esc(txt || "rien"), esc(Object.keys(codes).join(", ")), box];
       }), "f-tbl f-pieces") + "</section>";
 

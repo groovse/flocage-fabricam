@@ -5,6 +5,19 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 7.0.0 — 21/10/2026
+
+Nouvelle règle de prix, vinyle thermocollant et texte à orientation libre. **Version MAJEUR : tous les prix changent (marge et arrondi) ; le fichier de commande reste compatible.**
+
+- **Marge de 3 € par pièce, prix arrondi à l'euro pair.** Le prix d'un produit est le coût moyen (vêtement, planches, livraison, vinyle) + 3 €, arrondi à l'euro pair supérieur (20 €, 22 €, 24 €...). La marge réelle est donc toujours d'au moins 3 € par pièce. Avant : 1 € par motif, 2 € au plus, arrondi au centime. Exemple : le polo avec un visuel A6 passe de 19,39 € à 22 €.
+- **Packs : la moitié de la marge.** 1,50 € par pièce (au lieu de 1 €), 0 € pour les chaussettes. Le pack basket passe de 29,37 € à 32 €.
+- **Vêtements apportés : plus de remise.** La marge ne baisse plus au-delà de 5 pièces apportées (`regles.apporte.facteur` à 1, réglable).
+- **Vinyle thermocollant.** Le flex est découpé à l'atelier : pas de planche DTF, pas de livraison de transferts, seulement la matière (`vinyle.coutCm2` à 0,008 €, fourchette haute des prix relevés chez des revendeurs français, + 30 % de chutes). 22 articles où le DTF n'est pas idéal d'après les fiches de méthodes (chaussettes, polyester extensible, polaire, microfibre, bonnets, casquettes, sacs enduits) sont en vinyle par défaut ; le DTF reste possible.
+- **Atelier : technique de pose par pièce.** Dans l'onglet « Pièces », un choix Automatique / DTF / Vinyle par pièce ; les planches et le coût de revient se recalculent. Le coût de revient montre une ligne « Vinyle thermocollant » et le texte de presse du vinyle.
+- **Texte et chiffre : taille, position et orientation libres.** Dans le configurateur, le prénom et le numéro ont une hauteur en cm, une orientation libre (angle de -180° à 180°, boutons quart de tour) et un décalage horizontal et vertical en cm. La case réservée sur la planche est le rectangle qui englobe le texte tourné. L'aperçu, les planches (SVG et PNG), la fiche et le mail le montrent. Un texte tourné ou déplacé sort du bloc collé. Un ancien fichier de commande, sans ces champs, ne change pas.
+- **À vérifier.** Les prix du vinyle viennent de sites de revendeurs (Amazon n'était pas accessible) : remplace `vinyle.coutCm2` par ton vrai prix quand tu l'auras.
+- Tests : 155 (98 moteur, 8 fichiers, 24 facturation, 25 méthodes).
+
 ## 6.6.0 — 20/10/2026
 
 Atelier : guide des méthodes de fabrication et fiches PDF par matière. **Version MINEUR : aucun prix ne change, le format du fichier de commande ne change pas.**

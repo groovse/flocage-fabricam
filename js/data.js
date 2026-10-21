@@ -6,6 +6,7 @@
  * ouvre-bouteille, porte-cles), tags (genre, style, type : haut, bas, ensemble ou accessoire, et categories : une ou plusieurs de la liste « categories » plus bas), vendeur (seulement pour un article vendu en ligne :
  * place de marché Decathlon ou AliExpress, voir prix.js), sublimation: false (article qui ne se sublime pas),
  * technique: "gravure" (article gravé au laser ou marqué en vinyle thermocollant : ni planche DTF ni coût de planche, voir engine.js),
+ * techniqueDefaut: "vinyle" (le DTF n'est pas idéal sur cette matière : le flex thermocollant, découpé à l'atelier, est la technique de base ; voir engine.js, pieceTechno),
  * margePack: 0 (pièce sans marge dans un pack, comme les chaussettes, voir prix.js), vitrine (emplacements du prix affiché) et zones.
  * Un article « apporte: true » est un vêtement que le client apporte (voir plus bas, « Ton vêtement ») : prixAchat 0, couleurs = COULEURS_APPORTE.
  * Chaque couleur porte : nomDec (son nom sur Decathlon), ref (référence Decathlon), lien (la page de cette couleur), photos (sa série de
@@ -390,6 +391,7 @@ window.DATA = {
     },
     {
       id: "veste-sans-manches",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Veste sans manches",
       nom: "Veste sans manches Regatta",
       marque: "Regatta",
@@ -425,6 +427,7 @@ window.DATA = {
     },
     {
       id: "chaussettes-football",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Chaussettes football",
       nom: "Chaussettes de football Essential",
       marque: "Kipsta, Decathlon",
@@ -507,6 +510,7 @@ window.DATA = {
     },
     {
       id: "veste-micropolaire",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Veste micropolaire",
       nom: "Veste micropolaire zippée Kariban",
       marque: "Kariban",
@@ -545,6 +549,7 @@ window.DATA = {
     },
     {
       id: "short-2-en-1-fitness",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Short 2 en 1 fitness",
       nom: "Short 2 en 1 fitness femme",
       marque: "Domyos, Decathlon",
@@ -686,6 +691,7 @@ window.DATA = {
     },
     {
       id: "tshirt-femme-noir",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "T-shirt femme",
       nom: "T-shirt à manches courtes femme",
       marque: "Decathlon",
@@ -888,6 +894,7 @@ window.DATA = {
     },
     {
       id: "sweat-viralto-axton",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Sweat 1/2 zip",
       nom: "Sweat de football 1/2 zip Viralto Axton",
       marque: "Kipsta, Decathlon",
@@ -1402,6 +1409,7 @@ window.DATA = {
     },
     {
       id: "casquette-hike-100",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Casquette randonnée",
       nom: "Casquette de randonnée HIKE 100",
       marque: "Forclaz, Decathlon",
@@ -1437,6 +1445,7 @@ window.DATA = {
     },
     {
       id: "casquette-chasse-100",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Casquette chasse orange",
       nom: "Casquette de chasse orange 100",
       marque: "Solognac, Decathlon",
@@ -1478,6 +1487,7 @@ window.DATA = {
     },
     {
       id: "casquette-tennis-tc100",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Casquette tennis",
       nom: "Casquette de tennis TC 100",
       marque: "Artengo, Decathlon",
@@ -1513,6 +1523,7 @@ window.DATA = {
     },
     {
       id: "bonnet-rider-500",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Bonnet à revers",
       nom: "Bonnet à revers adulte RIDER 500",
       marque: "Wedze, Decathlon",
@@ -1581,6 +1592,7 @@ window.DATA = {
     },
     {
       id: "bonnet-running-seamless",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Bonnet running",
       nom: "Bonnet de running seamless adulte",
       marque: "Kiprun, Decathlon",
@@ -1619,6 +1631,7 @@ window.DATA = {
     },
     {
       id: "tour-de-cou-morf",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Tour de cou Morf",
       nom: "Tour de cou Morf Original",
       marque: "Beechfield (Morf)",
@@ -1662,6 +1675,7 @@ window.DATA = {
     },
     {
       id: "sac-tube-move-100",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Sac tube 30 L",
       nom: "Sac tube pliable Move 100 30 L",
       marque: "Decathlon",
@@ -1699,6 +1713,7 @@ window.DATA = {
     },
     {
       id: "sac-sport-club-100",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Sac de sport 20 L",
       nom: "Sac de sport pliable à bandoulière Club 100 20 L",
       marque: "Decathlon",
@@ -1739,6 +1754,7 @@ window.DATA = {
     },
     {
       id: "sac-a-dos-arpenaz-50",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Sac à dos 10 L Arpenaz 50",
       nom: "Sac à dos de randonnée 10 L Arpenaz 50",
       marque: "Quechua, Decathlon",
@@ -1779,6 +1795,7 @@ window.DATA = {
     },
     {
       id: "sac-a-dos-travel-100",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Sac à dos pliable 10 L",
       nom: "Sac à dos de poche pliable 10 L Travel 100",
       marque: "Forclaz, Decathlon",
@@ -1827,6 +1844,7 @@ window.DATA = {
     },
     {
       id: "sac-a-dos-arpenaz-100",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Sac à dos 10 L Arpenaz 100",
       nom: "Sac à dos de randonnée 10 L Arpenaz 100",
       marque: "Quechua, Decathlon",
@@ -1884,6 +1902,7 @@ window.DATA = {
     },
     {
       id: "sac-a-dos-arpenaz-500",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Sac à dos 20 L Arpenaz 500",
       nom: "Sac à dos de randonnée 20 L Arpenaz 500",
       marque: "Quechua, Decathlon",
@@ -1927,6 +1946,7 @@ window.DATA = {
     },
     {
       id: "sac-a-dos-mh100",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Sac à dos 20 L MH100",
       nom: "Sac à dos de randonnée montagne 20 L MH100",
       marque: "Quechua, Decathlon",
@@ -1972,6 +1992,7 @@ window.DATA = {
     },
     {
       id: "bandeau-running-v2",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Bandeau running",
       nom: "Bandeau de running V2",
       marque: "Kiprun, Decathlon",
@@ -2009,6 +2030,7 @@ window.DATA = {
     },
     {
       id: "ceinture-running-basique-2",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Ceinture running",
       nom: "Ceinture de running smartphone Basique 2",
       marque: "Kiprun, Decathlon",
@@ -2061,6 +2083,7 @@ window.DATA = {
 
     {
       id: "serviette-microfibre-l",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
       nomCourt: "Serviette",
       nom: "Serviette de bain microfibre 80 × 130 cm",
       marque: "Nabaiji, Decathlon",

@@ -53,6 +53,12 @@ test("la fiche correspond à la composition de l'article", () => {
     if (["aluminium", "inox", "verre"].includes(f)) assert.strictEqual(M.matiere(f).groupe, "rigide");
   });
 });
+test("le DTF « avec précautions » dans la fiche = vinyle par défaut dans le catalogue (et inversement)", () => {
+  DATA.produits.filter(p => !p.apporte && p.technique !== "gravure").forEach(p => {
+    const dtf = M.methodesPour(D.produits[p.id], "fonce", p).find(x => x.id === "dtf").statut;
+    assert.strictEqual(p.techniqueDefaut === "vinyle", dtf === "prudence", p.id + " : DTF " + dtf + ", technique par défaut " + p.techniqueDefaut);
+  });
+});
 test("les matières apportées proposées existent", () => {
   Object.keys(D.matiereApportee).forEach(k => D.matiereApportee[k].forEach(id => assert.ok(M.matiere(id), id)));
   DATA.matieres.forEach(m => assert.ok(D.matiereApportee[m.id], "matière apportée sans fiche : " + m.id));
