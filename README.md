@@ -113,6 +113,29 @@ Frais de port d'un vendeur de la place de marché : un montant par vendeur et pa
 
 Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référence (poitrine, ou une cuisse pour les shorts), pour 1, 5, 10, 20 et 50 pièces. Pour un pack : le visuel A6 sur chaque pièce de référence, prix par pack. Pour les chaussettes (prénom seul), le prix affiché compte un prénom de 3 cm de haut : tous les packs en contiennent une paire.
 
+## Catalogue et prix dans Excel (version 7.2.0)
+
+Les prix, les marges et le catalogue se règlent dans 5 fichiers CSV du dossier `donnees`, sans toucher au code :
+
+| Fichier | Contenu |
+|---|---|
+| `articles.csv` | un article par ligne : nom, prix d'achat, marge propre, prix fixe, tailles, catégories, visible (oui/non), technique par défaut, sublimation, lien, `copie_de` (pour créer un article) |
+| `couleurs.csv` | une couleur par ligne : prix d'achat de la couleur, rupture, couleur masquée ou ajoutée |
+| `prix.csv` | marge par pièce, pas d'arrondi, vêtements apportés, TVA, livraison, vinyle, écarts de planche |
+| `planches.csv` | prix TTC et taille de chaque planche DTF et sublimation |
+| `vendeurs.csv` | frais de port, délai et lien de chaque vendeur de la place de marché |
+
+**Modifier.** L'onglet « Catalogue et prix » de l'atelier télécharge les fichiers à jour (un par un ou en zip). On les ouvre dans Excel, on les enregistre au format « CSV UTF-8 (délimité par des points-virgules) » sous le même nom, puis on les dépose dans le dossier `donnees` de GitHub (« Add file », « Upload files »). Une à deux minutes plus tard, le site et l'atelier utilisent les nouvelles valeurs.
+
+**Règles.**
+- Un fichier absent ou illisible est ignoré : le site garde les valeurs écrites dans `js/prix.js` et `js/data.js`. Une ligne invalide est ignorée et expliquée dans l'onglet de l'atelier ; le reste est pris en compte.
+- Les CSV remplacent ces valeurs, ils ne les effacent pas : un article absent du CSV garde ses valeurs. Pour retirer un article de la vitrine, mettre `non` dans `visible` : il n'est plus proposé, mais les anciens fichiers de commande qui le contiennent s'ouvrent et se chiffrent toujours.
+- `marge` et `prix_fixe` (articles) : vide = la règle générale. `prix_fixe` impose le prix de vente unitaire de l'article, quel que soit le coût. `prix_achat` vide dans `couleurs.csv` = le prix de l'article.
+- Nouvel article : une ligne avec un nouvel `id`, un `nom`, un `prix_achat` et `copie_de` (l'`id` d'un article proche, dont il reprend le dessin, les emplacements, les photos et les couleurs). Ses couleurs s'adaptent dans `couleurs.csv` (une couleur ajoutée n'a pas de photo).
+- Décimales avec une virgule ou un point, séparateur point-virgule, virgule ou tabulation (détecté tout seul). TVA : `20 %` ou `0,2`.
+- Après un changement de `js/prix.js` ou `js/data.js`, `node outils/generer-csv.js` remet les CSV à jour (il écrase `donnees`).
+- Technique : le site lit les CSV avec une requête synchrone au chargement (`js/reglages.js`), ce qui fait apparaître un avertissement de navigateur dans la console sans conséquence. Hors ligne, ou si la page est ouverte directement depuis un fichier, les valeurs intégrées servent.
+
 ## Choses à vérifier
 
 - **Fournisseur des planches** : DTF Print (Port-de-Bouc), prix relevés TTC le 18/10/2026 sur dtfprint.fr : DTF A4 5,50 €, A3 8,00 €, A2 14,00 €, mètre 18,00 € ; sublimation A4 3,90 €, A3 7,50 €, A2 13,00 €. Avant, le site utilisait Sprint Transfert (plus cher et sans remise relevée). Un fournisseur qui affiche des prix HT se règle avec `prixPlanchesHT: true` dans `js/prix.js`.
@@ -145,6 +168,7 @@ Prix de la vitrine = un vêtement avec un visuel A6 à l'emplacement de référe
 
 | Je veux… | Je modifie |
 |---|---|
+| changer un prix de planche, la TVA, la livraison, le vinyle, la marge, le pas d'arrondi, un prix d'achat, un prix fixe, masquer ou ajouter un article | les fichiers Excel du dossier `donnees` (voir « Catalogue et prix dans Excel » plus bas) |
 | changer un prix de planche, le fournisseur, la TVA, la livraison, la marge (3 € par pièce, remise des vêtements apportés), le pas d'arrondi (2 €), le prix du vinyle (`vinyle`), l'écart entre le visuel et le texte d'un bloc collé (`placement.ecartBloc`) | `js/prix.js` |
 | cocher ou non par défaut la case « collés au visuel » | `js/app.js` (`newMarquage`, champ `bloc`) |
 | ajouter un vêtement ou un accessoire, une couleur, une taille | `js/data.js` (copie un bloc de `produits`) |
@@ -197,7 +221,7 @@ node tests/methodes.test.js
 
 `methodes.test.js` (24 tests) vérifie les fiches de méthodes : chaque article a sa fiche et son PDF, les pages citées existent, les réglages DTF et sublimation sont ceux de `js/prix.js`, aucune mention du BDE, et les méthodes applicables selon la matière, la couleur et l'article.
 
-147 tests : 90 sur le moteur et le catalogue (`engine.test.js`), 8 sur les outils de fichiers de l'atelier (`fichiers.test.js`), 24 sur les fiches de paiement et les factures (`facturation.test.js`) et 25 sur les fiches de méthodes (`methodes.test.js`). Le moteur couvre : la règle de prix (marge de 3 €, arrondi pair, vêtements apportés sans remise, remise réglable), les planches, le catalogue (données, catégories, dessins, couleurs, photos, vendeurs, « Ton vêtement »), le bloc collé, le visuel à taille libre, le vinyle (coût de la matière, technique par pièce, vinyle par défaut) et le texte et le chiffre à taille, position et orientation libres.
+166 tests : 90 sur le moteur et le catalogue (`engine.test.js`), 19 sur les réglages CSV (`reglages.test.js`), 8 sur les outils de fichiers de l'atelier (`fichiers.test.js`), 24 sur les fiches de paiement et les factures (`facturation.test.js`) et 25 sur les fiches de méthodes (`methodes.test.js`). Le moteur couvre : la règle de prix (marge de 3 €, arrondi pair, vêtements apportés sans remise, remise réglable), les planches, le catalogue (données, catégories, dessins, couleurs, photos, vendeurs, « Ton vêtement »), le bloc collé, le visuel à taille libre, le vinyle (coût de la matière, technique par pièce, vinyle par défaut) et le texte et le chiffre à taille, position et orientation libres.
 
 ## Publier sur GitHub Pages
 

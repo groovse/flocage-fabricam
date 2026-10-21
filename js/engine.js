@@ -478,7 +478,7 @@
       g.coutMoyen = g.cout / g.n;
       g.margeMoyenne = g.margeTotale / g.n;
       g.brut = g.coutMoyen + g.margeMoyenne;
-      g.unitaire = round2(Math.ceil(g.brut / r.pas - 1e-9) * r.pas);
+      g.unitaire = g.prixFixe != null ? round2(g.prixFixe) : round2(Math.ceil(g.brut / r.pas - 1e-9) * r.pas);   // prixFixe : prix imposé à la main pour cet article
       g.total = round2(g.unitaire * g.n);
       total += g.total;
     });
@@ -584,17 +584,22 @@
     motifs.forEach(function (m) { nbMotifs[m.pieceId] = (nbMotifs[m.pieceId] || 0) + 1; });
     // vêtements apportés : plus de regles.apporte.seuil pièces apportées dans la commande = marge réduite sur toutes ces pièces (facteur 1 : pas de remise)
     var nApportees = order.pieces.filter(function (p) { var pr = ctx.produits[p.produitId]; return pr && pr.apporte && coutPieces[p.id]; }).length;
-    var reglesApp = reglesApporte(prix.regles, nApportees), apporteReduite = reglesApp !== prix.regles;
+    var apporteReduite = reglesApporte(prix.regles, nApportees) !== prix.regles;
+    // règles d'un produit : sa marge propre (champ marge du produit) remplace regles.margePiece ; un vêtement apporté suit en plus la règle d'apporté
+    function reglesDe(pr) {
+      var base = pr.marge != null ? Object.assign({}, prix.regles, { margePiece: pr.marge }) : prix.regles;
+      return pr.apporte ? reglesApporte(base, nApportees) : base;
+    }
     var groupes = [], gi = {};
     function groupe(cle, base) {
       var g = gi[cle]; if (!g) { g = gi[cle] = Object.assign({ n: 0, cout: 0, margeTotale: 0, motifs: 0 }, base); groupes.push(g); } return g;
     }
     order.pieces.forEach(function (p) {
       if (!coutPieces[p.id]) return;
-      var g2 = groupe("produit:" + p.produitId, { produitId: p.produitId });
-      g2.n++; g2.cout += coutPieces[p.id].total;
       var pr2 = ctx.produits[p.produitId];
-      g2.motifs += nbMotifs[p.id] || 0; g2.margeTotale += margePiece(nbMotifs[p.id] || 0, pr2.apporte ? reglesApp : prix.regles);
+      var g2 = groupe("produit:" + p.produitId, { produitId: p.produitId, prixFixe: pr2.prixFixe != null ? pr2.prixFixe : null });
+      g2.n++; g2.cout += coutPieces[p.id].total;
+      g2.motifs += nbMotifs[p.id] || 0; g2.margeTotale += margePiece(nbMotifs[p.id] || 0, reglesDe(pr2));
       if (pr2.apporte && apporteReduite) g2.margeReduite = true;
     });
 
@@ -607,7 +612,7 @@
         unitaire: seul ? groupes[0].unitaire : null,   // un seul prix par pièce seulement s'il n'y a qu'un produit
         groupes: groupes.map(function (g) {
           return { produitId: g.produitId, n: g.n,
-            coutMoyen: round2(g.coutMoyen), margeMoyenne: round2(g.margeMoyenne), motifs: g.motifs, margeReduite: !!g.margeReduite, unitaire: g.unitaire, total: g.total };
+            coutMoyen: round2(g.coutMoyen), margeMoyenne: round2(g.margeMoyenne), motifs: g.motifs, margeReduite: !!g.margeReduite, prixFixe: g.prixFixe != null, unitaire: g.unitaire, total: g.total };
         }),
         apporte: { n: nApportees, seuil: prix.regles.apporte ? prix.regles.apporte.seuil : null, reduite: apporteReduite },
         total: fx.total, marge: fx.marge

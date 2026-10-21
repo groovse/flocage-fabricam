@@ -1,0 +1,8 @@
+﻿type;format;nom;largeur_cm;hauteur_cm;prix_ttc
+dtf;A4;A4 (21 × 28 cm);21;28;5,5
+dtf;A3;A3 (28 × 42 cm);28;42;8
+dtf;A2;A2 (42 × 56 cm);42;56;14
+dtf;1m;1 mètre (56 × 100 cm);56;100;18
+sublimation;A4;A4 (20 × 28 cm);20;28;3,9
+sublimation;A3;A3 (28 × 41 cm);28;41;7,5
+sublimation;A2;A2 (42 × 56 cm);42;56;13

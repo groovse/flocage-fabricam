@@ -70,7 +70,8 @@
   function rayonOf(item) { return categoriesOf(item)[0] || ""; }
   // Ordre du catalogue : par rayon, et dans un rayon les vêtements Decathlon, puis les vêtements apportés
   function catalogueItems() {
-    var tous = DATA.produits.filter(function (p) { return !p.apporte; }).concat(DATA.produits.filter(function (p) { return p.apporte; }));
+    var visibles = DATA.produits.filter(function (p) { return !p.masque; });   // un article masqué (donnees/articles.csv) n'est plus proposé
+    var tous = visibles.filter(function (p) { return !p.apporte; }).concat(visibles.filter(function (p) { return p.apporte; }));
     return tous.map(function (item, i) { return { item: item, i: i, rang: RANG_CATEGORIE[rayonOf(item)] }; })
       .sort(function (a, b) { return a.rang - b.rang || a.i - b.i; })
       .map(function (x) { return x.item; });
@@ -700,7 +701,8 @@
   // Liste des modèles, par groupes : vêtements du catalogue, vêtements apportés par le client
   function modelOptions(cur) {
     var o = function (id, lab) { return '<option value="' + esc(id) + '"' + (id === cur ? " selected" : "") + ">" + esc(lab) + "</option>"; };
-    var cat = DATA.produits.filter(function (x) { return !x.apporte; }), app = DATA.produits.filter(function (x) { return x.apporte; });
+    var dispo = DATA.produits.filter(function (x) { return !x.masque || x.id === cur; });   // un article masqué reste affiché dans une commande qui le contient
+    var cat = dispo.filter(function (x) { return !x.apporte; }), app = dispo.filter(function (x) { return x.apporte; });
     return '<optgroup label="Vêtements">' + cat.map(function (x) { return o(x.id, x.nomCourt); }).join("") + '</optgroup>' +
       (app.length ? '<optgroup label="Ton vêtement (tu l\'apportes)">' + app.map(function (x) { return o(x.id, x.nomCourt); }).join("") + '</optgroup>' : "");
   }
