@@ -11,6 +11,7 @@ const PRIX = window.PRIX, DATA = window.DATA;
 const produits = {}; DATA.produits.forEach(p => produits[p.id] = p);
 const ctx = { prix: PRIX, produits, emplacements: DATA.emplacements, measure: E.approxMeasure };
 let ok = 0;
+const pair = x => Math.ceil(x / 2 - 1e-9) * 2;      // arrondi à l'euro pair supérieur (prix.js : pas 2)
 function test(nom, fn) { try { fn(); ok++; console.log("  ok  " + nom); } catch (e) { console.log("  ECHEC " + nom + "\n   " + e.message); process.exitCode = 1; } }
 
 function pieces(n, couleur, extra) {
@@ -19,38 +20,41 @@ function pieces(n, couleur, extra) {
 const A6poitrine = { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" } };
 
 console.log("Prix de vente");
-test("prix = coût + 1 € par motif, arrondi au centime supérieur : 1 polo, 1 visuel A6 poitrine", () => {
+test("prix = coût + 3 € de marge, arrondi à l'euro pair supérieur : 1 polo, 1 visuel A6 poitrine", () => {
   const r = E.computeOrder({ pieces: pieces(1), marquages: A6poitrine, technique: "dtf" }, ctx);
   assert.strictEqual(r.couts.achats, 7.99);
   assert.strictEqual(r.couts.planchesTTC, 5.50);   // une A6 prend une planche A4 chez DTF Print (prix TTC)
   assert.strictEqual(r.couts.livraison, 4.90);
   assert.strictEqual(r.couts.total, 18.39);
-  assert.strictEqual(r.prix.unitaire, 19.39);   // un seul motif : 1 € de marge
-  assert.strictEqual(r.prix.marge, 1);
+  assert.strictEqual(r.prix.unitaire, 22);          // 18,39 + 3 = 21,39 -> 22
+  assert.strictEqual(r.prix.marge, 3.61);
   assert.strictEqual(r.prix.groupes[0].motifs, 1);
-  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 1);
+  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 3);
 });
-test("10 polos avec 1 visuel chacun : 108,30 € au total, soit 1 € de marge par polo", () => {
+test("10 polos avec 1 visuel chacun : 14 € la pièce (9,83 + 3 = 12,83 -> 14)", () => {
   const r = E.computeOrder({ pieces: pieces(10), marquages: A6poitrine, technique: "dtf" }, ctx);
   assert.strictEqual(r.couts.total, 98.3);
-  assert.strictEqual(r.prix.unitaire, 10.83);
-  assert.strictEqual(r.prix.total, 108.3);
+  assert.strictEqual(r.prix.unitaire, 14);
+  assert.strictEqual(r.prix.total, 140);
 });
-test("margePiece : 1 € par motif, 2 € au plus par pièce, rien sans motif", () => {
+test("règles de prix : marge de 3 €, pas de 2 €, pack à la moitié, plus de remise sur les vêtements apportés", () => {
+  assert.strictEqual(PRIX.regles.margePiece, 3); assert.strictEqual(PRIX.regles.pas, 2);
+  assert.strictEqual(PRIX.regles.parPiecePack, PRIX.regles.margePiece / 2);
+  assert.strictEqual(PRIX.regles.apporte.facteur, 1);
+});
+test("margePiece : 3 € par pièce quel que soit le nombre de motifs, rien sans motif", () => {
   const m = n => E.margePiece(n, PRIX.regles);
-  assert.deepStrictEqual([0, 1, 2, 3, 4, 10].map(m), [0, 1, 2, 2, 2, 2]);
-  const sans = Object.assign({}, PRIX.regles, { maxParPiece: null });
-  assert.strictEqual(E.margePiece(3, sans), 3);
+  assert.deepStrictEqual([0, 1, 2, 3, 4, 10].map(m), [0, 3, 3, 3, 3, 3]);
 });
-test("une pièce avec un visuel, un prénom et un numéro (3 motifs) : marge plafonnée à 2 €", () => {
+test("une pièce avec un visuel, un prénom et un numéro (3 motifs) : toujours 3 € de marge", () => {
   const marq = { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait",
     prenom: { actif: true, police: "Bebas Neue", hauteur: 2.5, couleur: "#fff" }, numero: { actif: true, police: "Bebas Neue", hauteur: 4, couleur: "#fff" } } };
   const r = E.computeOrder({ pieces: pieces(1, "marine", () => ({ prenom: "Léo", numero: "7" })), marquages: marq, technique: "dtf" }, ctx);
   assert.strictEqual(r.motifs.length, 3);
   assert.strictEqual(r.prix.groupes[0].motifs, 3);
-  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 2);
+  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 3);
   assert.strictEqual(r.prix.marge, E.round2(r.prix.total - r.couts.total));
-  assert.ok(r.prix.marge >= 2 - 1e-9 && r.prix.marge <= 2.01);
+  assert.ok(r.prix.marge >= 3 - 1e-9 && r.prix.marge < 5, "marge " + r.prix.marge);
 });
 test("une pièce sans motif ne porte aucune marge", () => {
   const r = E.computeOrder({ pieces: pieces(2), marquages: {}, technique: "dtf" }, ctx);
@@ -58,29 +62,31 @@ test("une pièce sans motif ne porte aucune marge", () => {
   assert.strictEqual(r.prix.groupes[0].margeMoyenne, 0);
   assert.ok(r.prix.marge <= 0.02);
 });
-test("calcPrix : pas de palier de 2,50 €, seulement l'arrondi au centime", () => {
-  const p = E.calcPrix(70, 10, PRIX.regles);        // 7,00 + 1 motif = 8,00
-  assert.strictEqual(p.unitaire, 8); assert.strictEqual(p.marge, 10);
-  const q = E.calcPrix(10.07, 1, PRIX.regles, 3);   // 3 motifs : plafonné à 2 € -> 12,07
-  assert.strictEqual(q.unitaire, 12.07);
-  const r = E.calcPrix(9.511, 1, PRIX.regles, 1);   // 9,511 + 1 = 10,511 -> 10,52
-  assert.strictEqual(r.unitaire, 10.52);
+test("calcPrix : coût + 3 €, arrondi à l'euro pair supérieur", () => {
+  const p = E.calcPrix(70, 10, PRIX.regles);        // 7,00 + 3 = 10,00 -> 10
+  assert.strictEqual(p.unitaire, 10); assert.strictEqual(p.marge, 30);
+  const q = E.calcPrix(10.07, 1, PRIX.regles, 3);   // 3 motifs : toujours 3 € -> 13,07 -> 14
+  assert.strictEqual(q.unitaire, 14);
+  const r = E.calcPrix(9.511, 1, PRIX.regles, 1);   // 12,511 -> 14
+  assert.strictEqual(r.unitaire, 14);
 });
-test("calcPrix : la marge ne dépend plus du coût, seulement du nombre de motifs", () => {
+test("calcPrix : la marge ne dépend ni du coût ni du nombre de motifs (3 €), le prix est toujours pair", () => {
   const u = (c, m) => E.calcPrix(c, 1, PRIX.regles, m).unitaire;
-  assert.strictEqual(u(5, 1), 6); assert.strictEqual(u(30, 1), 31); assert.strictEqual(u(100, 1), 101);
-  assert.strictEqual(u(5, 2), 7); assert.strictEqual(u(30, 2), 32); assert.strictEqual(u(100, 5), 102);
+  assert.strictEqual(u(5, 1), 8); assert.strictEqual(u(30, 1), 34); assert.strictEqual(u(100, 1), 104);
+  assert.strictEqual(u(5, 2), 8); assert.strictEqual(u(30, 2), 34); assert.strictEqual(u(100, 5), 104);
   assert.strictEqual(u(30, 0), 30);
+  for (let c = 0.5; c < 120; c += 0.37) { const x = E.calcPrix(c, 1, PRIX.regles, 1); assert.strictEqual(x.unitaire % 2, 0, "pair : " + x.unitaire); assert.ok(x.unitaire >= c + 3 - 1e-9 && x.unitaire < c + 5 + 1e-9, c + " -> " + x.unitaire); }
 });
-test("calcPrix : sans plafond (maxParPiece null) la marge suit le nombre de motifs", () => {
-  const sans = Object.assign({}, PRIX.regles, { maxParPiece: null });
-  assert.strictEqual(E.calcPrix(30, 1, sans, 3).unitaire, 33);
+test("calcPrix : une autre marge dans prix.js suit (5 €)", () => {
+  const cinq = Object.assign({}, PRIX.regles, { margePiece: 5 });
+  assert.strictEqual(E.calcPrix(30, 1, cinq, 1).unitaire, 36);
 });
-test("la marge d'une commande vaut 1 € par pièce quand chaque pièce a un seul motif", () => {
+test("la marge d'une commande est d'au moins 3 € par pièce, quel que soit le nombre de pièces", () => {
   [1, 2, 3, 5, 6, 7, 8, 12, 20, 50].forEach(n => {
     const r = E.computeOrder({ pieces: pieces(n), marquages: A6poitrine, technique: "dtf" }, ctx);
-    assert.ok(r.prix.marge >= n - 1e-6, n + " pièces : marge " + r.prix.marge + " pour un coût de " + r.couts.total);
-    assert.ok(r.prix.marge <= n + 0.01 * n + 1e-6, n + " pièces : marge trop haute " + r.prix.marge);
+    assert.ok(r.prix.marge >= 3 * n - 1e-6, n + " pièces : marge " + r.prix.marge + " pour un coût de " + r.couts.total);
+    assert.ok(r.prix.marge <= 5 * n + 1e-6, n + " pièces : marge trop haute " + r.prix.marge);
+    assert.strictEqual(r.prix.unitaire % 2, 0, n + " pièces : prix pair");
   });
 });
 
@@ -154,7 +160,7 @@ const marqMixte = {
   poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" },
   cuisse_g: { actif: true, avecImage: true, format: "A6", orient: "portrait" }
 };
-test("un prix par produit : chaque produit a le sien, 1 € de marge par motif", () => {
+test("un prix par produit : chaque produit a le sien, 3 € de marge", () => {
   const ps = [piece("a", "short-basket"), piece("b", "short-basket"), piece("c", "sweat-molleton")];
   const r = E.computeOrder({ pieces: ps, marquages: marqMixte, technique: "dtf" }, ctx);
   assert.strictEqual(r.prix.groupes.length, 2);
@@ -163,8 +169,9 @@ test("un prix par produit : chaque produit a le sien, 1 € de marge par motif",
   assert.ok(short.unitaire < sweat.unitaire, "le short doit coûter moins cher que le sweat");
   assert.strictEqual(r.prix.unitaire, null);
   r.prix.groupes.forEach(g => {
-    const marge = g.unitaire - g.coutMoyen, attendue = 1;   // un seul motif par pièce (cuisse du short, poitrine du sweat)
-    assert.ok(marge >= attendue - 1e-6 && marge <= attendue + 0.01 + 1e-6, g.produitId + " : marge " + marge.toFixed(3));
+    const marge = g.unitaire - g.coutMoyen;
+    assert.ok(marge >= 3 - 1e-6 && marge < 5 + 1e-6, g.produitId + " : marge " + marge.toFixed(3));   // 3 € puis l'arrondi à l'euro pair (jusqu'à +2 €)
+    assert.strictEqual(g.unitaire % 2, 0, g.produitId + " : prix pair");
   });
   assert.strictEqual(r.prix.total, short.total + sweat.total);
   assert.ok(Math.abs(Object.values(r.coutPieces).reduce((s, c) => s + c.total, 0) - r.couts.total) < 0.01, "les coûts imputés doivent égaler le coût réel");
@@ -175,7 +182,7 @@ test("un seul produit : même résultat qu'avant (prix unique par pièce)", () =
   assert.strictEqual(r.prix.groupes.length, 1);
   assert.strictEqual(r.prix.unitaire, r.prix.groupes[0].unitaire);
 });
-test("pack basket : un seul article, 1 € de marge par pièce du pack", () => {
+test("pack basket : un seul article, 1,50 € de marge par pièce du pack (la moitié)", () => {
   const avec = [piece("a", "maillot-basket", { pack: "k1", packType: "pack-basket" }), piece("b", "short-basket", { pack: "k1", packType: "pack-basket" })];
   const sans = avec.map(p => Object.assign({}, p, { pack: undefined, packType: undefined }));
   const r1 = E.computeOrder({ pieces: avec, marquages: marqMixte, technique: "dtf" }, ctx);
@@ -185,14 +192,14 @@ test("pack basket : un seul article, 1 € de marge par pièce du pack", () => {
   const g = r1.prix.groupes[0];
   assert.ok(g.pack && g.n === 1 && g.pieces === 2);
   assert.strictEqual(g.unitaire, r1.prix.total);
-  assert.strictEqual(g.margeMoyenne, 2);   // deux pièces, 1 € chacune
-  assert.ok(r1.prix.marge >= 2 - 1e-6 && r1.prix.marge <= 2.01, "marge " + r1.prix.marge);
-  // un motif par pièce : 1 € de marge par pièce, que la pièce soit vendue seule ou dans le pack ; le pack n'est jamais plus cher
+  assert.strictEqual(g.margeMoyenne, 3);   // deux pièces, 1,50 € chacune
+  assert.ok(r1.prix.marge >= 3 - 1e-6 && r1.prix.marge < 5, "marge " + r1.prix.marge);
+  // dans le pack, la marge de chaque pièce est la moitié de celle d'une pièce seule (3 €) ; le pack n'est jamais plus cher
   assert.ok(r1.prix.total <= r2.prix.total, "le pack ne doit pas coûter plus cher que les deux pièces séparées");
-  assert.strictEqual(r2.prix.groupes.reduce((s, x) => s + x.margeMoyenne * x.n, 0), 2);
+  assert.strictEqual(r2.prix.groupes.reduce((s, x) => s + x.margeMoyenne * x.n, 0), 6);
   console.log("     pack", r1.prix.total, "€ contre", r2.prix.total, "€ séparés");
 });
-test("pack : la marge de chaque pièce reste 1 € quel que soit son nombre de motifs, chaussettes à 0 €", () => {
+test("pack : la marge de chaque pièce reste 1,50 € quel que soit son nombre de motifs, chaussettes à 0 €", () => {
   const pk = (id, produitId) => piece(id, produitId, { pack: "k1", packType: "pack-basket", prenom: "Léa", numero: "9" });
   const ps = [pk("a", "maillot-basket"), pk("b", "short-basket"), pk("c", "chaussettes-football")];
   const marq = {
@@ -204,10 +211,10 @@ test("pack : la marge de chaque pièce reste 1 € quel que soit son nombre de m
   const r = E.computeOrder({ pieces: ps, marquages: marq, technique: "dtf" }, ctx);
   assert.ok(r.motifs.length >= 5, "plusieurs motifs : " + r.motifs.length);
   assert.strictEqual(r.prix.groupes.length, 1);
-  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 2);   // maillot 1 € + short 1 € + chaussettes 0 €
+  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 3);   // maillot 1,50 € + short 1,50 € + chaussettes 0 €
   assert.strictEqual(E.margePiecePack(produits["chaussettes-football"], PRIX.regles), 0);
-  assert.strictEqual(E.margePiecePack(produits["maillot-basket"], PRIX.regles), 1);
-  // vendues séparément, les mêmes pièces portent plus de marge (jusqu'à 2 € le maillot, 2 € le short, 1 € les chaussettes)
+  assert.strictEqual(E.margePiecePack(produits["maillot-basket"], PRIX.regles), 1.5);
+  // vendues séparément, les mêmes pièces portent plus de marge (3 € chacune)
   const separees = ps.map(p => Object.assign({}, p, { pack: undefined, packType: undefined }));
   const r2 = E.computeOrder({ pieces: separees, marquages: marq, technique: "dtf" }, ctx);
   assert.ok(r2.prix.marge > r.prix.marge + 2, "séparées " + r2.prix.marge + " contre " + r.prix.marge);
@@ -228,14 +235,14 @@ test("un pack incomplet (une seule pièce) est vendu comme une pièce seule", ()
   assert.strictEqual(r.prix.packs.n, 0);
   assert.strictEqual(r.prix.groupes[0].pack, false);
 });
-test("short de basket, 2 A6 (une par cuisse) : le prix suit le coût sans palier", () => {
+test("short de basket, 2 A6 (une par cuisse) : le prix suit le coût + 3 €, arrondi à l'euro pair", () => {
   const marq = { cuisse_g: marqMixte.cuisse_g, cuisse_d: { actif: true, avecImage: true, format: "A6", orient: "portrait" } };
   let prev = null;
   [4, 5, 6, 7, 8, 9, 10, 12].forEach(n => {
     const ps = Array.from({ length: n }, (_, i) => piece("s" + i, "short-basket"));
     const r = E.computeOrder({ pieces: ps, marquages: marq, technique: "dtf" }, ctx);
     const u = r.prix.groupes[0].unitaire, cm = r.prix.groupes[0].coutMoyen;
-    assert.ok(Math.abs(u - (cm + 2)) < 0.02, n + " : prix " + u + " pour un coût moyen de " + cm);   // deux motifs : 2 € de marge
+    assert.ok(u >= cm + 3 - 1e-6 && u < cm + 5 + 1e-6 && u % 2 === 0, n + " : prix " + u + " pour un coût moyen de " + cm);   // 3 € de marge, puis l'arrondi pair
     console.log("     " + n + " shorts : coût moyen " + cm.toFixed(2) + " -> " + u.toFixed(2) + " € la pièce");
     prev = u;
   });
@@ -373,10 +380,10 @@ test("place de marché : un seul frais de port par vendeur et par commande, rép
   // la somme des coûts par pièce égale le coût de revient
   let somme = 0; Object.keys(deux.coutPieces).forEach(k => { somme += deux.coutPieces[k].total; });
   assert.ok(Math.abs(somme - deux.couts.total) < 0.011, "somme " + somme + " pour un coût de " + deux.couts.total);
-  assert.strictEqual(deux.couts.total, E.round2(deux.couts.achats + deux.couts.planchesTTC + deux.couts.livraison + 9.98));
+  assert.strictEqual(deux.couts.total, E.round2(deux.couts.achats + deux.couts.planchesTTC + deux.couts.livraison + deux.couts.vinyle + 9.98));
   const margeVoulue = deux.prix.groupes.reduce((s, g) => s + g.n * g.margeMoyenne, 0);
-  assert.strictEqual(margeVoulue, 2);   // un motif par pièce, deux pièces
-  assert.ok(deux.prix.total >= deux.couts.total + margeVoulue - 0.02, "la marge (1 € par motif) est respectée avec les frais du vendeur");
+  assert.strictEqual(margeVoulue, 6);   // 3 € par pièce, deux pièces
+  assert.ok(deux.prix.total >= deux.couts.total + margeVoulue - 0.02, "la marge (3 € par pièce) est respectée avec les frais du vendeur");
 });
 test("place de marché : plus on commande de pièces, plus la part des frais de port baisse", () => {
   const prix = [1, 5, 20].map(q => E.priceTable(produits["doudoune-sans-manche"], [q], ctx)[0].unitaire);
@@ -399,7 +406,7 @@ test("packs d'ensembles : moins cher que les pièces séparées", () => {
     assert.ok(pk < sep, id + " : pack " + pk + " contre " + sep + " séparés");
   });
 });
-test("packs : chaque pack contient les chaussettes, 1 € de marge par pièce hors chaussettes", () => {
+test("packs : chaque pack contient les chaussettes, 1,50 € de marge par pièce hors chaussettes", () => {
   const taille = { "pack-basket": 3, "pack-fitness-femme": 3, "pack-jogging-femme": 3, "pack-football": 3, "pack-entraineur": 4, "pack-hummel": 3 };
   assert.deepStrictEqual(DATA.packs.map(k => k.id).sort(), Object.keys(taille).sort());
   DATA.packs.forEach(k => {
@@ -411,15 +418,15 @@ test("packs : chaque pack contient les chaussettes, 1 € de marge par pièce ho
     const marq = {}; k.vitrine.forEach(e => { const t = !!DATA.emplacements[e].texteSeul; marq[e] = { actif: true, avecImage: !t, image: null, format: "A6", orient: "portrait" }; if (t) { marq[e].maj = true; marq[e].prenom = { actif: true, police: "Bebas Neue", hauteur: 3, couleur: "#ffffff" }; } });
     const r = E.computeOrder({ pieces, marquages: marq, technique: "dtf" }, ctx);
     assert.strictEqual(r.prix.groupes.length, 1, k.id + " : un seul article");
-    const attendue = k.produits.filter(pid => produits[pid].margePack !== 0).length;
-    assert.ok(r.prix.marge >= attendue - 1e-6 && r.prix.marge <= attendue + 0.01 + 1e-6, k.id + " : marge " + r.prix.marge + " au lieu de " + attendue);
+    const attendue = 1.5 * k.produits.filter(pid => produits[pid].margePack !== 0).length;
+    assert.ok(r.prix.marge >= attendue - 1e-6 && r.prix.marge < attendue + 2 + 1e-6, k.id + " : marge " + r.prix.marge + " au lieu de " + attendue);   // l'arrondi pair peut ajouter jusqu'à 2 €
     assert.ok(r.prix.groupes[0].pack, k.id);
   });
 });
-test("packs : prix de la vitrine d'un pack basket (29,37 €) et d'un pack entraîneur (56,45 €)", () => {
+test("packs : prix de la vitrine d'un pack basket (32 €) et d'un pack entraîneur (60 €)", () => {
   const prixPack = id => E.priceTable(DATA.packs.filter(k => k.id === id)[0], [1], ctx)[0].unitaire;
-  assert.strictEqual(prixPack("pack-basket"), 29.37);       // coût 27,37 + 2 € (maillot et short)
-  assert.strictEqual(prixPack("pack-entraineur"), 56.45);   // coût 53,45 + 3 € (veste, haut thermique, jogging)
+  assert.strictEqual(prixPack("pack-basket"), 32);       // coût 27,37 + 3 € (maillot et short à 1,50 €) = 30,37 -> 32
+  assert.strictEqual(prixPack("pack-entraineur"), 60);   // coût 53,45 + 4,50 € (veste, haut thermique, jogging) = 57,95 -> 58, chaussettes en vinyle : 60
 });
 test("ensemble Hummel : un t-shirt et un short vendus ensemble, une seule pièce pour la marge", () => {
   const h = produits["ensemble-hummel"];
@@ -430,16 +437,16 @@ test("ensemble Hummel : un t-shirt et un short vendus ensemble, une seule pièce
   assert.ok(h.anciensId.includes("robe-hummel"));
   const m = (n, empl) => { const marq = {}; empl.forEach(e => { marq[e] = { actif: true, avecImage: true, format: "A6", orient: "portrait" }; });
     return E.computeOrder({ pieces: [piece("a", "ensemble-hummel")], marquages: marq, technique: "dtf" }, ctx).prix.groupes[0].margeMoyenne; };
-  assert.strictEqual(m(1, ["poitrine"]), 1);
-  assert.strictEqual(m(2, ["poitrine", "cuisse_g"]), 2);
-  assert.strictEqual(m(3, ["poitrine", "cuisse_g", "cuisse_d"]), 2);   // trois motifs : plafonné à 2 € pour tout l'ensemble
-  // dans le pack Hummel : 1 € pour l'ensemble + 1 € pour la veste + 0 € pour les chaussettes
+  assert.strictEqual(m(1, ["poitrine"]), 3);
+  assert.strictEqual(m(2, ["poitrine", "cuisse_g"]), 3);
+  assert.strictEqual(m(3, ["poitrine", "cuisse_g", "cuisse_d"]), 3);   // 3 € pour tout l'ensemble, quel que soit le nombre de motifs
+  // dans le pack Hummel : 1,50 € pour l'ensemble + 1,50 € pour la veste + 0 € pour les chaussettes
   const k = DATA.packs.filter(x => x.id === "pack-hummel")[0];
   assert.deepStrictEqual(k.produits, ["ensemble-hummel", "veste-micropolaire", "chaussettes-football"]);
   const ps = k.produits.map((pid, j) => piece("h" + j, pid, { pack: "pk0", packType: "pack-hummel" }));
   const marq = { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" }, cuisse_g: marqMixte.cuisse_g, cuisse_d: marqMixte.cuisse_g };
   const r = E.computeOrder({ pieces: ps, marquages: marq, technique: "dtf" }, ctx);
-  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 2);
+  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 3);
 });
 test("catalogue : plus de robe, chaque dessin existe dans l'aperçu", () => {
   assert.ok(!DATA.produits.some(p => p.tags.type === "robe"), "plus aucune robe");
@@ -469,8 +476,8 @@ test("accessoires : formats, zones, vitrine et prix valides pour chaque article 
       });
     });
     const t = E.priceTable(p, [1, 10], ctx);
-    // une pièce gravée ou en vinyle n'a ni planche ni livraison à partager : son prix ne baisse pas avec la quantité (achat + 1 €)
-    if (p.technique === "gravure") assert.ok(t[0].unitaire === t[1].unitaire && t[1].unitaire > p.prixAchat, p.id + " : prix " + t.map(x => x.unitaire));
+    // une pièce gravée ou en vinyle n'a ni planche ni livraison à partager : son prix ne baisse pas avec la quantité (achat + 3 €), sauf les frais de port du vendeur
+    if (p.technique === "gravure" || p.techniqueDefaut === "vinyle") assert.ok(t[0].unitaire >= t[1].unitaire && t[1].unitaire > p.prixAchat, p.id + " : prix " + t.map(x => x.unitaire));
     else assert.ok(t[0].unitaire > t[1].unitaire && t[1].unitaire > p.prixAchat, p.id + " : prix " + t.map(x => x.unitaire));
     p.couleurs.forEach(c => assert.ok(/^https:\/\/(www\.decathlon\.fr\/p|fr\.aliexpress\.com\/item)\//.test(c.lien || p.lien), p.id + " : lien de la couleur " + c.id));
   });
@@ -478,12 +485,14 @@ test("accessoires : formats, zones, vitrine et prix valides pour chaque article 
   const marq = { casquette: { actif: true, avecImage: true, format: "Mini", orient: "portrait" } };
   const r = E.computeOrder({ pieces: [piece2("c", "casquette-tennis-tc100")], marquages: marq, technique: "dtf" }, ctx);
   assert.deepStrictEqual(r.motifs.map(m => [m.w, m.h]), [[5, 5]]);
-  assert.strictEqual(r.couts.planchesTTC, 5.50);
+  assert.strictEqual(r.couts.planchesTTC, 0, "la casquette est en vinyle par défaut : pas de planche");
+  const dtf = E.computeOrder({ pieces: [piece2("c", "casquette-tennis-tc100", { technique: "dtf" })], marquages: marq, technique: "dtf" }, ctx);
+  assert.strictEqual(dtf.couts.planchesTTC, 5.50, "le DTF reste possible sur la pièce");
 });
-test("accessoires : pas de sublimation sur une casquette ou un sac blancs, mais oui sur un tour de cou blanc en polyester", () => {
+test("accessoires : pas de sublimation sur une casquette ou un bandeau blancs (vinyle à la place), mais oui sur un tour de cou blanc en polyester", () => {
   const ps = [piece2("a", "casquette-tennis-tc100", { couleurId: "blanc" }), piece2("b", "tour-de-cou-morf", { couleurId: "blanc" }), piece2("c", "bandeau-running-v2", { couleurId: "blanc" })];
   const order = { pieces: ps, marquages: {}, technique: "sublimation" };
-  assert.deepStrictEqual(ps.map(p => E.pieceTechno(order, p, ctx)), ["dtf", "sublimation", "dtf"]);
+  assert.deepStrictEqual(ps.map(p => E.pieceTechno(order, p, ctx)), ["vinyle", "sublimation", "vinyle"]);
 });
 test("accessoires : le tour de cou du vendeur Atelier Katanga ajoute un seul frais de port, même avec la veste d'un autre vendeur", () => {
   const ps = [piece2("a", "tour-de-cou-morf"), piece2("b", "tour-de-cou-morf"), piece2("c", "veste-micropolaire")];
@@ -604,17 +613,18 @@ test("Ton vêtement : 16 articles génériques, filtre dédié, sans prix d'acha
     .forEach(m => assert.ok(apportes.some(p => p.modele === m), "dessin absent : " + m));
   assert.deepStrictEqual(DATA.matieres.map(m => m.id), ["polyester", "coton", "inconnu"]);
 });
-test("Ton vêtement : le prix ne compte ni vêtement ni livraison de vêtement (planche, livraison, 1 € par motif)", () => {
+test("Ton vêtement : le prix ne compte ni vêtement ni livraison de vêtement (planche, livraison, 3 € de marge)", () => {
   const un = E.computeOrder({ pieces: [pApp("a", "apporte-veste")], marquages: A6seul, technique: "dtf" }, ctx);
   assert.strictEqual(un.couts.achats, 0);
   assert.strictEqual(un.couts.planchesTTC, 5.50);
   assert.strictEqual(un.couts.livraison, 4.90);
   assert.strictEqual(un.couts.total, 10.40);
-  assert.strictEqual(un.prix.unitaire, 11.40);
+  assert.strictEqual(un.prix.unitaire, 14);    // 10,40 + 3 = 13,40 -> 14
   assert.strictEqual(un.coutPieces.a.achat, 0);
   const t = E.priceTable(produits["apporte-veste"], [1, 5, 10, 20, 50], ctx).map(x => x.unitaire);
-  assert.deepStrictEqual(t.slice(0, 2), [11.40, 3.58]);
-  assert.ok(t.every((x, i) => i === 0 || x < t[i - 1]), "le prix baisse avec la quantité : " + t);
+  assert.deepStrictEqual(t.slice(0, 2), [14, 6]);
+  assert.ok(t.every((x, i) => i === 0 || x <= t[i - 1]), "le prix ne monte pas avec la quantité : " + t);
+  assert.ok(t[t.length - 1] < t[0], "et il baisse : " + t);
 });
 test("Ton vêtement : mélangé à un vêtement Decathlon, seul celui-ci compte à l'achat", () => {
   const mix = [pApp("a", "apporte-tshirt"), Object.assign(pieces(1, "marine")[0], { id: "b" })];
@@ -637,11 +647,11 @@ test("Ton vêtement : la sublimation demande un vêtement blanc ou clair déclar
   assert.strictEqual(E.polyesterPiece(produits["apporte-polo"], { matiere: "coton" }), 0);
   assert.strictEqual(E.polyesterPiece(produits["polo-essential"], { matiere: "coton" }), 100, "un article du catalogue garde sa propre matière");
 });
-test("Ton vêtement : une pièce sans motif ne coûte rien, deux motifs font 2 € de marge", () => {
+test("Ton vêtement : une pièce sans motif ne coûte rien, deux motifs font 3 € de marge", () => {
   const vide = E.computeOrder({ pieces: [pApp("a", "apporte-sweat")], marquages: {}, technique: "dtf" }, ctx);
   assert.strictEqual(vide.couts.total, 0);
   const deux = E.computeOrder({ pieces: [pApp("a", "apporte-sweat", { prenom: "Léo" })], marquages: Object.assign({}, A6seul, { dos: { actif: true, avecImage: true, format: "A5", orient: "portrait" } }), technique: "dtf" }, ctx);
-  assert.strictEqual(deux.prix.groupes[0].margeMoyenne, 2);
+  assert.strictEqual(deux.prix.groupes[0].margeMoyenne, 3);
 });
 
 console.log("\nBloc collé : visuel, prénom et numéro sur un seul transfert (version 5.0.0)");
@@ -662,15 +672,14 @@ test("bloc collé : un seul motif par pièce, ses éléments empilés et centré
   m.el.items.forEach(i => assert.ok(Math.abs(i.dx - (m.w - i.w) / 2) < 1e-9, "centré"));
   assert.ok(E.motifImage(m) === v && E.motifImage({ kind: "image", el: v }) === v && E.motifImage({ kind: "prenom", el: p }) === null);
 });
-test("bloc collé : 1 € de marge au lieu de 2 €, mais un bloc entier tient moins bien sur les planches", () => {
+test("bloc collé : même marge (3 €), mais un bloc entier tient moins bien sur les planches", () => {
   const sep = n => E.computeOrder({ pieces: lesPieces(n), marquages: marqBloc(false), technique: "dtf" }, ctx);
   const blo = n => E.computeOrder({ pieces: lesPieces(n), marquages: marqBloc(true), technique: "dtf" }, ctx);
-  assert.strictEqual(sep(1).prix.unitaire, 20.39); assert.strictEqual(blo(1).prix.unitaire, 19.39);
-  assert.strictEqual(sep(10).prix.unitaire, 11.88); assert.strictEqual(blo(10).prix.unitaire, 11.28);
+  assert.strictEqual(sep(1).prix.unitaire, 22); assert.strictEqual(blo(1).prix.unitaire, 22);
   assert.strictEqual(sep(10).couts.planchesTTC, 14); assert.strictEqual(blo(10).couts.planchesTTC, 18);
-  assert.strictEqual(blo(30).prix.unitaire, 10.36);
-  assert.strictEqual(blo(10).prix.groupes[0].motifs, 10); assert.strictEqual(blo(10).prix.groupes[0].margeMoyenne, 1);
-  assert.strictEqual(sep(10).prix.groupes[0].motifs, 30);
+  assert.ok(blo(10).prix.unitaire >= sep(10).prix.unitaire, "le bloc coûte plus de planches : prix " + blo(10).prix.unitaire + " contre " + sep(10).prix.unitaire);
+  assert.strictEqual(blo(10).prix.groupes[0].motifs, 10); assert.strictEqual(blo(10).prix.groupes[0].margeMoyenne, 3);
+  assert.strictEqual(sep(10).prix.groupes[0].motifs, 30); assert.strictEqual(sep(10).prix.groupes[0].margeMoyenne, 3);
 });
 test("bloc collé : sans la case (anciens fichiers) ou décochée, rien ne change : trois motifs", () => {
   [undefined, false].forEach(b => {
@@ -692,7 +701,7 @@ test("bloc collé : un emplacement de texte seul (dos sans visuel) colle le pré
   const r = E.computeOrder({ pieces: lesPieces(1), marquages: dos, technique: "dtf" }, ctx);
   assert.strictEqual(r.motifs.length, 1); assert.strictEqual(r.motifs[0].kind, "bloc"); assert.strictEqual(r.motifs[0].avecImage, false);
   assert.strictEqual(E.motifImage(r.motifs[0]), null);
-  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 1);
+  assert.strictEqual(r.prix.groupes[0].margeMoyenne, 3);
 });
 test("bloc collé : trop grand pour le plateau (visuel A4 et texte), les éléments restent séparés avec un avertissement", () => {
   const grand = { poitrine: { actif: true, avecImage: true, format: "A4", orient: "portrait", prenom: txtO(3), bloc: true } };
@@ -708,67 +717,65 @@ test("bloc collé : un pack garde sa marge de pièce, le bloc ne change que les 
   const un = b => E.computeOrder({ pieces: pk(["maillot-basket", "short-basket"]), marquages: { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait", prenom: txtO(2.5), bloc: b } }, technique: "dtf" }, ctx);
   assert.strictEqual(un(true).prix.groupes[0].pack, true);
   assert.strictEqual(un(true).motifs.filter(m => m.kind === "bloc").length, 1);
-  assert.strictEqual(un(true).prix.groupes[0].margeMoyenne, 2);   // 1 € par pièce du pack, avec ou sans bloc
-  assert.strictEqual(un(false).prix.groupes[0].margeMoyenne, 2);
+  assert.strictEqual(un(true).prix.groupes[0].margeMoyenne, 3);   // 1,50 € par pièce du pack, avec ou sans bloc
+  assert.strictEqual(un(false).prix.groupes[0].margeMoyenne, 3);
 });
 
-console.log("\nVêtements apportés : marge divisée par 2 au-delà de 5 pièces (version 6.0.0)");
+console.log("\nVêtements apportés : plus de remise (version 7.0.0), la règle de la 6.0.0 reste réglable");
 const apps = (n, pid, deb) => Array.from({ length: n }, (_, i) => pApp("ap" + pid + (deb || 0) + "_" + i, pid));
 const cmdApp = (ps, marq, c) => E.computeOrder({ pieces: ps, marquages: marq || A6seul, technique: "dtf" }, c || ctx);
-const ctxSans = Object.assign({}, ctx, { prix: Object.assign({}, PRIX, { regles: Object.assign({}, PRIX.regles, { apporte: null }) }) });   // sans la règle
-const ctxMoitie = Object.assign({}, ctx, { prix: Object.assign({}, PRIX, { regles: Object.assign({}, PRIX.regles, { apporte: null, parMotif: 0.5, maxParPiece: 1 }) }) });   // la moitié partout
-test("vêtements apportés : la règle est dans prix.js (au-delà de 5 pièces, marge × 0,5)", () => {
-  assert.deepStrictEqual(PRIX.regles.apporte, { seuil: 5, facteur: 0.5 });
-  const r = E.reglesApporte(PRIX.regles, 6);
-  assert.deepStrictEqual([r.parMotif, r.maxParPiece, r.parPiecePack], [0.5, 1, 1]);
-  assert.strictEqual(E.reglesApporte(PRIX.regles, 5), PRIX.regles, "à 5 pièces, rien ne change");
-  assert.strictEqual(E.reglesApporte(Object.assign({}, PRIX.regles, { maxParPiece: null }), 9).maxParPiece, null);
-  assert.strictEqual(E.reglesApporte(Object.assign({}, PRIX.regles, { apporte: { seuil: 5, facteur: 1 } }), 9).parMotif, 1);
-});
-test("vêtements apportés : 5 pièces, 1 € par motif comme avant ; 6 pièces, 0,50 € par motif pour toutes les pièces", () => {
+// la remise de la 6.0.0 (marge × 0,5 au-delà de 5 pièces apportées), remise en route dans prix.js pour vérifier que le code la gère toujours
+const ctxRemise = Object.assign({}, ctx, { prix: Object.assign({}, PRIX, { regles: Object.assign({}, PRIX.regles, { apporte: { seuil: 5, facteur: 0.5 } }) }) });
+test("vêtements apportés : depuis la 7.0.0, la marge est la même quel que soit leur nombre (facteur 1)", () => {
+  assert.deepStrictEqual(PRIX.regles.apporte, { seuil: 5, facteur: 1 });
+  assert.strictEqual(E.reglesApporte(PRIX.regles, 6), PRIX.regles, "facteur 1 : rien ne change");
+  const r = E.reglesApporte(ctxRemise.prix.regles, 6);
+  assert.deepStrictEqual([r.margePiece, r.parPiecePack], [1.5, 1.5]);
+  assert.strictEqual(E.reglesApporte(ctxRemise.prix.regles, 5), ctxRemise.prix.regles, "à 5 pièces, rien ne change");
   const r5 = cmdApp(apps(5, "apporte-veste")), r6 = cmdApp(apps(6, "apporte-veste"));
-  assert.strictEqual(r5.prix.groupes[0].margeMoyenne, 1);
+  assert.strictEqual(r5.prix.groupes[0].margeMoyenne, 3); assert.strictEqual(r6.prix.groupes[0].margeMoyenne, 3);
+  assert.strictEqual(r6.prix.groupes[0].margeReduite, false);
+  assert.deepStrictEqual(r6.prix.apporte, { n: 6, seuil: 5, reduite: false });
+  assert.strictEqual(r5.prix.unitaire, 6); assert.strictEqual(r6.prix.unitaire, 6);
+  assert.ok(r6.prix.marge >= 3 * 6 - 1e-6);
+});
+test("remise réglable (facteur 0,5) : 5 pièces comme avant, 6 pièces et plus la moitié de la marge pour toutes les pièces apportées", () => {
+  const r5 = cmdApp(apps(5, "apporte-veste"), null, ctxRemise), r6 = cmdApp(apps(6, "apporte-veste"), null, ctxRemise);
+  assert.strictEqual(r5.prix.groupes[0].margeMoyenne, 3);
   assert.deepStrictEqual(r5.prix.apporte, { n: 5, seuil: 5, reduite: false });
-  assert.strictEqual(r5.prix.unitaire, 3.58);   // inchangé
-  assert.strictEqual(r5.prix.unitaire, cmdApp(apps(5, "apporte-veste"), null, ctxSans).prix.unitaire);
-  assert.strictEqual(r6.prix.groupes[0].margeMoyenne, 0.5);
+  assert.strictEqual(r6.prix.groupes[0].margeMoyenne, 1.5);
   assert.strictEqual(r6.prix.groupes[0].margeReduite, true);
   assert.deepStrictEqual(r6.prix.apporte, { n: 6, seuil: 5, reduite: true });
-  assert.strictEqual(r6.prix.unitaire, 2.65);   // 3,15 € sans la règle
-  assert.strictEqual(cmdApp(apps(6, "apporte-veste"), null, ctxSans).prix.unitaire, 3.15);
-  assert.strictEqual(r6.prix.total, cmdApp(apps(6, "apporte-veste"), null, ctxMoitie).prix.total);
+  assert.ok(r6.prix.unitaire < cmdApp(apps(6, "apporte-veste")).prix.unitaire || r6.prix.unitaire === cmdApp(apps(6, "apporte-veste")).prix.unitaire);
 });
-test("vêtements apportés : on compte toutes les pièces apportées, tous articles confondus", () => {
-  const trois = cmdApp(apps(3, "apporte-veste").concat(apps(3, "apporte-tshirt")));
+test("remise réglable : on compte toutes les pièces apportées, tous articles confondus", () => {
+  const trois = cmdApp(apps(3, "apporte-veste").concat(apps(3, "apporte-tshirt")), null, ctxRemise);
   assert.strictEqual(trois.prix.apporte.n, 6); assert.strictEqual(trois.prix.apporte.reduite, true);
-  assert.ok(trois.prix.groupes.length === 2 && trois.prix.groupes.every(g => g.margeMoyenne === 0.5 && g.margeReduite));
-  const cinq = cmdApp(apps(3, "apporte-veste").concat(apps(2, "apporte-tshirt")));
-  assert.strictEqual(cinq.prix.apporte.reduite, false); assert.ok(cinq.prix.groupes.every(g => g.margeMoyenne === 1 && !g.margeReduite));
+  assert.ok(trois.prix.groupes.length === 2 && trois.prix.groupes.every(g => g.margeMoyenne === 1.5 && g.margeReduite));
+  const cinq = cmdApp(apps(3, "apporte-veste").concat(apps(2, "apporte-tshirt")), null, ctxRemise);
+  assert.strictEqual(cinq.prix.apporte.reduite, false); assert.ok(cinq.prix.groupes.every(g => g.margeMoyenne === 3 && !g.margeReduite));
 });
-test("vêtements apportés : les vêtements Decathlon ne comptent pas et gardent leur marge de 1 € par motif", () => {
-  const peu = cmdApp(apps(3, "apporte-veste").concat(pieces(10)));
+test("remise réglable : les vêtements Decathlon ne comptent pas et gardent leur marge de 3 €", () => {
+  const peu = cmdApp(apps(3, "apporte-veste").concat(pieces(10)), null, ctxRemise);
   assert.strictEqual(peu.prix.apporte.reduite, false);
-  assert.ok(peu.prix.groupes.every(g => g.margeMoyenne === 1));
-  const mix = cmdApp(apps(6, "apporte-veste").concat(pieces(4).map((p, i) => Object.assign(p, { id: "d" + i }))));
+  assert.ok(peu.prix.groupes.every(g => g.margeMoyenne === 3));
+  const mix = cmdApp(apps(6, "apporte-veste").concat(pieces(4).map((p, i) => Object.assign(p, { id: "d" + i }))), null, ctxRemise);
   const g = id => mix.prix.groupes.find(x => x.produitId === id);
-  assert.strictEqual(g("apporte-veste").margeMoyenne, 0.5); assert.strictEqual(g("polo-essential").margeMoyenne, 1);
+  assert.strictEqual(g("apporte-veste").margeMoyenne, 1.5); assert.strictEqual(g("polo-essential").margeMoyenne, 3);
   assert.strictEqual(g("polo-essential").margeReduite, false);
 });
-test("vêtements apportés : trois motifs, plafond de 1 € par pièce au lieu de 2 € ; un bloc collé, 0,50 €", () => {
+test("vêtements apportés : la marge ne dépend pas du nombre de motifs (3 motifs séparés, ou un bloc collé)", () => {
   const trois = marqBloc(false), bloc = marqBloc(true);
   const ps = n => apps(n, "apporte-veste").map((p, i) => Object.assign(p, { prenom: "Léo", numero: String(i + 1) }));
-  assert.strictEqual(cmdApp(ps(5), trois).prix.groupes[0].margeMoyenne, 2);
-  assert.strictEqual(cmdApp(ps(6), trois).prix.groupes[0].margeMoyenne, 1);
-  assert.strictEqual(cmdApp(ps(5), bloc).prix.groupes[0].margeMoyenne, 1);
-  assert.strictEqual(cmdApp(ps(6), bloc).prix.groupes[0].margeMoyenne, 0.5);
+  [5, 6].forEach(n => { assert.strictEqual(cmdApp(ps(n), trois).prix.groupes[0].margeMoyenne, 3); assert.strictEqual(cmdApp(ps(n), bloc).prix.groupes[0].margeMoyenne, 3); });
 });
-test("vêtements apportés : un pack et les articles Decathlon ne sont pas touchés, la table de prix du catalogue suit la règle", () => {
+test("vêtements apportés : un pack et les articles Decathlon ne sont pas touchés ; la table de prix suit la règle", () => {
   const pack = ["maillot-basket", "short-basket"].map((id, j) => ({ id: "k" + j, produitId: id, couleurId: produits[id].couleurs[0].id, taille: "M", prenom: "", numero: "", pack: "pk0", packType: "pack-basket" }));
   const r = cmdApp(pack.concat(apps(6, "apporte-veste")));
-  assert.strictEqual(r.prix.groupes.find(g => g.pack).margeMoyenne, 2);
-  const t = E.priceTable(produits["apporte-veste"], [5, 6, 10], ctx).map(x => x.unitaire), t0 = E.priceTable(produits["apporte-veste"], [5, 6, 10], ctxSans).map(x => x.unitaire);
-  assert.strictEqual(t[0], t0[0]);
-  assert.strictEqual(t[1], E.round2(t0[1] - 0.5)); assert.strictEqual(t[2], E.round2(t0[2] - 0.5));
+  assert.strictEqual(r.prix.groupes.find(g => g.pack).margeMoyenne, 3);
+  const t = E.priceTable(produits["apporte-veste"], [5, 6, 10], ctx).map(x => x.unitaire), tr = E.priceTable(produits["apporte-veste"], [5, 6, 10], ctxRemise).map(x => x.unitaire);
+  assert.strictEqual(t[0], tr[0], "à 5 pièces, la remise ne joue pas");
+  assert.ok(tr[1] <= t[1] && tr[2] <= t[2], "avec la remise réglée, le prix ne monte jamais : " + tr + " contre " + t);
 });
 
 console.log("\nOuvre-bouteilles, porte-clés, serviette et chasuble (version 6.1.0)");
@@ -784,7 +791,7 @@ test("6.1.0 : le format Micro (3 × 1,5 cm) existe, et son emplacement n'accepte
   assert.deepStrictEqual(r.motifs.map(m => [m.w, m.h]), [[1.5, 3]]);
   assert.deepStrictEqual(r.warnings, []);
 });
-test("6.1.0 : gravure ou vinyle, une pièce en métal n'a ni planche, ni livraison DTF, même en sublimation : achat + 1 € de marge", () => {
+test("6.1.0 : gravure ou vinyle, une pièce en métal n'a ni planche, ni livraison DTF, même en sublimation : achat + 3 € de marge, arrondi pair", () => {
   const prods = ["ouvre-bouteille-carte", "porte-cles-decapsuleur"];
   prods.forEach(id => assert.strictEqual(produits[id].technique, "gravure", id));
   ["dtf", "sublimation"].forEach(technique => {
@@ -794,21 +801,21 @@ test("6.1.0 : gravure ou vinyle, une pièce en métal n'a ni planche, ni livrais
     assert.deepStrictEqual(r.motifs.map(m => m.techno), ["gravure"]);
     assert.strictEqual(r.couts.planchesTTC, 0); assert.strictEqual(r.couts.livraison, 0);
     assert.strictEqual(r.couts.total, 1.81);
-    assert.strictEqual(r.prix.unitaire, 2.81);
-    assert.strictEqual(r.prix.marge, 1);
+    assert.strictEqual(r.prix.unitaire, 6);        // 1,81 + 3 = 4,81 -> 6
+    assert.strictEqual(r.prix.marge, 4.19);
   });
   const r = E.computeOrder({ pieces: [piece2("b", "porte-cles-decapsuleur")], marquages: mqPC, technique: "dtf" }, ctx);
-  assert.strictEqual(r.couts.total, 1.46); assert.strictEqual(r.prix.unitaire, 2.46);
+  assert.strictEqual(r.couts.total, 1.46); assert.strictEqual(r.prix.unitaire, 6);
   // 50 pièces : le prix ne bouge pas (rien à partager)
   const t = E.priceTable(produits["ouvre-bouteille-carte"], [1, 50], ctx).map(x => x.unitaire);
-  assert.deepStrictEqual(t, [2.81, 2.81]);
+  assert.deepStrictEqual(t, [6, 6]);
 });
 test("6.1.0 : le prix d'achat suit la variante AliExpress choisie (couleur et motif)", () => {
   const ob = produits["ouvre-bouteille-carte"], pc = produits["porte-cles-decapsuleur"];
   assert.deepStrictEqual(ob.couleurs.map(c => E.prixAchatPiece(ob, c.id)), [1.81, 1.91, 2.08, 2.12, 2.12]);
   assert.deepStrictEqual(pc.couleurs.map(c => E.prixAchatPiece(pc, c.id)), [1.46, 1.66, 1.64, 1.61, 1.62, 1.59, 1.56, 1.66]);
   const r = E.computeOrder({ pieces: [piece2("a", "ouvre-bouteille-carte", { couleurId: ob.couleurs[3].id })], marquages: mqOB, technique: "dtf" }, ctx);
-  assert.strictEqual(r.prix.unitaire, 3.12);
+  assert.strictEqual(r.couts.total, 2.12); assert.strictEqual(r.prix.unitaire, 6);   // 2,12 + 3 = 5,12 -> 6
 });
 test("6.1.0 : un motif gravé ne prend pas de place sur la planche DTF et ne coûte rien à la pièce voisine", () => {
   const mix = { pieces: [piece2("p", "polo-essential"), piece2("a", "ouvre-bouteille-carte"), piece2("b", "porte-cles-decapsuleur")], marquages: Object.assign({}, A6poitrine, mqOB, mqPC), technique: "dtf" };
@@ -819,7 +826,7 @@ test("6.1.0 : un motif gravé ne prend pas de place sur la planche DTF et ne co�
   assert.strictEqual(r.coutPieces.p.total, seul.coutPieces.p.total);
   assert.deepStrictEqual([r.coutPieces.a.planches, r.coutPieces.a.livraison, r.coutPieces.b.planches, r.coutPieces.b.livraison], [0, 0, 0, 0]);
   assert.strictEqual(r.couts.total, E.round2(seul.couts.total + 1.81 + 1.46));
-  assert.strictEqual(r.prix.total, E.round2(19.39 + 2.81 + 2.46));
+  assert.strictEqual(r.prix.total, 22 + 6 + 6);
   assert.strictEqual(r.motifs.length, 3);
 });
 test("6.1.0 : AliExpress, port compté à 0 € et délai de 5 à 10 jours, boutique et note repris dans la commande", () => {
@@ -830,7 +837,7 @@ test("6.1.0 : AliExpress, port compté à 0 € et délai de 5 à 10 jours, bout
   assert.strictEqual(r.vendeurs.filter(v => v.plateforme === "Decathlon").length, 1, "le tour de cou reste chez son vendeur Decathlon");
   assert.strictEqual(r.couts.livraisonVendeurs, 4.99, "seul le vendeur Decathlon facture un port");
 });
-test("6.1.0 : chasuble Kipsta en polyester (sublimation si blanc), serviette Nabaiji toujours en DTF", () => {
+test("6.1.0 : chasuble Kipsta en polyester (sublimation si blanc), serviette Nabaiji jamais en sublimation (vinyle par défaut depuis la 7.0.0)", () => {
   const ch = produits["chasuble-football"], se = produits["serviette-microfibre-l"];
   assert.strictEqual(ch.prixAchat, 3.49); assert.strictEqual(se.prixAchat, 7.99);
   assert.strictEqual(ch.couleurs.length, 6); assert.strictEqual(se.couleurs.length, 6);
@@ -839,9 +846,9 @@ test("6.1.0 : chasuble Kipsta en polyester (sublimation si blanc), serviette Nab
   const techno = (prod, couleurId) => E.pieceTechno(o, piece2("x", prod.id, { couleurId }), ctx);
   assert.strictEqual(techno(ch, "blanc"), "sublimation");
   assert.strictEqual(techno(ch, "rouge"), "dtf");
-  se.couleurs.forEach(c => assert.strictEqual(techno(se, c.id), "dtf", "serviette " + c.id));
-  assert.deepStrictEqual(E.priceTable(ch, [1, 5, 10, 20, 50], ctx).map(x => x.unitaire), [14.89, 7.07, 6.33, 5.64, 5.22]);
-  assert.deepStrictEqual(E.priceTable(se, [1, 5, 10, 20, 50], ctx).map(x => x.unitaire), [19.39, 11.57, 10.83, 10.14, 9.72]);
+  se.couleurs.forEach(c => assert.strictEqual(techno(se, c.id), "vinyle", "serviette " + c.id));
+  assert.deepStrictEqual(E.priceTable(ch, [1, 5, 10, 20, 50], ctx).map(x => x.unitaire), [18, 10, 10, 8, 8]);
+  assert.deepStrictEqual(E.priceTable(se, [1, 5, 10, 20, 50], ctx).map(x => x.unitaire), [14, 14, 14, 14, 14]);
   assert.ok(se.zones.serviette && DATA.emplacements.serviette.formats.every(f => PRIX.formatsMotif[f].w <= se.zones.serviette.w && PRIX.formatsMotif[f].h <= se.zones.serviette.h));
   assert.ok(ch.zones.poitrine && ch.zones.dos);
 });
@@ -881,7 +888,7 @@ test("6.2.0 : la taille compte pour les planches et le prix, la position non", (
   const prix = extra => cmdV(extra, 10);
   const petit = prix({ largeur: 5, image: { ratio: 1 } }), grand = prix({ largeur: 20, image: { ratio: 1.2 } });
   assert.ok(petit.couts.planchesTTC < grand.couts.planchesTTC, "petits visuels : " + petit.couts.planchesTTC + " €, grands : " + grand.couts.planchesTTC + " €");
-  assert.ok(petit.prix.unitaire < grand.prix.unitaire);
+  assert.ok(petit.prix.unitaire <= grand.prix.unitaire && petit.prix.unitaire % 2 === 0 && grand.prix.unitaire % 2 === 0);
   const centre = prix({ largeur: 8, image: { ratio: 1 } }), decale = prix({ largeur: 8, image: { ratio: 1 }, dx: 3, dy: -2 });
   assert.strictEqual(decale.couts.total, centre.couts.total); assert.strictEqual(decale.prix.unitaire, centre.prix.unitaire);
   assert.deepStrictEqual(decale.motifs.map(m => [m.w, m.h]), centre.motifs.map(m => [m.w, m.h]));
@@ -935,6 +942,123 @@ test("6.2.0 : décalage dit en français, et valeurs aberrantes ramenées à des
   const g = E.imageGeom({ format: "A6", largeur: 8, dx: 9999, dy: "abc" }, ctx);
   assert.deepStrictEqual([g.dx, g.dy], [100, 0]);
   assert.strictEqual(E.imageGeom({ format: "A6", largeur: -4 }, ctx).libre, false, "largeur négative : on retrouve le format");
+});
+
+
+console.log("\nVinyle thermocollant, technique par pièce et prix 7.0.0 (version 7.0.0)");
+const marqPoitrine = { poitrine: { actif: true, avecImage: true, format: "A6", orient: "portrait" } };
+test("7.0.0 : le vinyle est découpé à l'atelier : ni planche ni livraison, seulement le coût de la matière", () => {
+  const ps = [piece2("v", "polo-essential", { technique: "vinyle" })];
+  const r = E.computeOrder({ pieces: ps, marquages: marqPoitrine, technique: "dtf" }, ctx);
+  assert.deepStrictEqual(r.motifs.map(m => m.techno), ["vinyle"]);
+  assert.deepStrictEqual(Object.keys(r.plans), [], "aucune planche");
+  assert.strictEqual(r.couts.planchesTTC, 0); assert.strictEqual(r.couts.livraison, 0);
+  const attendu = E.round2(10 * 14 * PRIX.vinyle.coutCm2 * PRIX.vinyle.chute);      // un A6 : 140 cm²
+  assert.strictEqual(r.couts.vinyle, attendu);
+  assert.strictEqual(r.couts.total, E.round2(7.99 + attendu));
+  assert.strictEqual(r.coutPieces.v.vinyle, 10 * 14 * PRIX.vinyle.coutCm2 * PRIX.vinyle.chute);
+  assert.strictEqual(r.prix.unitaire, pair(7.99 + attendu + 3));
+  assert.ok(r.prix.marge >= 3 - 1e-9);
+});
+test("7.0.0 : le vinyle ne dépend pas de la quantité (rien à partager) et coûte moins que le DTF d'une seule pièce", () => {
+  const prix = n => E.computeOrder({ pieces: pieces(n, "marine", () => ({ technique: "vinyle" })), marquages: marqPoitrine, technique: "dtf" }, ctx).prix.unitaire;
+  assert.strictEqual(prix(1), prix(50));
+  assert.ok(prix(1) < E.computeOrder({ pieces: pieces(1), marquages: marqPoitrine, technique: "dtf" }, ctx).prix.unitaire);
+});
+test("7.0.0 : la technique de la pièce passe avant la technique par défaut de l'article, et la sublimation passe avant le vinyle par défaut", () => {
+  const sock = piece2("s", "chaussettes-football");
+  const t = (piece, technique) => E.pieceTechno({ technique: technique || "dtf" }, piece, ctx);
+  assert.strictEqual(produits["chaussettes-football"].techniqueDefaut, "vinyle");
+  assert.strictEqual(t(sock), "vinyle", "chaussettes : vinyle par défaut");
+  assert.strictEqual(t(Object.assign({}, sock, { technique: "dtf" })), "dtf", "le DTF reste possible à la main");
+  assert.strictEqual(t(piece2("p", "polo-essential")), "dtf", "un polo reste en DTF");
+  assert.strictEqual(t(piece2("p", "polo-essential", { technique: "vinyle" })), "vinyle");
+  assert.strictEqual(t(Object.assign({}, sock, { couleurId: "blanc" }), "sublimation"), "sublimation", "chaussettes blanches en polyester : la sublimation demandée passe avant");
+  assert.strictEqual(t(piece2("p", "polo-essential", { technique: "dtf", couleurId: "blanc" }), "sublimation"), "dtf", "un DTF choisi sur la pièce l'emporte sur la sublimation");
+  assert.strictEqual(t(piece2("o", "ouvre-bouteille-carte", { technique: "vinyle" })), "gravure", "la gravure d'un article en métal ne change pas");
+});
+test("7.0.0 : 22 articles où le DTF n'est pas idéal sont en vinyle par défaut (jamais un vêtement apporté ni une gravure)", () => {
+  const vin = DATA.produits.filter(p => p.techniqueDefaut === "vinyle");
+  assert.strictEqual(vin.length, 22);
+  vin.forEach(p => assert.ok(!p.apporte && p.technique !== "gravure", p.id));
+  vin.forEach(p => assert.strictEqual(E.pieceTechno({ technique: "dtf" }, piece2("x", p.id), ctx), "vinyle", p.id));
+});
+test("7.0.0 : un pack avec des chaussettes en vinyle : la planche ne compte que les pièces en DTF", () => {
+  const k = DATA.packs.filter(x => x.id === "pack-basket")[0];
+  const ps = k.produits.map((pid, j) => piece2("k" + j, pid, { pack: "pk", packType: k.id }));
+  const marq = {}; k.vitrine.forEach(e => { const tx = !!DATA.emplacements[e].texteSeul; marq[e] = { actif: true, avecImage: !tx, format: "A6", orient: "portrait" }; if (tx) { marq[e].maj = true; marq[e].prenom = { actif: true, police: "Bebas Neue", hauteur: 3, couleur: "#fff" }; } });
+  const r = E.computeOrder({ pieces: ps.map(p => Object.assign(p, { prenom: "Léa" })), marquages: marq, technique: "dtf" }, ctx);
+  const chaus = r.motifs.filter(m => m.pieceId === ps.find(p => p.produitId === "chaussettes-football").id);
+  assert.ok(chaus.length && chaus.every(m => m.techno === "vinyle"));
+  assert.ok(r.motifs.some(m => m.techno === "dtf"));
+  assert.ok(r.couts.vinyle > 0);
+  assert.ok(Math.abs(Object.values(r.coutPieces).reduce((s, c) => s + c.total, 0) - r.couts.total) < 0.011, "les coûts par pièce égalent le coût de revient");
+});
+test("7.0.0 : le prix de vente est toujours pair et la marge d'au moins 3 € par pièce (articles du catalogue, 1 à 50 pièces)", () => {
+  DATA.produits.filter(p => !p.apporte).forEach(p => {
+    E.priceTable(p, [1, 7, 50], ctx).forEach(x => assert.strictEqual(x.unitaire % 2, 0, p.id + " : " + x.unitaire));
+  });
+  DATA.packs.forEach(k => E.priceTable(k, [1, 5], ctx).forEach(x => assert.strictEqual(x.unitaire % 2, 0, k.id + " : " + x.unitaire)));
+});
+
+console.log("\nTexte et chiffre : taille, position et orientation libres (version 7.0.0)");
+const txtCfg = (extra) => ({ poitrine: { actif: true, avecImage: false, bloc: false, maj: true,
+  prenom: Object.assign({ actif: true, police: "Bebas Neue", hauteur: 3, couleur: "#fff" }, extra && extra.prenom), numero: Object.assign({ actif: true, police: "Bebas Neue", hauteur: 8, couleur: "#fff" }, extra && extra.numero) } });
+const pTxt = Object.assign({}, polo(1)[0], { prenom: "Léo", numero: "7" });
+const motifsTxt = (extra) => E.computeOrder({ pieces: [pTxt], marquages: txtCfg(extra), technique: "dtf" }, ctx).motifs;
+test("7.0.0 : sans rotation ni décalage, rien ne change (anciens fichiers de commande)", () => {
+  const m = motifsTxt();
+  assert.strictEqual(m.length, 2);
+  m.forEach(x => { assert.strictEqual(x.el.rot, 0); assert.strictEqual(x.el.w, x.el.w0); assert.strictEqual(x.el.h, x.el.h0); assert.strictEqual(x.el.tx, 0); assert.strictEqual(x.el.ty, 0); });
+});
+test("7.0.0 : la hauteur des lettres se règle en cm (0,5 à 28)", () => {
+  assert.strictEqual(motifsTxt({ numero: { hauteur: 12 } }).find(x => x.kind === "numero").el.hauteur, 12);
+  const grand = motifsTxt({ numero: { hauteur: 100 } }).find(x => x.kind === "numero");
+  assert.ok(grand.el.hauteur < 28 && grand.el.reduit, "hauteur bornée à 28 cm puis réduite pour tenir dans la zone : " + grand.el.hauteur);
+  assert.strictEqual(motifsTxt({ prenom: { hauteur: 0.1 } }).find(x => x.kind === "prenom").el.hauteur, 0.5);
+});
+test("7.0.0 : un quart de tour échange la largeur et la hauteur de la case de planche", () => {
+  const a = motifsTxt().find(x => x.kind === "numero"), b = motifsTxt({ numero: { rot: 90 } }).find(x => x.kind === "numero");
+  assert.ok(Math.abs(b.w - a.h) < 1e-3 && Math.abs(b.h - a.w) < 1e-3, a.w + "×" + a.h + " -> " + b.w + "×" + b.h);
+  assert.strictEqual(b.el.rot, 90);
+  assert.ok(Math.abs(b.el.w0 - a.w) < 1e-6 && Math.abs(b.el.h0 - a.h) < 1e-6, "le texte garde sa taille à l'endroit pour dessiner les planches");
+  const c = motifsTxt({ numero: { rot: 180 } }).find(x => x.kind === "numero");
+  assert.ok(Math.abs(c.w - a.w) < 1e-3 && Math.abs(c.h - a.h) < 1e-3);
+});
+test("7.0.0 : un angle libre : la case est le rectangle qui englobe le texte tourné", () => {
+  const a = motifsTxt().find(x => x.kind === "numero"), m = motifsTxt({ numero: { rot: 30 } }).find(x => x.kind === "numero");
+  const rad = Math.PI / 6, w = Math.cos(rad) * a.w + Math.sin(rad) * a.h, h = Math.sin(rad) * a.w + Math.cos(rad) * a.h;
+  assert.ok(Math.abs(m.w - w) < 0.002 && Math.abs(m.h - h) < 0.002, m.w + "×" + m.h + " attendu " + w + "×" + h);
+  assert.ok(m.w >= a.w - 1e-9 && m.h >= a.h - 1e-9, "le rectangle englobant n'est jamais plus petit");
+  assert.strictEqual(E.angleTexte(30), 30); assert.strictEqual(E.angleTexte(-30), -30); assert.strictEqual(E.angleTexte(270), -90);
+  assert.strictEqual(E.angleTexte(360), 0); assert.strictEqual(E.angleTexte(725.04), 5); assert.strictEqual(E.angleTexte("abc"), 0); assert.strictEqual(E.angleTexte(180), 180);
+});
+test("7.0.0 : la position ne change ni les planches ni le prix, et se retrouve sur l'élément", () => {
+  const base = E.computeOrder({ pieces: [pTxt], marquages: txtCfg(), technique: "dtf" }, ctx);
+  const dep = E.computeOrder({ pieces: [pTxt], marquages: txtCfg({ numero: { dx: 2, dy: -1.5 } }), technique: "dtf" }, ctx);
+  assert.strictEqual(dep.couts.total, base.couts.total); assert.strictEqual(dep.prix.unitaire, base.prix.unitaire);
+  assert.deepStrictEqual(dep.motifs.map(m => [m.w, m.h]), base.motifs.map(m => [m.w, m.h]));
+  const n = dep.motifs.find(m => m.kind === "numero");
+  assert.deepStrictEqual([n.el.tx, n.el.ty], [2, -1.5]);
+  const pile = E.stackFor("poitrine", txtCfg({ numero: { dx: 2, dy: -1.5 } }).poitrine, pTxt, produits["polo-essential"], ctx);
+  assert.deepStrictEqual(pile.items.map(i => [i.kind, i.ux, i.uy]), [["prenom", 0, 0], ["numero", 2, -1.5]]);
+  assert.strictEqual(E.computeOrder({ pieces: [pTxt], marquages: txtCfg({ numero: { dx: 9999 } }), technique: "dtf" }, ctx).motifs.find(m => m.kind === "numero").el.tx, 100, "borné");
+  assert.ok(E.computeOrder({ pieces: [pTxt], marquages: txtCfg({ numero: { dx: 15 } }), technique: "dtf" }, ctx).warnings.some(w => /déborde de la zone/.test(w)), "décalé hors de la zone");
+});
+test("7.0.0 : un texte tourné ou déplacé sort du bloc collé, avec un avertissement ; le prix ne change pas (marge fixe)", () => {
+  const avecBloc = (extra) => E.computeOrder({ pieces: [pTxt], marquages: { poitrine: Object.assign({ actif: true, avecImage: true, format: "A6", orient: "portrait", bloc: true, prenom: Object.assign({ actif: true, police: "Bebas Neue", hauteur: 2.5, couleur: "#fff" }, extra && extra.prenom), numero: Object.assign({ actif: true, police: "Bebas Neue", hauteur: 4, couleur: "#fff" }, extra && extra.numero) }) }, technique: "dtf" }, ctx);
+  const colle = avecBloc(), libre = avecBloc({ numero: { rot: 90 } });
+  assert.deepStrictEqual(colle.motifs.map(m => m.kind), ["bloc"]);
+  assert.deepStrictEqual(libre.motifs.map(m => m.kind), ["image", "prenom", "numero"]);
+  assert.ok(libre.warnings.some(w => /tourné ou déplacé/.test(w)), libre.warnings.join(" | "));
+  assert.ok(!colle.warnings.some(w => /tourné ou déplacé/.test(w)));
+  assert.strictEqual(libre.prix.groupes[0].margeMoyenne, 3);
+});
+test("7.0.0 : l'aperçu et les planches (SVG et PNG) dessinent le texte tourné", () => {
+  const fs = require("fs");
+  const imp = fs.readFileSync(path.join(__dirname, "..", "js", "atelier-impression.js"), "utf8"), pv = fs.readFileSync(path.join(__dirname, "..", "js", "preview.js"), "utf8");
+  assert.ok(/rotate\(' \+ el\.rot/.test(imp) && /ctx\.rotate\(el\.rot/.test(imp), "planches SVG et PNG");
+  assert.ok(/rotate\(' \+ rotT/.test(pv), "aperçu");
 });
 
 console.log("\n" + ok + " tests passés");

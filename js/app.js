@@ -802,7 +802,13 @@
       (o.actif ? '<div class="txt-opts">' +
         '<label>Police<select data-k="' + kind + '.police">' + fontOptions(o.police) + '</select></label>' +
         '<label>Hauteur des lettres<span class="unit"><input type="number" data-k="' + kind + '.hauteur" min="0.5" max="28" step="0.5" value="' + o.hauteur + '"> cm</span></label>' +
-        '<label>Couleur<input type="color" data-k="' + kind + '.couleur" value="' + esc(o.couleur) + '"></label></div>' : "") +
+        '<label>Couleur<input type="color" data-k="' + kind + '.couleur" value="' + esc(o.couleur) + '"></label></div>' +
+        '<div class="txt-pos" data-txt="' + kind + '">' +
+        '<label>Orientation<span class="unit"><input type="number" data-k="' + kind + '.rot" min="-180" max="180" step="1" value="' + fmtField(o.rot || 0) + '"> °</span></label>' +
+        '<div class="seg" role="group" aria-label="Tourner le texte"><button type="button" data-act="trot" data-kind="' + kind + '" data-dir="-1" title="Quart de tour vers la gauche">&#8634; 90°</button><button type="button" data-act="trot" data-kind="' + kind + '" data-dir="1" title="Quart de tour vers la droite">&#8635; 90°</button><button type="button" data-act="trot" data-kind="' + kind + '" data-dir="0" title="Remettre le texte à l\'endroit">0°</button></div>' +
+        '<label>Décalage horizontal <small>(+ vers la droite)</small><span class="unit"><input type="number" data-k="' + kind + '.dx" min="-60" max="60" step="0.5" value="' + fmtField(o.dx || 0) + '"> cm</span></label>' +
+        '<label>Décalage vertical <small>(+ vers le bas)</small><span class="unit"><input type="number" data-k="' + kind + '.dy" min="-60" max="60" step="0.5" value="' + fmtField(o.dy || 0) + '"> cm</span></label>' +
+        '<button type="button" class="linkbtn" data-act="tcenter" data-kind="' + kind + '">Recentrer</button></div>' : "") +
       '</div>';
   }
 
@@ -971,9 +977,17 @@
   function nGravure(c) {
     return (c || S).pieces.filter(function (p) { return E.pieceTechno({ technique: "dtf" }, p, CTX) === "gravure"; }).length;
   }
+  // Pièces en vinyle thermocollant (flex découpé à l'atelier, sans planche) : les articles où le DTF n'est pas idéal, hors gravure
+  function nVinyle(c) {
+    return (c || S).pieces.filter(function (p) { return E.pieceTechno({ technique: "dtf" }, p, CTX) === "vinyle"; }).length;
+  }
+  function vinyleTxt() {
+    var v = nVinyle();
+    return v ? " " + (v > 1 ? v + " pièces sont en vinyle thermocollant" : "1 pièce est en vinyle thermocollant") + " (le DTF n'est pas idéal sur " + (v > 1 ? "leur matière" : "sa matière") + ") : ce choix ne " + (v > 1 ? "les concerne" : "la concerne") + " pas." : "";
+  }
   function gravureTxt() {
     var g = nGravure();
-    return g ? " " + (g > 1 ? g + " pièces sont gravées au laser ou marquées en vinyle thermocollant" : "1 pièce est gravée au laser ou marquée en vinyle thermocollant") + " : ce choix ne " + (g > 1 ? "les concerne" : "la concerne") + " pas." : "";
+    return (g ? " " + (g > 1 ? g + " pièces sont gravées au laser ou marquées en vinyle thermocollant" : "1 pièce est gravée au laser ou marquée en vinyle thermocollant") + " : ce choix ne " + (g > 1 ? "les concerne" : "la concerne") + " pas." : "") + vinyleTxt();
   }
 
   function updateTechniqueInfo() {
@@ -1135,10 +1149,20 @@
     return out;
   }
 
+  // Orientation et position d'un prénom ou d'un numéro, pour le mail : ", tourné de 30°, décalé de 2 cm vers la droite"
+  function posTexte(o) {
+    var p = [], dec = [], dx = Number(o.dx) || 0, dy = Number(o.dy) || 0, rot = E.angleTexte(o.rot);
+    if (rot) p.push("tourné de " + fmtN(rot) + "°");
+    if (Math.abs(dx) >= 0.05) dec.push(fmtN(Math.abs(dx)) + " cm vers la " + (dx > 0 ? "droite" : "gauche"));
+    if (Math.abs(dy) >= 0.05) dec.push(fmtN(Math.abs(dy)) + " cm vers le " + (dy > 0 ? "bas" : "haut"));
+    if (dec.length) p.push("décalé de " + dec.join(" et "));
+    return p.length ? ", " + p.join(", ") : "";
+  }
+
   // Le texte d'une configuration : pièces, technique, marquages, prix
   function configTexte(c, r, compact) {
-    var t = [], gv = nGravure(c), techBase = c.technique === "sublimation" ? "sublimation (polyester clair), DTF sinon" : "DTF";
-    t.push("Technique : " + (gv === c.pieces.length ? "gravure laser ou vinyle thermocollant" : techBase + (gv ? ", gravure laser ou vinyle thermocollant pour " + gv + (gv > 1 ? " pièces" : " pièce") : "")), "");
+    var t = [], gv = nGravure(c), vn = nVinyle(c), techBase = c.technique === "sublimation" ? "sublimation (polyester clair), DTF sinon" : "DTF";
+    t.push("Technique : " + (gv === c.pieces.length ? "gravure laser ou vinyle thermocollant" : vn + gv === c.pieces.length ? "vinyle thermocollant" : techBase + (vn ? ", vinyle thermocollant pour " + vn + (vn > 1 ? " pièces" : " pièce") : "") + (gv ? ", gravure laser ou vinyle thermocollant pour " + gv + (gv > 1 ? " pièces" : " pièce") : "")), "");
     t.push(c.pieces.length + (c.pieces.length > 1 ? " pièces" : " pièce") + " :");
     if (compact) {
       var g = {};
@@ -1154,7 +1178,7 @@
       var m = c.marquages[e]; if (!m.actif) return;
       var d = [];
       if (m.avecImage) d.push("visuel " + E.descriptionVisuel(m, CTX) + (m.image ? " (" + m.image.nom + ")" : ""));
-      ["prenom", "numero"].forEach(function (k) { if (m[k].actif) d.push((k === "prenom" ? "prénom" : "numéro") + " en " + m[k].police + ", " + fmtN(m[k].hauteur) + " cm, " + m[k].couleur); });
+      ["prenom", "numero"].forEach(function (k) { if (m[k].actif) d.push((k === "prenom" ? "prénom" : "numéro") + " en " + m[k].police + ", " + fmtN(m[k].hauteur) + " cm, " + m[k].couleur + posTexte(m[k])); });
       t.push("- " + DATA.emplacements[e].label + " : " + d.join(" + ") + (m.bloc && d.length > 1 ? " (collés en un seul bloc)" : ""));
     });
     if (r && r.prix) { t.push(""); prixLignes(r).forEach(function (l) { t.push(l); }); }
@@ -1380,6 +1404,11 @@
         majChampsVisuel(emp, t);
         scheduleRefresh(); return;
       }
+      if (/^(prenom|numero)\.(rot|dx|dy)$/.test(k)) {              // texte : orientation (degrés) et position (cm), libres
+        v = parseFloat(String(t.value).replace(",", ".")); if (!isFinite(v)) return;
+        v = k.slice(-3) === "rot" ? Math.max(-180, Math.min(180, Math.round(v * 10) / 10)) : Math.max(-60, Math.min(60, Math.round(v * 10) / 10));
+        setPath(m, k, v); scheduleRefresh(); return;
+      }
       if (t.type === "checkbox") v = t.checked;
       else if (t.type === "number") { v = parseFloat(String(t.value).replace(",", ".")); if (!isFinite(v)) return; v = Math.max(0.5, Math.min(28, v)); }
       else v = t.value;
@@ -1463,6 +1492,13 @@
     }
     else if (act === "paste") { var pb = $("#pastebox"); pb.hidden = !pb.hidden; if (!pb.hidden) $("#pastetxt").focus(); }
     else if (act === "pasteok") { addFromList($("#pastetxt").value); $("#pastetxt").value = ""; $("#pastebox").hidden = true; renderPieces(); refresh(); }
+    else if (act === "trot" || act === "tcenter") {
+      var c2 = b.closest("[data-emp]"); if (!c2) return;
+      var emp2 = c2.dataset.emp, o2 = S.marquages[emp2][b.dataset.kind]; S.sel = emp2;
+      if (act === "tcenter") { o2.dx = 0; o2.dy = 0; }
+      else { var dir = parseInt(b.dataset.dir, 10); o2.rot = dir === 0 ? 0 : E.angleTexte((o2.rot || 0) + 90 * dir); }
+      renderEmp(emp2); refresh();
+    }
     else if (act === "fmt" || act === "rot" || act === "center") {
       var c1 = b.closest("[data-emp]"); if (!c1) return;
       var emp1 = c1.dataset.emp, m1 = S.marquages[emp1]; S.sel = emp1;

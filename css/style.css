@@ -257,6 +257,8 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .vis-range { width: 100%; accent-color: var(--ink); margin: 0 0 .5rem; }
 .vis-pos { display: grid; grid-template-columns: 1fr 1fr auto; gap: .8rem; align-items: end; }
 .vis-pos small { color: var(--muted); font-weight: 400; }
+.txt-pos { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) minmax(0, 1fr) auto; gap: .6rem .8rem; align-items: end; padding: .2rem 0 .4rem 1.6rem; }
+.txt-pos small { color: var(--muted); font-weight: 400; }
 .vis output { font-weight: 700; min-width: 3rem; }
 .vis .hint { margin: 0; }
 .pv-move { cursor: move; touch-action: none; }
@@ -325,6 +327,7 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
   .form2, .row2 { grid-template-columns: 1fr; }
   .txt-opts { grid-template-columns: 1fr 1fr; padding-left: 0; }
   .vis-size, .vis-pos { grid-template-columns: 1fr; }
+  .txt-pos { grid-template-columns: 1fr 1fr; padding-left: 0; }
   .seq { grid-template-columns: 1fr; }
   .hint-matiere { display: block; }
   .lb-stage { grid-template-columns: 1fr 1fr; }

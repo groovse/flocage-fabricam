@@ -282,19 +282,21 @@
 
   function pressNotes(order, r) {
     var notes = [], pr = A.PRIX.presse;
-    var usesPoly = false, usesOther = false, usesGrav = false, usesSub = r.motifs.some(function (m) { return m.techno === "sublimation"; });
+    var usesPoly = false, usesOther = false, usesGrav = false, usesVin = false, usesSub = r.motifs.some(function (m) { return m.techno === "sublimation"; });
     order.pieces.forEach(function (p) {
       var prod = prodOf(p), tech = E.pieceTechno(order, p, A.CTX);
       if (tech === "dtf") { if (E.polyesterPiece(prod, p) >= 50) usesPoly = true; else usesOther = true; }
       if (tech === "gravure") usesGrav = true;
+      if (tech === "vinyle") usesVin = true;
     });
     if (usesPoly) notes.push(pr.dtf_polyester);
     if (usesOther) notes.push(pr.dtf_autre);
     if (usesSub) notes.push(pr.sublimation);
+    if (usesVin) notes.push(pr.vinyle);
     if (usesGrav) notes.push(pr.gravure);
     var vus = {};
     order.pieces.forEach(function (p) { var prod = prodOf(p); if (prod.avertissement && !vus[prod.id]) { vus[prod.id] = 1; notes.push(prod.avertissement); } });
-    if (usesPoly || usesOther || usesSub || !usesGrav) notes.push("Plateau de la presse : " + A.PRIX.plateau.w + " × " + A.PRIX.plateau.h + " cm au maximum. Les motifs en DTF se découpent le long de leur case sur la planche.");
+    if (usesPoly || usesOther || usesSub || usesVin || !usesGrav) notes.push("Plateau de la presse : " + A.PRIX.plateau.w + " × " + A.PRIX.plateau.h + " cm au maximum. Les motifs en DTF se découpent le long de leur case sur la planche.");
     return notes;
   }
 
@@ -303,6 +305,7 @@
     var pr = A.PRIX.presse, prod = prodOf(piece), tech = E.pieceTechno(st.order, piece, A.CTX);
     if (tech === "sublimation") return { tech: "sublimation", texte: pr.sublimation };
     if (tech === "gravure") return { tech: "gravure", texte: pr.gravure };
+    if (tech === "vinyle") return { tech: "vinyle", texte: pr.vinyle };
     return { tech: "dtf", texte: E.polyesterPiece(prod, piece) >= 50 ? pr.dtf_polyester : pr.dtf_autre };
   }
 
@@ -323,7 +326,11 @@
   // Description lisible d'un motif : « Visuel A6, 10 × 14 cm », « Prénom LÉO, Bebas Neue, 4 cm »
   function elementTexte(el, cfg) {
     if (el.kind === "image") return "Visuel " + esc(E.descriptionVisuel(cfg, A.CTX) || (fmtN(el.w) + " × " + fmtN(el.h) + " cm"));
-    return (el.kind === "prenom" ? "Prénom " : "Numéro ") + "<b>" + esc(el.text) + "</b>, " + esc(el.police) + ", " + fmtN(el.hauteur) + " cm de haut";
+    var pos = [];
+    if (el.rot) pos.push("tourné de " + fmtN(el.rot) + "°");
+    if (Math.abs(el.tx || 0) >= 0.05) pos.push("décalé de " + fmtN(Math.abs(el.tx)) + " cm vers la " + (el.tx > 0 ? "droite" : "gauche"));
+    if (Math.abs(el.ty || 0) >= 0.05) pos.push("décalé de " + fmtN(Math.abs(el.ty)) + " cm vers le " + (el.ty > 0 ? "bas" : "haut"));
+    return (el.kind === "prenom" ? "Prénom " : "Numéro ") + "<b>" + esc(el.text) + "</b>, " + esc(el.police) + ", " + fmtN(el.hauteur) + " cm de haut" + (pos.length ? ", " + pos.join(", ") : "");
   }
   // Un bloc collé : « Bloc collé, 10 × 23,1 cm : visuel A6 + prénom LÉO + numéro 7 », éléments centrés, de haut en bas
   function motifTexte(m) {
@@ -541,6 +548,7 @@
     if (nMp) rows.push([nAli === 0 ? "Articles de la place de marché Decathlon (livrés par le vendeur)" : nAli === nMp ? "Articles AliExpress (livrés par le vendeur)" : "Articles de la place de marché Decathlon et d'AliExpress (livrés par le vendeur)", plur(nMp, "pièce", "pièces"), fmtEUR(eurMp)]);
     if (r.couts.livraisonVendeurs) rows.push(["Frais de port des vendeurs (estimation)", r.vendeurs.map(function (v) { return v.nom + " " + fmtEUR(v.frais); }).join(", "), fmtEUR(r.couts.livraisonVendeurs)]);
     var fn = A.PRIX.fournisseur.nom, plHT = A.PRIX.prixPlanchesHT;
+    if (r.couts.vinyle) rows.push(["Vinyle thermocollant (découpé à l'atelier)", plur(r.motifs.filter(function (m) { return m.techno === "vinyle"; }).length, "motif", "motifs") + ", " + String(Math.round(A.PRIX.vinyle.coutCm2 * 1000) / 1000).replace(".", ",") + " € le cm² + " + Math.round((A.PRIX.vinyle.chute - 1) * 100) + " % de chutes", fmtEUR(r.couts.vinyle)]);
     if (plHT) rows.push(["Planches " + fn + ", hors taxes", "", fmtEUR(r.couts.planchesHT)]);
     rows = rows.concat([
       ["Planches " + fn + ", TTC", plHT ? "TVA " + Math.round(A.PRIX.tva * 100) + " %" : "", fmtEUR(r.couts.planchesTTC)],
@@ -553,10 +561,10 @@
         var sans = g.produitIds.some(function (id) { return A.byId[id] && A.byId[id].margePack != null; });
         detail += " (" + fmtEUR(rg.parPiecePack) + " par pièce" + (sans ? ", chaussettes sans marge" : "") + ")";
       } else {
-        var f = g.margeReduite && rg.apporte ? rg.apporte.facteur : 1;   // plus de 5 pièces apportées : marge réduite
-        detail += g.motifs ? " (" + fmtEUR(rg.parMotif * f) + " par motif" + (rg.maxParPiece != null ? ", " + fmtEUR(rg.maxParPiece * f) + " au plus par pièce" : "") + (f !== 1 ? " : marge × " + String(f).replace(".", ",") + ", plus de " + rg.apporte.seuil + " vêtements apportés" : "") + ")" : " (aucun motif)";
+        var f = g.margeReduite && rg.apporte ? rg.apporte.facteur : 1;   // marge réduite si le facteur d'apporté n'est pas 1
+        detail += g.motifs ? " (" + fmtEUR(rg.margePiece * f) + " par pièce" + (f !== 1 ? " : marge × " + String(f).replace(".", ",") + ", plus de " + rg.apporte.seuil + " vêtements apportés" : "") + ")" : " (aucun motif)";
       }
-      detail += ", soit " + fmtEUR(g.unitaire) + " l'unité";
+      detail += ", arrondi à " + fmtEUR(g.unitaire) + " l'unité";
       rows.push([esc(A.groupName(g)) + " × " + g.n, detail, fmtEUR(g.total)]);
     });
     rows.push(["<b>Total à facturer</b>", pv.unitaire != null ? r.N + " × " + fmtEUR(pv.unitaire) : "", "<b>" + fmtEUR(pv.total) + "</b>"]);
@@ -604,6 +612,13 @@
     $("#sl-prev").addEventListener("click", function () { show(cur - 1); });
     $("#sl-next").addEventListener("click", function () { show(cur + 1); });
     $("#sl-strip").addEventListener("click", function (e) { var b = e.target.closest("button[data-i]"); if (b) show(+b.dataset.i); });
+    $("#sl-body").addEventListener("change", function (e) {
+      var sel = e.target.closest("select[data-tech]"); if (!sel) return;
+      var piece = st.order.pieces.filter(function (x) { return x.id === sel.dataset.tech; })[0]; if (!piece) return;
+      if (sel.value) piece.technique = sel.value; else delete piece.technique;
+      recompute(); save(); show(cur, false);
+      A.toast("Technique de la pièce " + (st.order.pieces.indexOf(piece) + 1) + " : " + (sel.value ? sel.value.toUpperCase() : "automatique") + ". Les planches et le coût sont recalculés.");
+    });
     // flèches du clavier, et balayage au doigt
     At.onKey = function (e) {
       if (/^(INPUT|SELECT|TEXTAREA)$/.test((e.target.tagName || ""))) return;
@@ -649,7 +664,7 @@
         return '<div class="mo' + (m.kind === "bloc" ? " mo-bloc" : "") + '">' + vis + "<div>" + motifTexte(m) + "</div></div>";
       }).join("") + "</td><td>" + g.items.map(function (m) {
         var sh = st.motifSheet[m.id];
-        return '<div class="mo">' + (sh ? "<b>" + esc(sh.code) + "</b> <span class=\"muted\">case " + esc(codeMotif(m)) + "</span>" : m.techno === "gravure" ? "<b>Gravure</b> <span class=\"muted\">sans planche</span>" : "–") + "</div>";
+        return '<div class="mo">' + (sh ? "<b>" + esc(sh.code) + "</b> <span class=\"muted\">case " + esc(codeMotif(m)) + "</span>" : m.techno === "gravure" ? "<b>Gravure</b> <span class=\"muted\">sans planche</span>" : m.techno === "vinyle" ? "<b>Vinyle</b> <span class=\"muted\">à découper, sans planche</span>" : "–") + "</div>";
       }).join("") + "</td></tr>";
     }).join("");
     var photo = photoDe(prod, col), liens = liensAchat(prod, col);
@@ -664,13 +679,25 @@
     return '<article class="slide">' +
       '<div class="sl-left"><div class="sl-stage">' + stage + "</div>" + carte + "</div>" +
       '<div class="sl-spec"><header><p class="sl-n">Pièce ' + (i + 1) + " sur " + n + "</p><h2>" + esc(prod.nom) + "</h2>" +
-      '<p class="sl-line">' + sw(col.hex) + "<b>" + esc(col.nom) + "</b> · taille <b>" + esc(p.taille) + "</b>" + (tech(p) === "sublimation" ? ' <span class="tag">sublimation</span>' : tech(p) === "gravure" ? ' <span class="tag">gravure / vinyle</span>' : "") + "</p>" + pack + who + "</header>" +
+      '<p class="sl-line">' + sw(col.hex) + "<b>" + esc(col.nom) + "</b> · taille <b>" + esc(p.taille) + "</b>" + (tech(p) === "sublimation" ? ' <span class="tag">sublimation</span>' : tech(p) === "gravure" ? ' <span class="tag">gravure / vinyle</span>' : tech(p) === "vinyle" ? ' <span class="tag">vinyle</span>' : "") + "</p>" + choixTechnique(p, prod) + pack + who + "</header>" +
       (marqs.length ? '<table class="sl-tab"><thead><tr><th>Emplacement</th><th>À poser</th><th>Planche</th></tr></thead><tbody>' + rows + "</tbody></table>" : '<p class="empty">Aucun marquage sur cette pièce : rien à presser.</p>') +
-      '<div class="callout"><b>' + (pr.tech === "sublimation" ? "Presse, sublimation" : pr.tech === "gravure" ? "Gravure laser ou vinyle thermocollant" : "Presse, transfert DTF") + "</b><p>" + esc(pr.texte) + "</p></div>" +
+      '<div class="callout"><b>' + (pr.tech === "sublimation" ? "Presse, sublimation" : pr.tech === "gravure" ? "Gravure laser ou vinyle thermocollant" : pr.tech === "vinyle" ? "Presse, vinyle thermocollant (flex)" : "Presse, transfert DTF") + "</b><p>" + esc(pr.texte) + "</p></div>" +
       (prod.avertissement ? '<p class="warn-line">' + esc(prod.avertissement) + "</p>" : "") +
       "</div></article>";
   }
   function tech(piece) { return E.pieceTechno(st.order, piece, A.CTX); }
+
+  // Choix de la technique de pose d'une pièce (DTF ou vinyle) : « Automatique » suit l'article (vinyle quand le DTF n'est pas idéal).
+  // Le choix est gardé sur la pièce (piece.technique) ; les planches et le coût de revient se recalculent.
+  function choixTechnique(p, prod) {
+    if (prod.technique === "gravure" || !st.order) return "";
+    var auto = (function () { var q = Object.assign({}, p); delete q.technique; return E.pieceTechno(st.order, q, A.CTX); })();
+    var nom = { dtf: "DTF", vinyle: "vinyle", sublimation: "sublimation" };
+    return '<p class="sl-tech no-print"><label>Technique de pose <select data-tech="' + esc(p.id) + '">' +
+      '<option value=""' + (!p.technique ? " selected" : "") + ">Automatique (" + nom[auto] + ")</option>" +
+      '<option value="dtf"' + (p.technique === "dtf" ? " selected" : "") + ">DTF</option>" +
+      '<option value="vinyle"' + (p.technique === "vinyle" ? " selected" : "") + ">Vinyle</option></select></label></p>";
+  }
 
   /* =================================================================== */
   /* BASE D'ACHATS                                                       */

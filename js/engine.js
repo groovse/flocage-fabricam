@@ -235,6 +235,12 @@
    */
   var LARGEUR_MIN = 0.2, LARGEUR_MAX = 60, DECALAGE_MAX = 100;
   function quartDeTour(r) { var n = Math.round((Number(r) || 0) / 90); return (((n % 4) + 4) % 4) * 90; }
+  // Angle d'un texte : n'importe quel angle en degrés, ramené entre -180 (exclu) et 180, arrondi au dixième
+  function angleTexte(r) {
+    var a = Math.round(nombre(r, 0) * 10) / 10;
+    a = ((a % 360) + 360) % 360;
+    return a > 180 ? Math.round((a - 360) * 10) / 10 : a;
+  }
   function nombre(v, def) { v = Number(v); return isFinite(v) ? v : def; }
   // Rapport hauteur / largeur de l'image du marquage, sinon celui de la case du format
   function ratioImage(cfg, boite) {
@@ -304,8 +310,14 @@
       var m = ctx.measure(text, o.police, hauteur);
       var maxW = Math.min(zone.w, Math.max(P.w, P.h)), s = 1;
       if (m.w > maxW) s = maxW / m.w;
+      // Orientation libre et position (version 7.0.0) : o.rot (degrés, sens des aiguilles d'une montre), o.dx et o.dy (cm depuis la place par défaut).
+      // La case réservée sur la planche est le rectangle qui englobe le texte tourné (w, h) ; w0 × h0 est la case du texte à l'endroit.
+      var w0 = m.w * s, h0 = m.h * s, rot = angleTexte(o.rot), rad = rot * Math.PI / 180;
+      var bw = Math.abs(Math.cos(rad)) * w0 + Math.abs(Math.sin(rad)) * h0, bh = Math.abs(Math.sin(rad)) * w0 + Math.abs(Math.cos(rad)) * h0;
       return { kind: kind, text: text, police: o.police, couleur: o.couleur, hauteur: hauteur * s,
-        w: m.w * s, h: m.h * s, fontCm: m.fontCm * s, asc: m.asc * s, reduit: s < 1 };
+        w: rot ? Math.round(bw * 1000) / 1000 : w0, h: rot ? Math.round(bh * 1000) / 1000 : h0, w0: w0, h0: h0, rot: rot,
+        tx: Math.max(-DECALAGE_MAX, Math.min(DECALAGE_MAX, nombre(o.dx, 0))), ty: Math.max(-DECALAGE_MAX, Math.min(DECALAGE_MAX, nombre(o.dy, 0))),
+        fontCm: m.fontCm * s, asc: m.asc * s, reduit: s < 1 };
     }
     var emp = ctx.emplacements[empId];
     var img = (cfg.avecImage !== false && !(emp && emp.texteSeul)) ? image() : null;
@@ -335,16 +347,20 @@
     var pl = ctx.prix && ctx.prix.placement, gapBloc = pl && pl.ecartBloc != null ? pl.ecartBloc : BLOC_GAP;
     var W = els.reduce(function (m, e) { return Math.max(m, e.w); }, 0);
     var bloc = cfg.bloc === true && els.length >= 2, tropGrand = false;
+    // un texte tourné ou déplacé à la main ne peut pas être collé dans un bloc : il est pressé à part (texteLibre: true)
+    var texteLibre = els.some(function (e) { return e.kind !== "image" && (e.rot || Math.abs(e.tx) >= 0.05 || Math.abs(e.ty) >= 0.05); });
+    if (bloc && texteLibre) bloc = false;
+    else texteLibre = false;
     var lay = layoutStack(els, bloc ? gapBloc : STACK_GAP);
     if (bloc && !fitsPlateau(W, lay.H, ctx.prix.plateau)) { bloc = false; tropGrand = true; lay = layoutStack(els, STACK_GAP); }
     // Position choisie par le client (cfg.dx, cfg.dy) : elle déplace le visuel seul, ou le bloc entier quand le texte lui est collé.
     // Elle ne change rien aux planches : seulement la place sur le vêtement (aperçu, avertissement de débordement).
     var g = els.some(function (e) { return e.kind === "image"; }) ? imageGeom(cfg, ctx) : null, ux = g ? g.dx : 0, uy = g ? g.dy : 0;
     lay.items.forEach(function (it) {
-      it.ux = (bloc || it.kind === "image") ? ux : 0;
-      it.uy = (bloc || it.kind === "image") ? uy : 0;
+      if (it.kind === "image" || bloc) { it.ux = ux; it.uy = uy; }
+      else { it.ux = it.tx || 0; it.uy = it.ty || 0; }      // un texte seul suit sa propre position
     });
-    return { items: lay.items, H: lay.H, W: W, bloc: bloc, tropGrand: tropGrand, ux: bloc ? ux : 0, uy: bloc ? uy : 0 };
+    return { items: lay.items, H: lay.H, W: W, bloc: bloc, tropGrand: tropGrand, texteLibre: texteLibre, ux: bloc ? ux : 0, uy: bloc ? uy : 0 };
   }
 
   // L'élément « visuel » d'un motif (un motif visuel seul, ou un bloc qui en contient un), sinon null
@@ -365,13 +381,20 @@
   // Procédé de pose d'une pièce. Un article qui déclare `technique: "gravure"` (ouvre-bouteilles en métal) est gravé au laser ou
   // marqué en vinyle thermocollant : ses motifs ne vont sur aucune planche et n'en coûtent aucune (ni DTF, ni sublimation),
   // quel que soit le choix du client. Les autres articles sont en sublimation (polyester blanc ou clair, si la commande la demande) ou en DTF.
+  // Vinyle (version 7.0.0) : le flex thermocollant est découpé à l'atelier, sans planche ni livraison de transferts, seule la matière
+  // compte (prix.vinyle). Une pièce peut le demander (piece.technique : "vinyle" ou "dtf") ; sinon un article qui déclare
+  // `techniqueDefaut: "vinyle"` (chaussettes, polyester extensible, polaire, casquettes... où le DTF n'est pas idéal) est en vinyle.
+  // Le DTF reste la technique de base et le choix du client (sublimation) passe avant la technique par défaut de l'article.
   function pieceTechno(order, piece, ctx) {
     var prod = ctx.produits[piece.produitId];
     if (prod && prod.technique === "gravure") return "gravure";
+    if (piece.technique === "vinyle") return "vinyle";
+    if (piece.technique === "dtf") return "dtf";
     if (order.technique === "sublimation" && prod && prod.sublimation !== false) {
       var col = prod.couleurs.filter(function (c) { return c.id === piece.couleurId; })[0];
       if (col && col.clair && polyesterPiece(prod, piece) >= 90) return "sublimation";
     }
+    if (prod && prod.techniqueDefaut === "vinyle") return "vinyle";
     return "dtf";
   }
 
@@ -399,6 +422,7 @@
         var qui = piece.prenom || ("pièce " + (idx + 1));
         if (lay.H > zone.h + EPS) warn(emp.label + " : le contenu dépasse la zone prévue sur le vêtement (" + zone.h + " cm de haut).");
         else if (debordeZone(lay, zone)) warn(emp.label + " : le visuel déborde de la zone prévue sur le vêtement. Fabr'Icam vérifie la place sur le vêtement avant de presser.");
+        if (lay.texteLibre) warn(emp.label + " : un prénom ou un numéro est tourné ou déplacé, il n'est plus collé au visuel : il est pressé séparément.");
         if (lay.tropGrand) warn(emp.label + " : le bloc (visuel, prénom et numéro collés) est trop grand pour le plateau de la presse (A4) : les éléments sont pressés séparément.");
         els.forEach(function (el) {
           if (el.reduit) warn(emp.label + " : un prénom ou un numéro est trop large, il est réduit pour tenir.");
@@ -431,31 +455,29 @@
   /* ------------------------------------------------------------------ */
   /* Prix de vente                                                       */
   /* ------------------------------------------------------------------ */
-  // Marge d'une pièce vendue hors pack : regles.parMotif (1 €) par motif à presser (visuel, prénom ou numéro),
-  // au plus regles.maxParPiece (2 €) par pièce. Une pièce sans motif ne porte aucune marge.
+  // Marge d'une pièce vendue hors pack : regles.margePiece (3 €), quel que soit le nombre de motifs à presser (visuel, prénom ou numéro).
+  // Une pièce sans motif ne porte aucune marge.
   function margePiece(nbMotifs, r) {
-    var m = nbMotifs * r.parMotif;
-    if (r.maxParPiece != null && m > r.maxParPiece) m = r.maxParPiece;
-    return round2(m);
+    return nbMotifs > 0 ? round2(r.margePiece) : 0;
   }
 
   // Vêtements apportés par le client : au-delà de regles.apporte.seuil pièces apportées dans la commande, la marge de ces pièces
-  // est multipliée par regles.apporte.facteur (0,5 : 0,50 € par motif, 1 € au plus par pièce). Renvoie les règles à appliquer à une pièce apportée.
+  // est multipliée par regles.apporte.facteur (1 depuis la 7.0.0 : pas de remise). Renvoie les règles à appliquer à une pièce apportée.
   function reglesApporte(r, nbApportees) {
     var a = r.apporte;
     if (!a || a.facteur == null || a.facteur === 1 || nbApportees <= a.seuil) return r;
-    return Object.assign({}, r, { parMotif: r.parMotif * a.facteur, maxParPiece: r.maxParPiece == null ? null : r.maxParPiece * a.facteur });
+    return Object.assign({}, r, { margePiece: r.margePiece * a.facteur });
   }
 
   // Marge d'une pièce vendue dans un pack : un montant fixe, quel que soit le nombre de motifs.
-  // regles.parPiecePack (1 €), sauf pour un produit qui déclare sa propre valeur (margePack : 0 pour les chaussettes).
+  // regles.parPiecePack (1,50 €), sauf pour un produit qui déclare sa propre valeur (margePack : 0 pour les chaussettes).
   function margePiecePack(prod, r) {
     return prod && prod.margePack != null ? prod.margePack : r.parPiecePack;
   }
 
   // Fixe le prix unitaire de chaque article (groupes : { n, cout, margeTotale } avec cout = coût total du groupe
   // et margeTotale = somme des marges de ses n articles).
-  // Prix = coût moyen de l'article + marge moyenne, arrondi au supérieur de regles.pas : un prix moyen par produit.
+  // Prix = coût moyen de l'article + marge moyenne, arrondi à l'euro pair supérieur (regles.pas = 2) : un prix moyen par produit.
   function fixerPrix(groupes, coutTotal, r) {
     var total = 0;
     groupes.forEach(function (g) {
@@ -515,6 +537,15 @@
     });
     planchesHT = round2(planchesHT);
 
+    // vinyle découpé à l'atelier : coût de la matière (surface du motif + chutes), imputé à la pièce
+    var vp = prix.vinyle || { coutCm2: 0, chute: 1 }, vinyleParPiece = {}, vinyleTotal = 0;
+    motifs.forEach(function (m) {
+      if (m.techno !== "vinyle") return;
+      var c = m.w * m.h * vp.coutCm2 * vp.chute;
+      vinyleParPiece[m.pieceId] = (vinyleParPiece[m.pieceId] || 0) + c; vinyleTotal += c;
+    });
+    vinyleTotal = round2(vinyleTotal);
+
     var planchesTTC = prix.prixPlanchesHT ? round2(planchesHT * (1 + prix.tva)) : planchesHT;
     var achats = round2(order.pieces.reduce(function (s, p) {
       var prod = ctx.produits[p.produitId]; return s + (prod ? prixAchatPiece(prod, p.couleurId) : 0);
@@ -537,7 +568,7 @@
     });
     var listeVendeurs = Object.keys(vendeurs).map(function (k) { return vendeurs[k]; });
     var livraisonVendeurs = round2(listeVendeurs.reduce(function (s, v) { return s + v.frais; }, 0));
-    var cout = round2(achats + planchesTTC + livraison + livraisonVendeurs);
+    var cout = round2(achats + planchesTTC + livraison + livraisonVendeurs + vinyleTotal);
 
     // les planches et la livraison sont imputées aux pièces (la somme reste égale au coût réel)
     var sommeBrute = 0;
@@ -550,7 +581,8 @@
       var li = planchesTTC > 0 ? livraison * pl / planchesTTC : 0;
       var lvp = prod.vendeur ? vendeurs[prod.vendeur].frais / vendeurs[prod.vendeur].pieces : 0;
       var achat = prixAchatPiece(prod, p.couleurId);
-      coutPieces[p.id] = { achat: achat, planches: pl, livraison: li, livraisonVendeur: lvp, total: achat + pl + li + lvp };
+      var vi = vinyleParPiece[p.id] || 0;
+      coutPieces[p.id] = { achat: achat, planches: pl, livraison: li, livraisonVendeur: lvp, vinyle: vi, total: achat + pl + li + lvp + vi };
     });
 
     // Un pack complet (au moins deux pièces avec le même identifiant de pack) est un seul article, avec un seul prix.
@@ -604,7 +636,7 @@
 
     return {
       N: N, motifs: motifs, warnings: warnings, plans: plans, lignesPlanches: allLines,
-      couts: { achats: achats, planchesHT: planchesHT, planchesTTC: planchesTTC, livraison: livraison, livraisonVendeurs: livraisonVendeurs, total: cout },
+      couts: { achats: achats, planchesHT: planchesHT, planchesTTC: planchesTTC, livraison: livraison, livraisonVendeurs: livraisonVendeurs, vinyle: vinyleTotal, total: cout },
       vendeurs: listeVendeurs,
       coutPieces: coutPieces,
       prix: vente
@@ -647,6 +679,6 @@
     elementsFor: elementsFor, layoutStack: layoutStack, stackFor: stackFor, motifImage: motifImage, buildMotifs: buildMotifs,
     pieceTechno: pieceTechno, polyesterPiece: polyesterPiece, prixAchatPiece: prixAchatPiece, margePiece: margePiece, margePiecePack: margePiecePack, reglesApporte: reglesApporte, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
     approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP, BLOC_GAP: BLOC_GAP,
-    imageGeom: imageGeom, descriptionVisuel: descriptionVisuel, largeurMax: largeurMax, largeurPourFormat: largeurPourFormat, quartDeTour: quartDeTour, LARGEUR_MIN: LARGEUR_MIN
+    angleTexte: angleTexte, imageGeom: imageGeom, descriptionVisuel: descriptionVisuel, largeurMax: largeurMax, largeurPourFormat: largeurPourFormat, quartDeTour: quartDeTour, LARGEUR_MIN: LARGEUR_MIN
   };
 });
