@@ -124,7 +124,7 @@
   function vendeurTexte(prod, noms) {
     var v = vendeurInfo(prod); if (!v) return "";
     var pl = noms && noms.length > 1;
-    return (noms ? noms.join(", ") + " : " + (pl ? "articles vendus" : "article vendu") : (pl ? "Articles vendus" : "Article vendu")) + " par " + v.nom + (v.plateforme === "AliExpress" ? " sur AliExpress" : " sur la place de marché Decathlon") + ". " +
+    return (noms ? noms.join(", ") + " : " + (pl ? "articles vendus" : "article vendu") : (pl ? "Articles vendus" : "Article vendu")) + " par " + v.nom + (v.plateforme === "AliExpress" ? " sur AliExpress" : v.plateforme === "Amazon" ? (v.id === "amazon" ? "" : " sur Amazon") : " sur la place de marché Decathlon") + ". " +
       (pl ? "Ils sont livrés" : "Il est livré") + " à Fabr'Icam par le vendeur" + (v.delai ? " (" + v.delai + ")" : "") + ", sans retrait en magasin. " +
       (v.frais > 0 ? "Les frais de port du vendeur, estimés à " + fmtEUR(v.frais) + " pour toute la commande chez lui, sont compris dans le prix. " : v.note ? v.note + " " : "") +
       "Une fois floqué" + (pl ? "s" : "") + ", " + (pl ? "ils ne sont" : "il n'est") + " ni repris ni échangé" + (pl ? "s" : "") + ".";
@@ -621,7 +621,7 @@
       '<div><dt>Aucun minimum</dt><dd>Une seule pièce ou toute l\'équipe, le calcul est le même. Tu peux mélanger plusieurs vêtements dans une commande.</dd></div>' +
       '<div><dt>Deux techniques</dt><dd>Le DTF convient à toutes les couleurs. La sublimation, plus lisse, ne marche que sur polyester blanc ou clair.</dd></div>' +
       '<div><dt>Tu as déjà tes vêtements ?</dt><dd>Choisis « Ton vêtement » dans le catalogue : tu apportes tes vêtements et on les floque. Le prix compte les planches de transfert, la livraison et le flocage, sans vêtement. ' + (seuilApporte() != null ? "À partir de " + (seuilApporte() + 1) + " vêtements apportés dans une commande, le prix de ces pièces baisse. " : "") + 'Fabr\'Icam t\'indique où et quand les déposer.</dd></div>' +
-      '<div><dt>Des vêtements Decathlon</dt><dd>Fabr\'Icam les retire en magasin, il n\'y a donc pas de frais de livraison sur les vêtements. Les articles marqués « Livré par le vendeur » viennent de vendeurs partenaires de Decathlon : ils sont livrés à Fabr\'Icam, et leurs frais de port sont déjà dans le prix.</dd></div>' +
+      '<div><dt>Des vêtements Decathlon</dt><dd>Fabr\'Icam les retire en magasin, il n\'y a donc pas de frais de livraison sur les vêtements. Les articles marqués « Livré par le vendeur » viennent de vendeurs partenaires de Decathlon, d\'AliExpress ou d\'Amazon : ils sont livrés à Fabr\'Icam, et leurs frais de port sont déjà dans le prix.</dd></div>' +
       '</dl></section>';
 
     majFiltres();

@@ -8,7 +8,7 @@
  *   porte son propre prixAchat (voir data.js).
  */
 window.PRIX = {
-  maj: "2026-10-21",
+  maj: "2026-10-25",
 
   // Fournisseur des planches de transfert (affiché dans l'espace atelier)
   fournisseur: {
@@ -28,10 +28,11 @@ window.PRIX = {
   livraison: { seuilGratuit: 100, colissimo: 4.90 },
 
   // Articles vendus par un vendeur en ligne (pas de retrait en magasin) : un vendeur partenaire de la place de marché Decathlon,
-  // ou un vendeur AliExpress. Le vendeur livre à Fabr'Icam et fait payer des frais de port, une seule fois par vendeur et par commande.
+  // un vendeur AliExpress, ou Amazon (ou un vendeur de sa place de marché). Le vendeur livre à Fabr'Icam et fait payer des frais de port,
+  // une seule fois par vendeur et par commande.
   // Decathlon n'affiche ces frais qu'au moment de la commande : 4,99 € est une ESTIMATION (livraison à Toulouse, 31300).
   // Quand tu connais le montant réel (panier Decathlon), corrige-le ici : « defaut » sert aux vendeurs non listés.
-  // plateforme : « AliExpress » pour un vendeur AliExpress ; sans cette ligne, c'est un vendeur de la place de marché Decathlon.
+  // plateforme : « AliExpress » ou « Amazon » ; sans cette ligne, c'est un vendeur de la place de marché Decathlon.
   // note : phrase ajoutée au texte du vendeur quand ses frais de port sont nuls (livraison offerte, voir plus bas).
   // lien : la page du vendeur (bouton « Voir chez le vendeur » du catalogue et de l'atelier). Sans lien, le bouton
   // ouvre la page de l'article chez ce vendeur.
@@ -46,7 +47,13 @@ window.PRIX = {
       "qst-express-02": { nom: "QST EXPress-02", plateforme: "AliExpress", frais: 0, delai: "5 à 10 jours", lien: "https://fr.aliexpress.com/store/1406222",
         note: "La livraison est offerte dès 10 € d'achat sur AliExpress, TVA comprise. Les droits de douane éventuels se calculent au paiement." },
       "shop4293023": { nom: "Shop4293023 Store", plateforme: "AliExpress", frais: 0, delai: "5 à 10 jours", lien: "https://fr.aliexpress.com/store/4293023",
-        note: "La livraison est offerte dès 10 € d'achat sur AliExpress, TVA comprise. Les droits de douane éventuels se calculent au paiement." }
+        note: "La livraison est offerte dès 10 € d'achat sur AliExpress, TVA comprise. Les droits de douane éventuels se calculent au paiement." },
+      // Amazon (version 7.2.0). « amazon » : articles vendus ET expédiés par Amazon (gilet VELILLA), livraison offerte, 2 à 4 jours.
+      // Un vendeur tiers de la place de marché Amazon est un vendeur à part, avec ses propres frais de port : « xozwkh » (sweat à capuche
+      // polaire), 10,99 € relevé le 25/10/2026 (livraison à Paris, 75001), 2 à 3 semaines. Prix TTC affichés sur Amazon.
+      "amazon": { nom: "Amazon", plateforme: "Amazon", frais: 0, delai: "2 à 4 jours", lien: "",
+        note: "Vendu et expédié par Amazon : la livraison est offerte dès 25 € d'achat sur les articles expédiés par Amazon, TVA comprise (la page affiche « livraison gratuite lors de votre première commande » : à confirmer au panier)." },
+      "xozwkh": { nom: "xozwkh", plateforme: "Amazon", frais: 10.99, delai: "2 à 3 semaines", lien: "" }
     }
   },
 
