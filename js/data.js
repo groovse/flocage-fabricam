@@ -4,7 +4,7 @@
  * maillot, short-basket, short-tennis, short-slim, tshirt, manches-longues, veste, sweat-zip, gilet, gilet-matelasse, ensemble-short,
  * pantalon, chaussette, chasuble, gourde, casquette, bonnet, tour-de-cou, bandeau, sac-tube, sac-sport, sac-a-dos, ceinture, serviette,
  * ouvre-bouteille, porte-cles), tags (genre, style, type : haut, bas, ensemble ou accessoire, et categories : une ou plusieurs de la liste « categories » plus bas), vendeur (seulement pour un article vendu en ligne :
- * place de marché Decathlon ou AliExpress, voir prix.js), sublimation: false (article qui ne se sublime pas),
+ * place de marché Decathlon, AliExpress ou Amazon, voir prix.js), sublimation: false (article qui ne se sublime pas),
  * technique: "gravure" (article gravé au laser ou marqué en vinyle thermocollant : ni planche DTF ni coût de planche, voir engine.js),
  * techniqueDefaut: "vinyle" (le DTF n'est pas idéal sur cette matière : le flex thermocollant, découpé à l'atelier, est la technique de base ; voir engine.js, pieceTechno),
  * margePack: 0 (pièce sans marge dans un pack, comme les chaussettes, voir prix.js), vitrine (emplacements du prix affiché) et zones.
@@ -14,6 +14,8 @@
  * à laquelle Decathlon l'a signalée en rupture de stock). « photos » de l'article : les photos de la couleur de référence de apercuPhoto.
  * Sur AliExpress, la variante se choisit sur la page de l'article : nomDec est le nom de la variante chez le vendeur, lien la page de l'article,
  * photos l'adresse complète de l'image de la variante (pas de dec([...])), prixAchat le prix de la variante affiché sur la page.
+ * Sur Amazon, chaque couleur est une page d'article à part : ref est son ASIN, lien sa page (amazon.fr/dp/ASIN), nomDec le nom de l'option de couleur,
+ * photos l'adresse complète de l'image (m.media-amazon.com), prixAchat le prix de cette couleur quand il diffère du prix de l'article (TTC affiché sur la page).
  * Les zones sont en cm sur le dessin du vêtement (90 cm de large) : cx = centre horizontal,
  * top = haut de la zone (ou cy = centre), w/h = taille max de la zone.
  */
@@ -545,6 +547,139 @@ window.DATA = {
         dos:      { vue: "dos",  cx: 45, top: 15, w: 32, h: 52, label: "Dos" },
         manche_g: { vue: "cote", cx: 76.5, cy: 40, w: 10, h: 14, rot: -9, label: "Manche gauche" },
         manche_d: { vue: "cote", cx: 13.5, cy: 40, w: 10, h: 14, rot: 9,  label: "Manche droite" }
+      }
+    },
+    {
+      id: "sweat-capuche-polaire",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
+      nomCourt: "Sweat à capuche polaire",
+      nom: "Sweat à capuche polaire homme",
+      marque: "zinmave, Amazon",
+      modele: "sweat",
+      demonstratif: "ce sweat",
+      tags: { genre: ["homme"], style: "casual", type: "haut", categories: ["sweats"] },
+      vendeur: "xozwkh",   // vendeur de la place de marché Amazon : livré à Fabr'Icam, frais de port dans prix.js (livraisonVendeur)
+      prixAchat: 9.99,
+      matiere: "Polyester (polaire), composition « polyester » selon la fiche du vendeur",
+      polyesterPct: 100,
+      tailles: ["S", "M", "L", "XL"],
+      couleurs: [
+        { id: "noir", nom: "Noir", nomDec: "11#noir", hex: "#1c1c1f", clair: false, ref: "B0HDH8P34D",
+          lien: "https://www.amazon.fr/dp/B0HDH8P34D",
+          photos: ["https://m.media-amazon.com/images/I/61cq2vJipxL._AC_SL1500_.jpg"] },
+        { id: "blanc", nom: "Blanc", nomDec: "12#blanc", hex: "#f3f3f0", clair: true, ref: "B0HDHG78T3",
+          lien: "https://www.amazon.fr/dp/B0HDHG78T3",
+          photos: ["https://m.media-amazon.com/images/I/61HpLTkCdPL._AC_SL1500_.jpg"] },
+        { id: "beige", nom: "Beige", nomDec: "2#beige", hex: "#d8c8a8", clair: true, ref: "B0HDH8R9TV",
+          lien: "https://www.amazon.fr/dp/B0HDH8R9TV",
+          photos: ["https://m.media-amazon.com/images/I/61tRsALCSWL._AC_SL1500_.jpg"] },
+        { id: "bleu-clair", nom: "Bleu clair", nomDec: "2#bleu Clair", hex: "#8fb8e0", clair: false, ref: "B0HDGXKQX4",
+          lien: "https://www.amazon.fr/dp/B0HDGXKQX4",
+          photos: ["https://m.media-amazon.com/images/I/71tTpnXkenL._AC_SL1500_.jpg"] },
+        { id: "bleu-roi", nom: "Bleu roi", nomDec: "2#bleu Roi", hex: "#2450b0", clair: false, ref: "B0HDHG6N1D",
+          lien: "https://www.amazon.fr/dp/B0HDHG6N1D",
+          photos: ["https://m.media-amazon.com/images/I/71nww0v0Y4L._AC_SL1500_.jpg"] },
+        { id: "chameau", nom: "Chameau", nomDec: "2#chameaux", hex: "#b07d45", clair: false, ref: "B0HDH4XKPV",
+          lien: "https://www.amazon.fr/dp/B0HDH4XKPV",
+          photos: ["https://m.media-amazon.com/images/I/71h0Q+Dit+L._AC_SL1500_.jpg"] },
+        { id: "gris", nom: "Gris", nomDec: "2#gris", hex: "#8d9196", clair: false, ref: "B0HDH591G6",
+          lien: "https://www.amazon.fr/dp/B0HDH591G6",
+          photos: ["https://m.media-amazon.com/images/I/71NLlVmjS9L._AC_SL1500_.jpg"] },
+        { id: "gris-clair", nom: "Gris clair", nomDec: "2#gris Clair", hex: "#cdd1d5", clair: true, ref: "B0HDHCLBSH",
+          lien: "https://www.amazon.fr/dp/B0HDHCLBSH",
+          photos: ["https://m.media-amazon.com/images/I/71uOuAoDRWL._AC_SL1500_.jpg"] },
+        { id: "jaune", nom: "Jaune", nomDec: "2#jaune", hex: "#f4cf1e", clair: false, ref: "B0HDH82FWW",
+          lien: "https://www.amazon.fr/dp/B0HDH82FWW",
+          photos: ["https://m.media-amazon.com/images/I/71S5k0E7unL._AC_SL1500_.jpg"] },
+        { id: "marine", nom: "Marine", nomDec: "2#marine", hex: "#243b5e", clair: false, ref: "B0HDHN7WZN",
+          lien: "https://www.amazon.fr/dp/B0HDHN7WZN",
+          photos: ["https://m.media-amazon.com/images/I/61GEUa5QZCL._AC_SL1500_.jpg"] },
+        { id: "rose", nom: "Rose", nomDec: "2#rose", hex: "#e58fb2", clair: false, ref: "B0HDHDQ5KJ",
+          lien: "https://www.amazon.fr/dp/B0HDHDQ5KJ",
+          photos: ["https://m.media-amazon.com/images/I/71G4U96I37L._AC_SL1500_.jpg"] },
+        { id: "rouge", nom: "Rouge", nomDec: "2#rouge", hex: "#c4252b", clair: false, ref: "B0HDH4NYQF",
+          lien: "https://www.amazon.fr/dp/B0HDH4NYQF",
+          photos: ["https://m.media-amazon.com/images/I/712s4m4GXbL._AC_SL1500_.jpg"] },
+        { id: "safran", nom: "Safran", nomDec: "2#safran", hex: "#e9a21c", clair: false, ref: "B0HDH38KY5",
+          lien: "https://www.amazon.fr/dp/B0HDH38KY5",
+          photos: ["https://m.media-amazon.com/images/I/712BJXVN9UL._AC_SL1500_.jpg"] },
+        { id: "vert-fonce", nom: "Vert foncé", nomDec: "2#vert Foncé", hex: "#1f4d36", clair: false, ref: "B0HDH4NBZ1",
+          lien: "https://www.amazon.fr/dp/B0HDH4NBZ1",
+          photos: ["https://m.media-amazon.com/images/I/7193NmIoDML._AC_SL1500_.jpg"] },
+        { id: "vin", nom: "Vin", nomDec: "2#vin", hex: "#6e1e2c", clair: false, ref: "B0HDHWJRXL",
+          lien: "https://www.amazon.fr/dp/B0HDHWJRXL",
+          photos: ["https://m.media-amazon.com/images/I/61NYe42eyvL._AC_SL1500_.jpg"] },
+        { id: "violet", nom: "Violet", nomDec: "2#violet", hex: "#6a2c91", clair: false, ref: "B0HDHDCFYH",
+          lien: "https://www.amazon.fr/dp/B0HDHDCFYH",
+          photos: ["https://m.media-amazon.com/images/I/71iQyTMCOBL._AC_SL1500_.jpg"] },
+        { id: "violet-clair", nom: "Violet clair", nomDec: "2#violet Clair", hex: "#a98bd0", clair: false, ref: "B0HDGV72MK",
+          lien: "https://www.amazon.fr/dp/B0HDGV72MK",
+          photos: ["https://m.media-amazon.com/images/I/71iQyTMCOBL._AC_SL1500_.jpg"] }
+      ],
+      lien: "https://www.amazon.fr/dp/B0HDH8P34D",
+      photos: [
+        "https://m.media-amazon.com/images/I/61cq2vJipxL._AC_SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/41dn394uwJL._AC_SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/41gajx26A6L._AC_SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/51JrsZ4t12L._AC_SL1500_.jpg"
+      ],
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Sweat à capuche en polaire de polyester : le tissu s'écrase à la chaleur. Pressage à basse température avec une feuille de téflon, et essai sur une chute avant la série. Vendeur tiers Amazon : la fiche annonce seulement les tailles S à XL, et la livraison prend deux à trois semaines.",
+      zones: {
+        poitrine: { vue: "face", cx: 58, top: 21, w: 16, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 15, w: 32, h: 52, label: "Dos" },
+        manche_g: { vue: "cote", cx: 76.5, cy: 40, w: 10, h: 14, rot: -9, label: "Manche gauche" },
+        manche_d: { vue: "cote", cx: 13.5, cy: 40, w: 10, h: 14, rot: 9,  label: "Manche droite" }
+      }
+    },
+    {
+      id: "gilet-polaire-velilla",
+      techniqueDefaut: "vinyle",   // le DTF n'est pas idéal sur cette matière (fiches de méthodes) : vinyle par défaut, modifiable pièce par pièce à l'atelier
+      nomCourt: "Gilet polaire",
+      nom: "Gilet polaire sans manches VELILLA 105905",
+      marque: "VELILLA, Amazon",
+      modele: "gilet",
+      demonstratif: "ce gilet",
+      tags: { genre: ["homme", "femme"], style: "casual", type: "haut", categories: ["sweats"] },
+      vendeur: "amazon",   // vendu et expédié par Amazon : livré à Fabr'Icam, frais de port dans prix.js (livraisonVendeur)
+      prixAchat: 17.82,   // le rouge était à 16,38 € en promotion le 25/10/2026 : le prix habituel, 17,82 €, est gardé
+      matiere: "Microfibre polaire, 100 % polyester (220 g/m²)",
+      polyesterPct: 100,
+      tailles: ["XS", "S", "M", "L", "XL", "2XL", "3XL"],
+      couleurs: [
+        { id: "noir", nom: "Noir", nomDec: "Noir", hex: "#1c1c1f", clair: false, ref: "B0CVSH9H45",
+          lien: "https://www.amazon.fr/dp/B0CVSH9H45",
+          photos: ["https://m.media-amazon.com/images/I/51Qld7v8wrL._AC_SL1500_.jpg"] },
+        { id: "blanc", nom: "Blanc", nomDec: "Blanc", hex: "#f3f3f0", clair: true, prixAchat: 17.64, ref: "B0CVSHD89N",
+          lien: "https://www.amazon.fr/dp/B0CVSHD89N",
+          photos: ["https://m.media-amazon.com/images/I/41KuR8gC3KL._AC_SL1500_.jpg"] },
+        { id: "rouge", nom: "Rouge", nomDec: "Rouge", hex: "#c4252b", clair: false, ref: "B0CVSHSJG4",
+          lien: "https://www.amazon.fr/dp/B0CVSHSJG4",
+          photos: ["https://m.media-amazon.com/images/I/51O8Pj5bZHL._AC_SL1500_.jpg"] },
+        { id: "bleu-marine", nom: "Bleu marine", nomDec: "Bleu Marine", hex: "#1f2b4a", clair: false, prixAchat: 15.89, ref: "B0CVSHK4PR",
+          lien: "https://www.amazon.fr/dp/B0CVSHK4PR",
+          photos: ["https://m.media-amazon.com/images/I/51R1d8pkerL._AC_SL1500_.jpg"] },
+        { id: "vert-chasse", nom: "Vert chasse", nomDec: "Vert chasse", hex: "#3f5a3a", clair: false, prixAchat: 17.35, ref: "B0CVSHSJDJ",
+          lien: "https://www.amazon.fr/dp/B0CVSHSJDJ",
+          photos: ["https://m.media-amazon.com/images/I/61pLkw3e4vL._AC_SL1500_.jpg"] },
+        { id: "gris", nom: "Gris", nomDec: "Gris", hex: "#8d9196", clair: false, prixAchat: 23.07, ref: "B0CVSHGWR7",
+          lien: "https://www.amazon.fr/dp/B0CVSHGWR7",
+          photos: ["https://m.media-amazon.com/images/I/51oimcGLoEL._AC_SL1500_.jpg"] }
+      ],
+      lien: "https://www.amazon.fr/dp/B0CVSH9H45",
+      photos: [
+        "https://m.media-amazon.com/images/I/51Qld7v8wrL._AC_SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/31s+I6trSZL._AC_SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/21qVsdKXEqL._AC_SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/214melsFOTL._AC_SL1500_.jpg"
+      ],
+      vitrine: ["poitrine"],
+      texteVitrine: "à la poitrine",
+      avertissement: "Gilet en microfibre polaire (220 g/m²) : le tissu s'écrase à la chaleur. Pressage à basse température avec une feuille de téflon, et essai sur une chute avant la série. Les trois poches extérieures zippées et le rabat du col laissent la poitrine et le dos libres.",
+      zones: {
+        poitrine: { vue: "face", cx: 58, top: 19, w: 14, h: 21, label: "Poitrine, côté cœur" },
+        dos:      { vue: "dos",  cx: 45, top: 14, w: 30, h: 48, label: "Dos" }
       }
     },
     {

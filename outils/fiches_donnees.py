@@ -404,7 +404,7 @@ PRODUITS = {
     "short-slim-fitness": "coton-extensible", "jogging-femme": "coton-extensible",
     "veste-sans-manches": "polyester-extensible", "short-2-en-1-fitness": "polyester-extensible", "tshirt-femme-noir": "polyester-extensible",
     "sweat-viralto-axton": "polyester-extensible", "chaussettes-football": "polyester-extensible", "bandeau-running-v2": "polyester-extensible",
-    "veste-micropolaire": "polaire",
+    "veste-micropolaire": "polaire", "sweat-capuche-polaire": "polaire", "gilet-polaire-velilla": "polaire",
     "tour-de-cou-morf": "microfibre", "serviette-microfibre-l": "microfibre",
     "bonnet-rider-500": "acrylique-maille", "bonnet-running-seamless": "acrylique-maille",
     "casquette-hike-100": "casquette", "casquette-chasse-100": "casquette", "casquette-tennis-tc100": "casquette",

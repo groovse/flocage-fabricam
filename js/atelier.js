@@ -67,6 +67,12 @@
   }
   // Plateforme de vente d'un article : Decathlon (magasin ou place de marché) ou AliExpress
   function plateformeDe(prod) { var v = A.vendeurInfo(prod); return v ? v.plateforme : "Decathlon"; }
+  // Nom d'un ou plusieurs lieux d'achat en ligne : « Articles de la place de marché Decathlon », « Articles Amazon », « Articles de la place de marché Decathlon, d'AliExpress et d'Amazon »
+  function libelleMarche(pfs) {
+    if (pfs.length === 1) return pfs[0] === "Decathlon" ? "Articles de la place de marché Decathlon" : "Articles " + pfs[0];
+    var noms = pfs.map(function (p) { return p === "Decathlon" ? "de la place de marché Decathlon" : (/^[AEIOUH]/.test(p) ? "d'" : "de ") + p; });
+    return "Articles " + noms.slice(0, -1).join(", ") + " et " + noms[noms.length - 1];
+  }
   // Où s'achète un article, en une phrase : « Place de marché : X » (Decathlon), « AliExpress : X » ou « Decathlon, retrait en magasin »
   function sourceTxt(v) { return v ? (v.plateforme === "Decathlon" ? "Place de marché : " : v.plateforme + " : ") + v.nom : "Decathlon, retrait en magasin"; }
   function lien(href, texte) { return href ? '<a href="' + esc(href) + '" target="_blank" rel="noopener">' + texte + "</a>" : ""; }
@@ -471,7 +477,7 @@
       return scroll ? '<li><a href="#" data-scroll="' + scroll + '">' + inner + "</a></li>" : '<li><a href="' + href + '">' + inner + "</a></li>";
     }
     return '<ol class="at-steps" aria-label="Le principe">' +
-      it("Acheter les vêtements", "Decathlon en magasin ou en ligne, AliExpress pour les accessoires en métal, avec les liens de chaque article.", "", "#achats-bloc") +
+      it("Acheter les vêtements", "Decathlon en magasin ou en ligne, Amazon et AliExpress pour quelques articles, avec les liens de chaque article.", "", "#achats-bloc") +
       it("Commander les planches", "Une image prête à envoyer par planche, au format exact du fournisseur.", "#/planches") +
       it("Presser et contrôler", "Une fiche de fabrication à imprimer, et les pièces à la suite sur écran.", "#/fabrication") + "</ol>";
   }
@@ -540,12 +546,12 @@
   function coutsHtml() {
     var o = st.order, r = st.res, pv = r.prix;
     if (!pv) return '<p class="empty">Cette commande ne contient aucune pièce.</p>';
-    var nMag = 0, nMp = 0, nApp = 0, nAli = 0, eurMag = 0, eurMp = 0;
-    o.pieces.forEach(function (p) { var pr = prodOf(p), px = achatDe(pr, colorOf(p)); if (pr.apporte) nApp++; else if (pr.vendeur) { nMp++; eurMp += px; if (plateformeDe(pr) !== "Decathlon") nAli++; } else { nMag++; eurMag += px; } });
+    var nMag = 0, nMp = 0, nApp = 0, eurMag = 0, eurMp = 0, pfsMp = [];
+    o.pieces.forEach(function (p) { var pr = prodOf(p), px = achatDe(pr, colorOf(p)); if (pr.apporte) nApp++; else if (pr.vendeur) { nMp++; eurMp += px; var pfMp = plateformeDe(pr); if (pfsMp.indexOf(pfMp) < 0) pfsMp.push(pfMp); } else { nMag++; eurMag += px; } });
     var rows = [];
     if (nApp) rows.push(["Vêtements apportés par le client (aucun achat)", plur(nApp, "pièce", "pièces"), fmtEUR(0)]);
     if (nMag) rows.push(["Articles Decathlon (retrait en magasin)", plur(nMag, "pièce", "pièces"), fmtEUR(eurMag)]);
-    if (nMp) rows.push([nAli === 0 ? "Articles de la place de marché Decathlon (livrés par le vendeur)" : nAli === nMp ? "Articles AliExpress (livrés par le vendeur)" : "Articles de la place de marché Decathlon et d'AliExpress (livrés par le vendeur)", plur(nMp, "pièce", "pièces"), fmtEUR(eurMp)]);
+    if (nMp) rows.push([libelleMarche(pfsMp) + " (livrés par le vendeur)", plur(nMp, "pièce", "pièces"), fmtEUR(eurMp)]);
     if (r.couts.livraisonVendeurs) rows.push(["Frais de port des vendeurs (estimation)", r.vendeurs.map(function (v) { return v.nom + " " + fmtEUR(v.frais); }).join(", "), fmtEUR(r.couts.livraisonVendeurs)]);
     var fn = A.PRIX.fournisseur.nom, plHT = A.PRIX.prixPlanchesHT;
     if (r.couts.vinyle) rows.push(["Vinyle thermocollant (découpé à l'atelier)", plur(r.motifs.filter(function (m) { return m.techno === "vinyle"; }).length, "motif", "motifs") + ", " + String(Math.round(A.PRIX.vinyle.coutCm2 * 1000) / 1000).replace(".", ",") + " € le cm² + " + Math.round((A.PRIX.vinyle.chute - 1) * 100) + " % de chutes", fmtEUR(r.couts.vinyle)]);
