@@ -10,7 +10,7 @@
   var At = window.Atelier, A = At.A, st = At.st, F = window.Fichiers;
   var esc = At.esc, fmtEUR = At.fmtEUR, fmtN = At.fmtN, plur = At.plur, $ = A.$, $$ = A.$$;
   var DPI = 300;
-  var NOM_ELEMENT = { image: "visuel", prenom: "prénom", numero: "numéro" };
+  var NOM_ELEMENT = { image: "visuel", prenom: "prénom", numero: "numéro", texte: "texte libre" };
 
   /* ---------- plan d'une planche en SVG (aperçu à l'écran et fiche imprimée) ---------- */
   function sheetSVG(s) {
@@ -35,8 +35,10 @@
         } else {
           // texte tourné : la case (w × h) englobe le texte, qui est tourné autour de son centre
           var h0 = el.h0 != null ? el.h0 : el.h, cxT = c.x + el.w / 2, cyT = c.y + el.h / 2;
-          out += '<text x="' + cxT + '" y="' + (cyT - h0 / 2 + el.asc) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
-            '" fill="' + esc(el.couleur) + '"' + (el.rot ? ' transform="rotate(' + el.rot + " " + cxT + " " + cyT + ')"' : "") + ' style="paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.08px">' + esc(el.text) + "</text>";
+          (el.lignes || [{ text: el.text, y: el.asc }]).forEach(function (l) {
+            out += '<text x="' + cxT + '" y="' + (cyT - h0 / 2 + l.y) + '" text-anchor="middle" font-family="\'' + esc(el.police) + '\', Impact, sans-serif" font-size="' + el.fontCm +
+              '" fill="' + esc(el.couleur) + '"' + (el.rot ? ' transform="rotate(' + el.rot + " " + cxT + " " + cyT + ')"' : "") + ' style="paint-order:stroke;stroke:rgba(0,0,0,.35);stroke-width:.08px">' + esc(l.text) + "</text>";
+          });
         }
       });
       out += '<text x=".4" y="1.5" font-size="1.4" fill="#14213d" font-family="Hanken Grotesk, sans-serif" font-weight="700" opacity=".8">' + esc(At.codeMotif(mo)) + "</text></g>";
@@ -89,10 +91,12 @@
           var h0 = el.h0 != null ? el.h0 : el.h;
           ctx.save(); ctx.translate((c.x + el.w / 2) * ppcm, (c.y + el.h / 2) * ppcm);
           if (el.rot) ctx.rotate(el.rot * Math.PI / 180);
-          var tx = 0, ty = (-h0 / 2 + el.asc) * ppcm;
-          if (annot) { ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 0.08 * ppcm; ctx.strokeText(el.text, tx, ty); }
-          ctx.fillStyle = el.couleur;
-          ctx.fillText(el.text, tx, ty);
+          (el.lignes || [{ text: el.text, y: el.asc }]).forEach(function (l) {
+            var tx = 0, ty = (-h0 / 2 + l.y) * ppcm;
+            if (annot) { ctx.lineJoin = "round"; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 0.08 * ppcm; ctx.strokeText(l.text, tx, ty); }
+            ctx.fillStyle = el.couleur;
+            ctx.fillText(l.text, tx, ty);
+          });
           ctx.restore();
         }
       });
@@ -321,14 +325,14 @@
           return [box, "<b>" + esc(s.code) + "</b> sur " + s.total, esc(A.PRIX.planches[s.techno].nom + ", " + s.sheet.format.nom), s.sheet.placed.length, esc(A.PRIX.fournisseur.nom), box, box];
         }), "f-tbl") +
         '<div class="f-plans">' + st.sheets.map(function (s) { return "<figure>" + sheetSVG(s) + "<figcaption><b>" + esc(s.code) + "</b>, " + esc(s.sheet.format.nom) + "</figcaption></figure>"; }).join("") + "</div>" +
-        '<p class="f-key">Repères : numéro de la pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de jambe, SG et SD chaussettes, SA sac, GO gourde, CA casquette, BO bonnet, TC tour de cou, BA bandeau, CE ceinture, SE serviette, OB ouvre-bouteille, PC porte-clés, puis v visuel, p prénom, n numéro. Exemple : 3·Dp = prénom du dos de la pièce 3. Un bloc collé (visuel, prénom et numéro sur un seul transfert, à presser d\'un coup) porte plusieurs lettres : 3·Pvpn = visuel, prénom et numéro collés de la poitrine de la pièce 3.</p>';
+        '<p class="f-key">Repères : numéro de la pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de jambe, SG et SD chaussettes, SA sac, GO gourde, CA casquette, BO bonnet, TC tour de cou, BA bandeau, CE ceinture, SE serviette, OB ouvre-bouteille, PC porte-clés, puis v visuel, p prénom, n numéro, t texte libre. Exemple : 3·Dp = prénom du dos de la pièce 3. Un bloc collé (visuel, prénom et numéro sur un seul transfert, à presser d\'un coup) porte plusieurs lettres : 3·Pvpn = visuel, prénom et numéro collés de la poitrine de la pièce 3.</p>';
     } else html += '<p class="empty">Aucune planche : aucun marquage actif.</p>';
     html += "</section>";
 
     // 3. récap des motifs
     var rec = {};
     r.motifs.forEach(function (m) {
-      var k = m.emp; rec[k] = rec[k] || { image: 0, prenom: 0, numero: 0, bloc: 0, fmt: {}, compo: {} };
+      var k = m.emp; rec[k] = rec[k] || { image: 0, prenom: 0, numero: 0, texte: 0, bloc: 0, fmt: {}, compo: {} };
       rec[k][m.kind]++;
       if (m.avecImage) {
         var cfgM = o.marquages[m.emp] || {}, vis = A.CTX && window.Engine.motifImage(m);
@@ -337,14 +341,16 @@
       }
       if (m.kind === "bloc") rec[k].compo[m.el.items.map(function (i) { return i.kind === "image" ? "visuel " + ((o.marquages[m.emp] || {}).format || "") : NOM_ELEMENT[i.kind]; }).join(" + ")] = 1;
     });
+    var avecTextes = r.motifs.some(function (m) { return m.kind === "texte"; });
     var avecBlocs = r.motifs.some(function (m) { return m.kind === "bloc"; });
     var empRows = A.EMP_ORDER.filter(function (e) { return rec[e]; }).map(function (e) {
       var x = rec[e];
       var ligne = [esc(A.DATA.emplacements[e].label), x.image ? "<b>" + x.image + "</b> × " + esc(Object.keys(x.fmt).join(", ")) : "–", x.prenom ? "<b>" + x.prenom + "</b>" : "–", x.numero ? "<b>" + x.numero + "</b>" : "–"];
+      if (avecTextes) ligne.push(x.texte ? "<b>" + x.texte + "</b>" : "–");
       if (avecBlocs) ligne.push(x.bloc ? "<b>" + x.bloc + "</b> × " + esc(Object.keys(x.compo).join(" ; ")) : "–");
       return ligne;
     });
-    html += '<section class="f-sec"><h3><span class="f-n">3</span>Motifs à presser</h3>' + (empRows.length ? At.table(["Emplacement", { t: "Visuels", num: false }, "Prénoms", "Numéros"].concat(avecBlocs ? ["Blocs collés"] : []), empRows, "f-tbl") : '<p class="empty">Aucun motif.</p>') + "</section>";
+    html += '<section class="f-sec"><h3><span class="f-n">3</span>Motifs à presser</h3>' + (empRows.length ? At.table(["Emplacement", { t: "Visuels", num: false }, "Prénoms", "Numéros"].concat(avecTextes ? ["Textes libres"] : []).concat(avecBlocs ? ["Blocs collés"] : []), empRows, "f-tbl") : '<p class="empty">Aucun motif.</p>') + "</section>";
 
     // 4. pièces
     html += '<section class="f-sec long"><h3><span class="f-n">4</span>Pièces à presser</h3>' + At.table([{ t: "Pressée" }, { t: "N°", num: true }, "Article", "Taille", "Prénom", "Numéro", "À poser", "Planches", "Contrôlée"],

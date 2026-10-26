@@ -20,8 +20,8 @@
   var CLE_OK = "fabricam-atelier-ok", CLE_CMD = "fabricam-atelier-commande";
   var VUES = ["commande", "pieces", "fabrication", "planches", "paiement", "base"];
   var ABBR = { poitrine: "P", dos: "D", manche_g: "MG", manche_d: "MD", cuisse_g: "CG", cuisse_d: "CD", bas_jambe_g: "BJ", chaussette_g: "SG", chaussette_d: "SD", sac: "SA", gourde: "GO", casquette: "CA", bonnet: "BO", tour_de_cou: "TC", bandeau: "BA", ceinture: "CE", serviette: "SE", ouvre_bouteille: "OB", porte_cles: "PC" };
-  var KIND = { image: "v", prenom: "p", numero: "n" };
-  var KIND_NOM = { image: "visuel", prenom: "prénom", numero: "numéro" };
+  var KIND = { image: "v", prenom: "p", numero: "n", texte: "t" };
+  var KIND_NOM = { image: "visuel", prenom: "prénom", numero: "numéro", texte: "texte libre" };
   var views = {};
 
   // st : la commande chargée et tout ce qu'on en déduit
@@ -113,7 +113,7 @@
     var set = {};
     Object.keys(order.marquages || {}).forEach(function (e) {
       var m = order.marquages[e];
-      ["prenom", "numero"].forEach(function (k) { if (m && m[k] && m[k].actif && m[k].police) set[m[k].police] = 1; });
+      ["prenom", "numero", "texte"].forEach(function (k) { if (m && m[k] && m[k].actif && m[k].police) set[m[k].police] = 1; });
     });
     return Object.keys(set);
   }
@@ -336,7 +336,7 @@
     if (el.rot) pos.push("tourné de " + fmtN(el.rot) + "°");
     if (Math.abs(el.tx || 0) >= 0.05) pos.push("décalé de " + fmtN(Math.abs(el.tx)) + " cm vers la " + (el.tx > 0 ? "droite" : "gauche"));
     if (Math.abs(el.ty || 0) >= 0.05) pos.push("décalé de " + fmtN(Math.abs(el.ty)) + " cm vers le " + (el.ty > 0 ? "bas" : "haut"));
-    return (el.kind === "prenom" ? "Prénom " : "Numéro ") + "<b>" + esc(el.text) + "</b>, " + esc(el.police) + ", " + fmtN(el.hauteur) + " cm de haut" + (pos.length ? ", " + pos.join(", ") : "");
+    return (el.kind === "prenom" ? "Prénom " : el.kind === "texte" ? "Texte libre (" + (el.lignes ? el.lignes.length : 1) + (el.lignes && el.lignes.length > 1 ? " lignes" : " ligne") + ") " : "Numéro ") + "<b>" + esc(el.text) + "</b>, " + esc(el.police) + ", " + fmtN(el.hauteur) + " cm de haut" + (pos.length ? ", " + pos.join(", ") : "");
   }
   // Un bloc collé : « Bloc collé, 10 × 23,1 cm : visuel A6 + prénom LÉO + numéro 7 », éléments centrés, de haut en bas
   function motifTexte(m) {
