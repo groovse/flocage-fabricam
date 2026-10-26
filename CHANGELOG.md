@@ -5,6 +5,16 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 7.1.0 — 25/10/2026
+
+Deux articles Amazon au catalogue : un sweat à capuche polaire et un gilet polaire. **Version MINEUR : aucun prix existant ne change, le format du fichier de commande ne change pas.**
+
+- **Sweat à capuche polaire homme (zinmave).** Tailles S à XL, 17 couleurs (noir, blanc, beige, bleu clair, bleu roi, chameau, gris, gris clair, jaune, marine, rose, rouge, safran, vert foncé, vin, violet, violet clair), 9,99 € TTC pour toutes. Vendeur tiers `xozwkh` : port de 10,99 € une seule fois par commande, 2 à 3 semaines. Prix de vente : de 26 € (1 pièce) à 16 € (20 pièces) avec un visuel A6 en vinyle.
+- **Gilet polaire sans manches VELILLA 105905.** Tailles XS à 3XL, 6 couleurs (noir 17,82 €, blanc 17,64 €, rouge 17,82 €, bleu marine 15,89 €, vert chasse 17,35 €, gris 23,07 €), mixte. Vendu et expédié par Amazon : livraison offerte, 2 à 4 jours. Prix de vente : 24 €.
+- **Nouveau vendeur « Amazon ».** Deux entrées dans `livraisonVendeur` (`js/prix.js`) avec `plateforme: "Amazon"` : `amazon` (port offert) et `xozwkh` (10,99 €). Les textes du catalogue, du configurateur et de l'atelier (liste d'achats, coûts, base d'achats) nomment Amazon ; la base d'achats affiche « Boutique Amazon » et chaque couleur avec son ASIN et son lien.
+- **Polaire : vinyle par défaut.** Les deux articles portent `techniqueDefaut: "vinyle"` et la fiche « polaire » du guide des méthodes (24 articles en vinyle par défaut, au lieu de 22). La fiche PDF `fiches/polaire.pdf` liste les deux articles.
+- **À vérifier.** Le rouge du gilet était en promotion à 16,38 € (prix habituel gardé : 17,82 €) ; le gris du gilet s'affichait à 23,07 € alors qu'une autre offre partait de 14,34 € ; « Violet » et « Violet clair » du sweat ont la même photo chez Amazon ; le sweat n'a qu'un avis (2 étoiles) ; les frais de port d'Amazon se confirment au panier ; l'aperçu sur photo n'est pas calibré pour ces deux articles (le dessin s'affiche).
+- Tests : 159 (102 moteur, 8 fichiers, 24 facturation, 25 méthodes).
 ## 7.1.0 — 21/10/2026
 
 Les packs sont supprimés. **Version MINEUR : le fichier de commande reste compatible.**

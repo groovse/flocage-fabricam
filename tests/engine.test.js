@@ -372,7 +372,7 @@ test("catalogue : plus de robe, chaque dessin existe dans l'aperçu", () => {
   assert.ok(!DATA.produits.some(p => p.id === "robe-hummel"));
   const modeles = window.Preview.models;
   DATA.produits.forEach(p => assert.ok(modeles[p.modele], p.id + " : dessin « " + p.modele + " » absent de preview.js"));
-  assert.strictEqual(DATA.produits.filter(p => !p.apporte).length, 49);
+  assert.strictEqual(DATA.produits.filter(p => !p.apporte).length, 51);
   assert.strictEqual(DATA.produits.filter(p => p.apporte).length, 16);
 });
 test("catalogue : jogging homme et short de football 4,99 € ajoutés (version 3.1.0)", () => {
@@ -424,7 +424,7 @@ test("sublimation : chaussettes et ensemble Hummel blancs en polyester oui, t-sh
 });
 
 console.log("\nCouleurs, photos par couleur et liens vendeur");
-const URL_PHOTO = /^https:\/\/(contents\.mediadecathlon\.com\/[pm]\d+\/k\$[0-9a-f]{32}\/picture\.jpg|ae-pic-a1\.aliexpress-media\.com\/kf\/[A-Za-z0-9_]+\.jpg)$/;
+const URL_PHOTO = /^https:\/\/(contents\.mediadecathlon\.com\/[pm]\d+\/k\$[0-9a-f]{32}\/picture\.jpg|ae-pic-a1\.aliexpress-media\.com\/kf\/[A-Za-z0-9_]+\.jpg|m\.media-amazon\.com\/images\/I\/[A-Za-z0-9+_-]+\._AC_SL1500_\.jpg)$/;
 test("couleurs : identifiants uniques, nom Decathlon, lien de la page Decathlon, photos valides et sans doublon", () => {
   let avecPhotos = 0;
   DATA.produits.forEach(p => {
@@ -438,7 +438,7 @@ test("couleurs : identifiants uniques, nom Decathlon, lien de la page Decathlon,
         assert.ok(c.photos.length >= 1, p.id + " " + c.id + " : série de photos vide");
         c.photos.forEach(u => assert.ok(URL_PHOTO.test(u), p.id + " " + c.id + " : adresse de photo " + u));
         assert.strictEqual(new Set(c.photos).size, c.photos.length, p.id + " " + c.id + " : photo en double");
-        assert.ok(/^https:\/\/(www\.decathlon\.fr\/p|fr\.aliexpress\.com\/item)\//.test(c.lien || ""), p.id + " " + c.id + " : une couleur avec photos a aussi son lien");
+        assert.ok(/^https:\/\/(www\.decathlon\.fr\/p|fr\.aliexpress\.com\/item|www\.amazon\.fr\/dp)\//.test(c.lien || ""), p.id + " " + c.id + " : une couleur avec photos a aussi son lien");
       }
       if (c.rupture != null) assert.ok(/^\d{4}-\d{2}-\d{2}$/.test(c.rupture), p.id + " " + c.id + " : date de rupture");
       if (c.prixAchat != null) assert.ok(c.prixAchat > 0, p.id + " " + c.id + " : prix d'achat de la couleur");
@@ -494,13 +494,17 @@ test("prix d'achat par couleur : la couleur au prix différent change le coût, 
   const r0 = E.computeOrder({ pieces: mix, marquages: {}, technique: "dtf" }, ctx);
   assert.strictEqual(r0.couts.achats, 15.98, "sans prix de couleur, le prix de l'article s'applique");
 });
-test("vendeurs : chaque vendeur a un nom, et son lien (s'il est connu) est une page vendeur Decathlon ou une boutique AliExpress", () => {
+test("vendeurs : chaque vendeur a un nom, et son lien (s'il est connu) est une page vendeur Decathlon, une boutique AliExpress ou une page Amazon", () => {
   Object.keys(PRIX.livraisonVendeur.vendeurs).forEach(id => {
     const v = PRIX.livraisonVendeur.vendeurs[id];
     assert.ok(v.nom, id);
     if ((v.plateforme || "Decathlon") === "Decathlon") {
       assert.ok(v.frais > 0, id + " : un vendeur Decathlon a des frais de port");
       assert.ok(v.lien === "" || /^https:\/\/www\.decathlon\.fr\/mp\/seller\/[a-z0-9-]+\/[0-9a-f-]{36}$/.test(v.lien), id + " : lien du vendeur " + v.lien);
+    } else if (v.plateforme === "Amazon") {
+      assert.ok(v.frais >= 0 && v.delai, id + " : frais de port et délai de livraison");
+      assert.ok(v.frais > 0 || v.note, id + " : une livraison offerte s'explique dans la note");
+      assert.ok(v.lien === "" || /^https:\/\/www\.amazon\.fr\//.test(v.lien), id + " : lien du vendeur " + v.lien);
     } else {
       assert.strictEqual(v.plateforme, "AliExpress", id);
       assert.strictEqual(v.frais, 0, id + " : port compté à 0 € (offert dès 10 € d'achat)");
@@ -886,9 +890,9 @@ test("7.0.0 : la technique de la pièce passe avant la technique par défaut de 
   assert.strictEqual(t(piece2("p", "polo-essential", { technique: "dtf", couleurId: "blanc" }), "sublimation"), "dtf", "un DTF choisi sur la pièce l'emporte sur la sublimation");
   assert.strictEqual(t(piece2("o", "ouvre-bouteille-carte", { technique: "vinyle" })), "gravure", "la gravure d'un article en métal ne change pas");
 });
-test("7.0.0 : 22 articles où le DTF n'est pas idéal sont en vinyle par défaut (jamais un vêtement apporté ni une gravure)", () => {
+test("7.0.0 : 22 articles (24 depuis la 7.1.0) où le DTF n'est pas idéal sont en vinyle par défaut (jamais un vêtement apporté ni une gravure)", () => {
   const vin = DATA.produits.filter(p => p.techniqueDefaut === "vinyle");
-  assert.strictEqual(vin.length, 22);
+  assert.strictEqual(vin.length, 24);
   vin.forEach(p => assert.ok(!p.apporte && p.technique !== "gravure", p.id));
   vin.forEach(p => assert.strictEqual(E.pieceTechno({ technique: "dtf" }, piece2("x", p.id), ctx), "vinyle", p.id));
 });
@@ -956,6 +960,52 @@ test("7.0.0 : l'aperçu et les planches (SVG et PNG) dessinent le texte tourné"
   const imp = fs.readFileSync(path.join(__dirname, "..", "js", "atelier-impression.js"), "utf8"), pv = fs.readFileSync(path.join(__dirname, "..", "js", "preview.js"), "utf8");
   assert.ok(/rotate\(' \+ el\.rot/.test(imp) && /ctx\.rotate\(el\.rot/.test(imp), "planches SVG et PNG");
   assert.ok(/rotate\(' \+ rotT/.test(pv), "aperçu");
+});
+
+console.log("\nAmazon : sweat à capuche polaire et gilet polaire (version 7.1.0)");
+test("7.1.0 : deux articles Amazon, chaque couleur avec son ASIN, sa page, sa photo et son option de couleur", () => {
+  const sw = produits["sweat-capuche-polaire"], gi = produits["gilet-polaire-velilla"];
+  assert.strictEqual(sw.couleurs.length, 17); assert.strictEqual(gi.couleurs.length, 6);
+  assert.deepStrictEqual(sw.tailles, ["S", "M", "L", "XL"]);
+  assert.deepStrictEqual(gi.tailles, ["XS", "S", "M", "L", "XL", "2XL", "3XL"]);
+  [sw, gi].forEach(p => {
+    assert.deepStrictEqual(p.tags.categories, ["sweats"], p.id + " : rayon « Sweats et vestes »");
+    assert.strictEqual(p.techniqueDefaut, "vinyle", p.id + " : polaire, vinyle par défaut");
+    assert.strictEqual(p.polyesterPct, 100);
+    p.couleurs.forEach(c => {
+      assert.ok(/^B0[A-Z0-9]{8}$/.test(c.ref), p.id + " " + c.id + " : ASIN " + c.ref);
+      assert.strictEqual(c.lien, "https://www.amazon.fr/dp/" + c.ref, p.id + " " + c.id + " : page de la couleur");
+      assert.ok(c.nomDec && c.photos && c.photos.length === 1, p.id + " " + c.id + " : option Amazon et photo");
+    });
+    assert.strictEqual(new Set(p.couleurs.map(c => c.ref)).size, p.couleurs.length, p.id + " : un ASIN par couleur");
+  });
+  assert.strictEqual(sw.lien, sw.couleurs[0].lien); assert.strictEqual(gi.lien, gi.couleurs[0].lien);
+});
+test("7.1.0 : prix d'achat Amazon : 9,99 € pour toutes les couleurs du sweat, un prix par couleur pour le gilet", () => {
+  const sw = produits["sweat-capuche-polaire"], gi = produits["gilet-polaire-velilla"];
+  sw.couleurs.forEach(c => assert.strictEqual(E.prixAchatPiece(sw, c.id), 9.99, c.id));
+  const px = {}; gi.couleurs.forEach(c => { px[c.id] = E.prixAchatPiece(gi, c.id); });
+  assert.deepStrictEqual(px, { noir: 17.82, blanc: 17.64, rouge: 17.82, "bleu-marine": 15.89, "vert-chasse": 17.35, gris: 23.07 });
+});
+test("7.1.0 : « amazon » (livraison offerte) et « xozwkh » (10,99 €) sont deux vendeurs de la plateforme Amazon, port compté une seule fois par vendeur", () => {
+  const V = PRIX.livraisonVendeur.vendeurs;
+  assert.strictEqual(produits["gilet-polaire-velilla"].vendeur, "amazon"); assert.strictEqual(produits["sweat-capuche-polaire"].vendeur, "xozwkh");
+  assert.strictEqual(V.amazon.plateforme, "Amazon"); assert.strictEqual(V.amazon.frais, 0); assert.ok(/offerte dès 25 €/.test(V.amazon.note));
+  assert.strictEqual(V.xozwkh.plateforme, "Amazon"); assert.strictEqual(V.xozwkh.frais, 10.99);
+  const un = E.computeOrder({ pieces: [piece2("a", "sweat-capuche-polaire"), piece2("b", "sweat-capuche-polaire", { taille: "L" })], marquages: {}, technique: "dtf" }, ctx);
+  assert.strictEqual(un.vendeurs.length, 1); assert.strictEqual(un.couts.livraisonVendeurs, 10.99, "10,99 € une seule fois pour deux sweats");
+  const gil = E.computeOrder({ pieces: [piece2("a", "gilet-polaire-velilla")], marquages: {}, technique: "dtf" }, ctx);
+  assert.strictEqual(gil.couts.livraisonVendeurs, 0, "gilet expédié par Amazon : livraison offerte");
+  const deux = E.computeOrder({ pieces: [piece2("a", "sweat-capuche-polaire"), piece2("b", "gilet-polaire-velilla")], marquages: {}, technique: "dtf" }, ctx);
+  assert.deepStrictEqual(deux.vendeurs.map(v => v.plateforme), ["Amazon", "Amazon"]);
+  assert.strictEqual(deux.couts.livraisonVendeurs, 10.99);
+});
+test("7.1.0 : polaire : le motif part en vinyle par défaut (pas de planche), et le prix reste pair avec 3 € de marge au moins", () => {
+  ["sweat-capuche-polaire", "gilet-polaire-velilla"].forEach(id => {
+    assert.strictEqual(E.pieceTechno({ technique: "dtf" }, piece2("x", id), ctx), "vinyle", id);
+    const t = E.priceTable(Object.assign({}, produits[id], { vitrine: ["poitrine"] }), [1, 5, 10, 20, 50], ctx);
+    t.forEach(l => { assert.strictEqual(l.unitaire % 2, 0, id + " : prix pair " + l.unitaire); assert.ok(l.unitaire >= produits[id].prixAchat + 3, id + " : marge " + l.unitaire); });
+  });
 });
 
 console.log("\n" + ok + " tests passés");
