@@ -10,8 +10,6 @@
   var esc = P.esc;
   var byId = {};
   DATA.produits.forEach(function (p) { byId[p.id] = p; });
-  var PACKS = {};
-  (DATA.packs || []).forEach(function (p) { PACKS[p.id] = p; });
   var EMP_ORDER = ["poitrine", "dos", "manche_g", "manche_d", "cuisse_g", "cuisse_d", "bas_jambe_g", "chaussette_g", "chaussette_d",
     "sac", "gourde", "casquette", "bonnet", "tour_de_cou", "bandeau", "ceinture", "serviette", "ouvre_bouteille", "porte_cles"];
   var QUANTITES_VITRINE = [1, 5, 10, 20, 50];
@@ -38,13 +36,13 @@
     document.fonts.load('200px "' + f + '"', "AÉHg0").then(function () { scheduleRefresh(); }, function () {});
   }
 
-  var CTX = { prix: PRIX, produits: byId, packs: PACKS, emplacements: DATA.emplacements, measure: measure };
+  var CTX = { prix: PRIX, produits: byId, emplacements: DATA.emplacements, measure: measure };
 
   /* ---------------- état de la commande en cours ---------------- */
   var S = { pieces: [], nextId: 1, marquages: null, technique: "dtf", vue: "face", mode: "auto", previewId: null,
     contact: { asso: "", nom: "", email: "", tel: "", date: "", message: "" }, result: null,
-    entryId: null, addModel: null, nextPack: 1, sel: null };
-  function itemOf(id) { return byId[id] || PACKS[id]; }
+    entryId: null, addModel: null, sel: null };
+  function itemOf(id) { return byId[id]; }
   // Mails : on ouvre Gmail (rédaction d'un message dans un nouvel onglet), pas l'application de mail installée sur l'ordinateur.
   function gmailHref(to, subject, body) {
     return "https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(to) +
@@ -70,9 +68,9 @@
   function categorieLabel(id) { return CATEGORIES.filter(function (c) { return c.id === id; })[0].label; }
   // Rayon d'un article : sa première catégorie (c'est là qu'il apparaît quand aucune catégorie n'est choisie)
   function rayonOf(item) { return categoriesOf(item)[0] || ""; }
-  // Ordre du catalogue : par rayon, et dans un rayon les vêtements Decathlon, puis les packs, puis les vêtements apportés
+  // Ordre du catalogue : par rayon, et dans un rayon les vêtements Decathlon, puis les vêtements apportés
   function catalogueItems() {
-    var tous = DATA.produits.filter(function (p) { return !p.apporte; }).concat(DATA.packs || [], DATA.produits.filter(function (p) { return p.apporte; }));
+    var tous = DATA.produits.filter(function (p) { return !p.apporte; }).concat(DATA.produits.filter(function (p) { return p.apporte; }));
     return tous.map(function (item, i) { return { item: item, i: i, rang: RANG_CATEGORIE[rayonOf(item)] }; })
       .sort(function (a, b) { return a.rang - b.rang || a.i - b.i; })
       .map(function (x) { return x.item; });
@@ -92,9 +90,8 @@
     if (FILTRE.style && t.style && t.style !== FILTRE.style) return false;
     return true;
   }
-  // Nom d'une ligne de prix : un produit, ou un pack
+  // Nom d'une ligne de prix : le produit
   function groupName(g) {
-    if (g.pack) { var d = g.packType && PACKS[g.packType]; return d ? (d.nomCourt || d.nom) : "Pack"; }
     return byId[g.produitId].nomCourt;
   }
 
@@ -163,7 +160,7 @@
   // Vidée à chaque affichage de la vitrine, où les cartes repartent de leur première couleur.
   var COULEUR_CARTE = {};
   function couleurChoisie(item) {
-    var id = !item.produits && COULEUR_CARTE[item.id];
+    var id = COULEUR_CARTE[item.id];
     return id && item.couleurs.some(function (c) { return c.id === id; }) ? { couleurId: id } : null;
   }
 
@@ -173,30 +170,17 @@
     return Object.assign(p, over || {});
   }
 
-  // Un pack = une pièce par produit, liées par un identifiant. from : pièces à imiter (couleur, taille, et noms si withNames).
-  function newPack(def, from, withNames) {
-    var id = "k" + (S.nextPack++);
-    return def.produits.map(function (pid) {
-      var src = from && from.filter(function (x) { return x.produitId === pid; })[0], over = { pack: id, packType: def.id };
-      if (src) { over.couleurId = src.couleurId; over.taille = src.taille; if (withNames) { over.prenom = src.prenom; over.numero = src.numero; } }
-      return newPiece(byId[pid], over);
-    });
-  }
-
-  // Ajoute n pièces (ou n packs) du modèle choisi
+  // Ajoute n pièces du modèle choisi
   function addModel(id, n) {
     var last = S.pieces[S.pieces.length - 1];
     for (var i = 0; i < n; i++) {
-      if (PACKS[id]) S.pieces = S.pieces.concat(newPack(PACKS[id], null));
-      else {
-        var same = last && !last.pack && last.produitId === id ? last : null;
-        S.pieces.push(newPiece(byId[id], same ? { couleurId: same.couleurId, taille: same.taille } : {}));
-      }
+      var same = last && last.produitId === id ? last : null;
+      S.pieces.push(newPiece(byId[id], same ? { couleurId: same.couleurId, taille: same.taille } : {}));
     }
   }
 
   function ensureState(item) {
-    var prods = item.produits ? item.produits.map(function (id) { return byId[id]; }) : [item];
+    var prods = [item];
     if (!S.marquages) {
       S.marquages = {};
       EMP_ORDER.forEach(function (e) { S.marquages[e] = newMarquage(e, prods.filter(function (pr) { return pr.zones[e]; })[0] || prods[0]); });
@@ -206,7 +190,7 @@
         if (DATA.emplacements[e].texteSeul) S.marquages[e].prenom.actif = true;
       });
     }
-    if (!S.pieces.length) S.pieces = item.produits ? newPack(item, null) : [newPiece(item, couleurChoisie(item))];
+    if (!S.pieces.length) S.pieces = [newPiece(item, couleurChoisie(item))];
     if (!S.addModel) S.addModel = item.id;
     fixPreview();
   }
@@ -217,7 +201,7 @@
 
   // Commande encore vierge : on peut la remplacer sans rien perdre
   function pristine() {
-    return S.pieces.length <= taillePackMax() && S.pieces.every(function (p) { return !p.prenom && !p.numero; }) &&
+    return S.pieces.length <= 1 && S.pieces.every(function (p) { return !p.prenom && !p.numero; }) &&
       EMP_ORDER.every(function (e) { var m = S.marquages[e]; return !m.image && (DATA.emplacements[e].texteSeul || (!m.prenom.actif && !m.numero.actif)); });
   }
 
@@ -227,13 +211,13 @@
     if (S.marquages && S.entryId !== item.id) {
       if (pristine()) { S.marquages = null; S.pieces = []; S.previewId = null; S.technique = "dtf"; S.addModel = null; }
       else {
-        S.pieces = S.pieces.concat(item.produits ? newPack(item, null) : [newPiece(item, coul)]);
+        S.pieces = S.pieces.concat([newPiece(item, coul)]);
         S.addModel = item.id;
         toast((item.nomCourt || item.nom) + " ajouté à la configuration en cours.");
       }
     } else if (S.marquages && coul && !S.pieces.some(function (x) { return x.produitId === item.id && x.couleurId === coul.couleurId; })) {
       // Retour sur le même article dans une autre couleur : une commande vierge change de couleur, sinon la pièce s'ajoute
-      if (pristine()) S.pieces.forEach(function (x) { if (x.produitId === item.id && !x.pack) x.couleurId = coul.couleurId; });
+      if (pristine()) S.pieces.forEach(function (x) { if (x.produitId === item.id) x.couleurId = coul.couleurId; });
       else { S.pieces.push(newPiece(item, coul)); toast((item.nomCourt || item.nom) + " ajouté à la configuration en cours."); }
     }
     ensureState(item);
@@ -288,13 +272,13 @@
   // Repart d'une configuration vierge (après un ajout au panier)
   function razConfig() {
     S.pieces = []; S.marquages = null; S.technique = "dtf"; S.addModel = null; S.entryId = null; S.previewId = null; S.sel = null;
-    S.nextId = 1; S.nextPack = 1; S.result = null;
+    S.nextId = 1; S.result = null;
   }
-  // Les identifiants de pièces et de packs d'une configuration rechargée ne doivent pas être réutilisés
+  // Les identifiants de pièces d'une configuration rechargée ne doivent pas être réutilisés
   function reprendIds() {
-    var n = 0, k = 0;
-    S.pieces.forEach(function (p) { n = Math.max(n, parseInt(String(p.id).replace(/\D/g, ""), 10) || 0); if (p.pack) k = Math.max(k, parseInt(String(p.pack).replace(/\D/g, ""), 10) || 0); });
-    S.nextId = n + 1; S.nextPack = k + 1;
+    var n = 0;
+    S.pieces.forEach(function (p) { n = Math.max(n, parseInt(String(p.id).replace(/\D/g, ""), 10) || 0); });
+    S.nextId = n + 1;
   }
   function configEnCours() { return !!(S.marquages && S.pieces.length); }
   function prodOf(piece) { return byId[piece.produitId]; }
@@ -347,7 +331,7 @@
   }
 
   function priceStrip(item) {
-    var rows = E.priceTable(item, QUANTITES_VITRINE, CTX), unit = item.produits ? ["pack", "packs"] : ["pièce", "pièces"];
+    var rows = E.priceTable(item, QUANTITES_VITRINE, CTX), unit = ["pièce", "pièces"];
     return '<dl class="prices">' + rows.map(function (r) {
       return '<div class="pc"><dt>' + r.q + " " + (r.q > 1 ? unit[1] : unit[0]) + '</dt><dd>' + fmtEUR(r.unitaire) + '</dd></div>';
     }).join("") + '</dl>';
@@ -371,12 +355,6 @@
   }
 
   function cardPhoto(item) {
-    if (item.produits) {
-      return '<div class="p-photo duo" data-n="' + item.produits.length + '">' + item.produits.map(function (id) {
-        var pr = byId[id], ok = pr.photos && pr.photos[0];
-        return '<div class="cell" data-prod="' + pr.id + '">' + (ok ? photoImg(pr, pr.photos[0], 600) + zoomBtn(pr) : silhouette(pr)) + '</div>';
-      }).join("") + '</div>';
-    }
     var ph = photosOf(item, item.couleurs[0]);
     if (!ph.length) return '<div class="p-photo">' + silhouette(item) + '</div>';
     return '<div class="p-media" data-prod="' + item.id + '" data-i="0" data-c="0"><div class="p-photo" data-prod="' + item.id + '">' + photoImg(item, ph[0], 800) + zoomBtn(item) + '</div>' + thumbsHTML(item, ph, item.couleurs[0]) + '</div>';
@@ -418,19 +396,19 @@
   }
 
   function majFiltres() {
-    var all = catalogueItems(), cards = $$(".catalogue .produit"), nV = 0, nP = 0, rayons = {};
+    var all = catalogueItems(), cards = $$(".catalogue .produit"), nV = 0, rayons = {};
     cards.forEach(function (c, i) {
       var ok = matchFiltre(all[i]);
       c.hidden = !ok;
-      if (ok) { rayons[c.dataset.rayon] = true; if (c.dataset.pack) nP++; else nV++; }
+      if (ok) { rayons[c.dataset.rayon] = true; nV++; }
     });
     // Titres de rayon : seulement quand toutes les catégories sont affichées, et pas pour un rayon vide
     $$(".cat-titre").forEach(function (h) { h.hidden = !!FILTRE.categorie || !rayons[h.dataset.rayon]; });
     $$("[data-filtre]").forEach(function (b) { b.setAttribute("aria-pressed", FILTRE[b.dataset.filtre] === b.dataset.valeur ? "true" : "false"); });
     $$(".cat-chip").forEach(function (b) { b.setAttribute("aria-pressed", FILTRE.categorie === b.dataset.cat ? "true" : "false"); });
     var out = $("#f-count"); if (!out) return;
-    if (!nV && !nP) out.innerHTML = "Aucun article ne correspond à ces filtres. Tu peux nous <a href=\"" + autreVetementHref() + "\">demander le vêtement que tu cherches</a>.";
-    else out.textContent = nV + (nV > 1 ? " articles" : " article") + (nP ? " et " + nP + (nP > 1 ? " packs" : " pack") : "");
+    if (!nV) out.innerHTML = "Aucun article ne correspond à ces filtres. Tu peux nous <a href=\"" + autreVetementHref() + "\">demander le vêtement que tu cherches</a>.";
+    else out.textContent = nV + (nV > 1 ? " articles" : " article");
   }
 
   // Les cartes du catalogue, avec un titre devant chaque rayon
@@ -489,9 +467,6 @@
     if (window.ResizeObserver) new ResizeObserver(maj).observe(hd);
   }
 
-  function nombreEnLettres(n) { return ["Zéro", "Une", "Deux", "Trois", "Quatre", "Cinq", "Six"][n] || String(n); }
-  // Plus grand nombre de pièces d'un pack : une commande qui ne contient qu'un pack non personnalisé reste « vierge »
-  function taillePackMax() { return Math.max(2, ...(DATA.packs || []).map(function (pk) { return pk.produits.length; })); }
 
   // Format du visuel compté dans le prix de la vitrine : A6, ou le plus petit format de l'emplacement pour un accessoire (Mini 5 × 5 cm)
   function formatVitrine(item) {
@@ -510,18 +485,15 @@
   }
 
   function cardHTML(item) {
-    var isPack = !!item.produits, prods = isPack ? item.produits.map(function (id) { return byId[id]; }) : [item];
-    var app = !isPack && !!item.apporte;     // vêtement que le client apporte : ni couleurs de Decathlon, ni tailles, ni photo
-    var sw = app ? "" : isPack
-      ? prods.map(function (pr) { return '<li><b>' + esc(pr.nomCourt) + '</b> ' + pr.couleurs.map(function (c) { return '<span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom); }).join(" ") + '</li>'; }).join("")
-      : item.couleurs.map(function (c, i) {
-        return '<li><button type="button" class="sw-btn" data-c="' + i + '" aria-pressed="' + (i === 0 ? "true" : "false") + '" title="Voir cet article en ' + esc(c.nom.toLowerCase()) + '">' +
-          '<span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom) + '</button></li>';
-      }).join("");
-    var pointures = !app && prods.every(function (pr) { return /^\d/.test(pr.tailles[0]); });
-    var tailles = prods.map(function (pr) { return (isPack ? esc(pr.nomCourt) + " " : "") + esc(taillesTxt(pr)); }).join(", ");
-    var noms = prods.map(function (pr) { return esc(pr.nomCourt.toLowerCase()); });
-    var meta = isPack ? nombreEnLettres(prods.length) + " pièces : " + (noms.length > 1 ? noms.slice(0, -1).join(", ") + " et " + noms[noms.length - 1] : noms[0]) + ". Le pack coûte moins cher que les pièces prises séparément." : app ? "Tu apportes ton vêtement, Fabr'Icam le floque. Aucun vêtement n'est compté dans le prix." : esc(item.marque) + ". " + esc(item.matiere) + ".";
+    var prods = [item];
+    var app = !!item.apporte;     // vêtement que le client apporte : ni couleurs de Decathlon, ni tailles, ni photo
+    var sw = app ? "" : item.couleurs.map(function (c, i) {
+      return '<li><button type="button" class="sw-btn" data-c="' + i + '" aria-pressed="' + (i === 0 ? "true" : "false") + '" title="Voir cet article en ' + esc(c.nom.toLowerCase()) + '">' +
+        '<span class="sw" style="background:' + c.hex + '"></span>' + esc(c.nom) + '</button></li>';
+    }).join("");
+    var pointures = !app && /^\d/.test(item.tailles[0]);
+    var tailles = esc(taillesTxt(item));
+    var meta = app ? "Tu apportes ton vêtement, Fabr'Icam le floque. Aucun vêtement n'est compté dans le prix." : esc(item.marque) + ". " + esc(item.matiere) + ".";
     var t = tagsOf(item), labels = [];
     (t.genre || []).forEach(function (g) { labels.push(valeurLabel("genre", g)); });
     if (t.style) labels.push(valeurLabel("style", t.style));
@@ -530,14 +502,14 @@
     var mp = prods.filter(function (pr) { return pr.vendeur; })[0];
     var chips = labels.length || mp ? '<ul class="tags" aria-label="Étiquettes">' + labels.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") +
       (mp ? '<li class="mp">Livré par le vendeur</li>' : "") + "</ul>" : "";
-    return '<article class="produit" data-prod="' + item.id + '" data-pack="' + (isPack ? "1" : "") + '" data-rayon="' + esc(rayonOf(item)) + '"' + (matchFiltre(item) ? "" : " hidden") + '>' + cardPhoto(item) +
+    return '<article class="produit" data-prod="' + item.id + '" data-rayon="' + esc(rayonOf(item)) + '"' + (matchFiltre(item) ? "" : " hidden") + '>' + cardPhoto(item) +
       '<div class="p-info">' + chips + '<h3>' + esc(item.nom) + '</h3>' +
       '<p class="p-meta">' + meta + '</p>' +
       (app ? "" : '<ul class="swatches" aria-label="Couleurs">' + sw + '</ul>') +
-      (isPack || app ? "" : '<p class="p-liens">' + liensHTML(item, item.couleurs[0]) + '</p>') +
+      (app ? "" : '<p class="p-liens">' + liensHTML(item, item.couleurs[0]) + '</p>') +
       '<p class="p-meta">' + (app ? "Tu indiques la couleur, la taille et la matière de ton vêtement à l'étape suivante." : (pointures ? "Pointures" : "Tailles") + ' : ' + tailles + '.') + '</p>' +
-      '<h4>Prix par ' + (isPack ? "pack" : "pièce") + '</h4>' + priceStrip(item) +
-      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (isPack ? "vêtements" : app ? "marquage" : "article") + (item.technique === "gravure" ? ", gravure ou vinyle thermocollant et livraison compris" : ", planche de transfert et livraison compris") + (app ? ", sans vêtement (c'est toi qui l'apportes)" : "") + (item.technique === "gravure" ? ". Le prix est le même quelle que soit la quantité : rien à partager entre les pièces, ni planche ni livraison de transferts." : '. Le prix baisse avec la quantité' + (app && seuilApporte() != null ? ", et dès " + (seuilApporte() + 1) + " vêtements apportés dans une commande, le prix de ces pièces baisse encore" : "") + '.') + prixParCouleurTxt(prods) + '</p>' +
+      '<h4>Prix par pièce</h4>' + priceStrip(item) +
+      '<p class="note">' + esc(item.noteVitrine || ("Avec un visuel " + formatVitrine(item) + " " + (item.texteVitrine || "à la poitrine") + ".")) + ' Prix TTC, ' + (app ? "marquage" : "article") + (item.technique === "gravure" ? ", gravure ou vinyle thermocollant et livraison compris" : ", planche de transfert et livraison compris") + (app ? ", sans vêtement (c'est toi qui l'apportes)" : "") + (item.technique === "gravure" ? ". Le prix est le même quelle que soit la quantité : rien à partager entre les pièces, ni planche ni livraison de transferts." : '. Le prix baisse avec la quantité' + (app && seuilApporte() != null ? ", et dès " + (seuilApporte() + 1) + " vêtements apportés dans une commande, le prix de ces pièces baisse encore" : "") + '.') + prixParCouleurTxt(prods) + '</p>' +
       prods.filter(function (pr) { return pr.vendeur; }).map(function (pr) { return '<p class="note note-vendeur">' + esc(vendeurTexte(pr)) + '</p>'; }).join("") +
       '<a class="btn btn-primary" href="#/configurer/' + item.id + '">Personnaliser ' + esc(item.demonstratif || "ce produit") + '</a>' +
       '</div></article>';
@@ -711,28 +683,25 @@
 
   /* ---------- 1. pièces ---------- */
   function pieceRow(p, i) {
-    var prod = prodOf(p), inpack = !!p.pack;
+    var prod = prodOf(p);
     var opts = function (arr, cur, lab) { return arr.map(function (v) { var val = v.id || v; return '<option value="' + esc(val) + '"' + (val === cur ? " selected" : "") + ">" + esc(lab ? lab(v) : v) + "</option>"; }).join(""); };
-    var modele = inpack
-      ? '<td class="col-modele"><span class="pk">Pack</span> ' + esc(prod.nomCourt) + '</td>'
-      : '<td class="col-modele"><select data-f="produitId" aria-label="Modèle, pièce ' + (i + 1) + '">' + modelOptions(p.produitId, false) + '</select></td>';
-    return '<tr data-pid="' + p.id + '"' + (inpack ? ' class="inpack"' : "") + '>' +
+    var modele = '<td class="col-modele"><select data-f="produitId" aria-label="Modèle, pièce ' + (i + 1) + '">' + modelOptions(p.produitId) + '</select></td>';
+    return '<tr data-pid="' + p.id + '">' +
       '<td class="idx">' + (i + 1) + '</td>' + modele +
       '<td class="col-couleur"><span class="sw" style="background:' + colorOf(p).hex + '"></span><select data-f="couleurId" aria-label="Couleur, pièce ' + (i + 1) + '">' + opts(prod.couleurs, p.couleurId, function (c) { return c.nom; }) + '</select></td>' +
       '<td><select data-f="taille" aria-label="Taille, pièce ' + (i + 1) + '">' + opts(prod.tailles, p.taille) + '</select></td>' +
       '<td class="col-matiere">' + (prod.apporte ? '<select data-f="matiere" aria-label="Matière, pièce ' + (i + 1) + '">' + opts(DATA.matieres, matiereDe(p).id, function (m) { return m.nom; }) + '</select>' : "") + '</td>' +
       '<td class="col-prenom"><input data-f="prenom" type="text" maxlength="24" value="' + esc(p.prenom) + '" aria-label="Prénom, pièce ' + (i + 1) + '" autocomplete="off"></td>' +
       '<td class="col-numero"><input data-f="numero" type="text" maxlength="4" value="' + esc(p.numero) + '" aria-label="Numéro, pièce ' + (i + 1) + '" autocomplete="off"></td>' +
-      '<td class="act"><button type="button" class="ico" data-act="dup" title="' + (inpack ? "Dupliquer ce pack" : "Dupliquer cette pièce") + '" aria-label="Dupliquer la pièce ' + (i + 1) + '">+</button>' +
-      '<button type="button" class="ico" data-act="del" title="' + (inpack ? "Retirer ce pack" : "Retirer cette pièce") + '" aria-label="Retirer la pièce ' + (i + 1) + '">×</button></td></tr>';
+      '<td class="act"><button type="button" class="ico" data-act="dup" title="Dupliquer cette pièce" aria-label="Dupliquer la pièce ' + (i + 1) + '">+</button>' +
+      '<button type="button" class="ico" data-act="del" title="Retirer cette pièce" aria-label="Retirer la pièce ' + (i + 1) + '">×</button></td></tr>';
   }
 
-  // Liste des modèles, par groupes : vêtements du catalogue, packs (seulement pour « Ajouter »), vêtements apportés par le client
-  function modelOptions(cur, avecPacks) {
+  // Liste des modèles, par groupes : vêtements du catalogue, vêtements apportés par le client
+  function modelOptions(cur) {
     var o = function (id, lab) { return '<option value="' + esc(id) + '"' + (id === cur ? " selected" : "") + ">" + esc(lab) + "</option>"; };
     var cat = DATA.produits.filter(function (x) { return !x.apporte; }), app = DATA.produits.filter(function (x) { return x.apporte; });
     return '<optgroup label="Vêtements">' + cat.map(function (x) { return o(x.id, x.nomCourt); }).join("") + '</optgroup>' +
-      (avecPacks && (DATA.packs || []).length ? '<optgroup label="Packs (ensembles)">' + DATA.packs.map(function (x) { return o(x.id, x.nom); }).join("") + '</optgroup>' : "") +
       (app.length ? '<optgroup label="Ton vêtement (tu l\'apportes)">' + app.map(function (x) { return o(x.id, x.nomCourt); }).join("") + '</optgroup>' : "");
   }
 
@@ -744,7 +713,7 @@
       (S.pieces.some(function (p) { return prodOf(p).apporte; }) ? '<p class="hint hint-matiere">Fais glisser le tableau vers la gauche pour indiquer la matière de chaque vêtement.</p>' : "") +
       '<p class="hint hint-text" ' + (anyText("prenom") || anyText("numero") ? "hidden" : "") + '>Pour personnaliser chaque pièce, coche « Prénom » ou « Numéro » dans les marquages.</p>' +
       '<div class="toolbar">' +
-      '<label class="sr" for="addmodel">Modèle à ajouter</label><select id="addmodel">' + modelOptions(S.addModel, true) + '</select>' +
+      '<label class="sr" for="addmodel">Modèle à ajouter</label><select id="addmodel">' + modelOptions(S.addModel) + '</select>' +
       '<button type="button" class="btn btn-quiet" data-act="add">Ajouter</button>' +
       '<span class="addn"><label class="sr" for="addn">Nombre de pièces à ajouter</label><input id="addn" type="number" min="1" max="200" value="5"><button type="button" class="btn btn-quiet" data-act="addn">identiques à la dernière</button></span>' +
       '<button type="button" class="btn btn-quiet" data-act="paste">Coller une liste</button></div>' +
@@ -766,7 +735,7 @@
     text.split(/\r?\n/).forEach(function (line) {
       if (!line.trim()) return;
       var f = parseLine(line);
-      var batch = PACKS[id] ? newPack(PACKS[id], null) : [newPiece(byId[id])];
+      var batch = [newPiece(byId[id])];
       batch.forEach(function (p) {
         var prod = byId[p.produitId];
         p.prenom = (f[0] || "").slice(0, 24); p.numero = (f[1] || "").slice(0, 4);
@@ -780,7 +749,7 @@
     if (!added) { toast("Aucune ligne reconnue. Écris un prénom, un point-virgule, puis un numéro."); return; }
     if (blank) S.pieces = list; else S.pieces = S.pieces.concat(list);
     fixPreview();
-    toast(added + (PACKS[id] ? (added > 1 ? " packs ajoutés." : " pack ajouté.") : (added > 1 ? " pièces ajoutées." : " pièce ajoutée.")));
+    toast(added + (added > 1 ? " pièces ajoutées." : " pièce ajoutée."));
   }
 
   function updatePieceSelect() {
@@ -1117,8 +1086,7 @@
       marquages: JSON.parse(JSON.stringify(o.marquages, sansUrl)),
       prixAffiche: r && r.prix ? {
         unitaire: r.prix.unitaire, total: r.prix.total, pieces: r.N,
-        parProduit: r.prix.groupes.map(function (g) { return { produitId: g.produitId, packType: g.packType, n: g.n, unitaire: g.unitaire }; }),
-        packs: r.prix.packs.n
+        parProduit: r.prix.groupes.map(function (g) { return { produitId: g.produitId, n: g.n, unitaire: g.unitaire }; })
       } : null
     };
   }
@@ -1381,13 +1349,6 @@
     if (tr && t.dataset.f) {
       var p = S.pieces.filter(function (x) { return x.id === tr.dataset.pid; })[0], f = t.dataset.f;
       p[f] = t.value;
-      if ((f === "prenom" || f === "numero") && p.pack) {   // un pack = une personne : même prénom et même numéro sur les deux pièces
-        S.pieces.forEach(function (x) {
-          if (x.pack !== p.pack || x === p) return;
-          x[f] = p[f];
-          var other = $('tr[data-pid="' + x.id + '"] [data-f="' + f + '"]'); if (other) other.value = p[f];
-        });
-      }
       if (f === "produitId") { var pr = prodOf(p); p.couleurId = pr.couleurs[0].id; if (pr.tailles.indexOf(p.taille) < 0) p.taille = pr.tailles[0]; if (pr.apporte) p.matiere = p.matiere || "inconnu"; else delete p.matiere; renderPieces(); renderMarquages(); }
       if (f === "couleurId") { var sw = $(".sw", tr); if (sw) sw.style.background = colorOf(p).hex; }
       S.previewId = p.id;
@@ -1454,8 +1415,8 @@
     } else {
       if (configEnCours() && !pristine() && PANIER.edit == null) { toast("Une configuration est déjà en cours : ajoute-la au panier avant d'en modifier une autre."); return; }
       var o = cloneOrder(PANIER.lignes[i].order);
-      S.pieces = o.pieces; S.marquages = o.marquages; S.technique = o.technique; S.previewId = null; S.sel = null; S.addModel = o.pieces[0].packType || o.pieces[0].produitId;
-      S.entryId = o.pieces[0].packType || o.pieces[0].produitId;
+      S.pieces = o.pieces; S.marquages = o.marquages; S.technique = o.technique; S.previewId = null; S.sel = null; S.addModel = o.pieces[0].produitId;
+      S.entryId = o.pieces[0].produitId;
       reprendIds(); PANIER.edit = id;
       location.hash = "#/configurer";
     }
@@ -1471,7 +1432,7 @@
     var tr = b.closest("tr[data-pid]");
     var piecesChanged = function () { fixPreview(); renderPieces(); renderMarquages(); refresh(); };
     var pieceOf = function (row) { return S.pieces.filter(function (x) { return x.id === row.dataset.pid; })[0]; };
-    var clone = function (src) { return src.pack ? newPack(PACKS[src.packType], S.pieces.filter(function (x) { return x.pack === src.pack; }), false) : [newPiece(prodOf(src), { couleurId: src.couleurId, taille: src.taille })]; };
+    var clone = function (src) { return [newPiece(prodOf(src), { couleurId: src.couleurId, taille: src.taille })]; };
     if (act === "add") { var sel = $("#addmodel"); if (sel) S.addModel = sel.value; addModel(S.addModel, 1); piecesChanged(); }
     else if (act === "addn") {
       var n = Math.max(1, Math.min(200, parseInt($("#addn").value, 10) || 1)), last = S.pieces[S.pieces.length - 1];
@@ -1479,13 +1440,12 @@
       piecesChanged();
     }
     else if (act === "dup" && tr) {
-      var src = pieceOf(tr), members = src.pack ? S.pieces.filter(function (x) { return x.pack === src.pack; }) : [src];
-      var at = S.pieces.indexOf(members[members.length - 1]);
+      var src = pieceOf(tr), at = S.pieces.indexOf(src);
       S.pieces.splice.apply(S.pieces, [at + 1, 0].concat(clone(src)));
       piecesChanged();
     }
     else if (act === "del" && tr) {
-      var gone = pieceOf(tr), left = S.pieces.filter(function (x) { return gone.pack ? x.pack !== gone.pack : x.id !== gone.id; });
+      var gone = pieceOf(tr), left = S.pieces.filter(function (x) { return x.id !== gone.id; });
       if (!left.length) { toast("Il faut au moins une pièce."); return; }
       S.pieces = left;
       piecesChanged();
@@ -1661,7 +1621,7 @@
     CTX: CTX, S: S, DATA: DATA, PRIX: PRIX, esc: esc, fmtEUR: fmtEUR, fmtN: fmtN, $: $, $$: $$, byId: byId,
     EMP_ORDER: EMP_ORDER, toast: toast, download: download, slug: slug, measure: measure, ensureFont: ensureFont,
     orderOf: orderOf, start: start, colorOf: colorOf, pieceLine: pieceLine,
-    vendeurInfo: vendeurInfo, matiereDe: matiereDe, photosOf: photosOf, lienOf: lienOf, liensVendeur: liensVendeur, liensHTML: liensHTML, mailHref: mailHref, gmailHref: gmailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, PACKS: PACKS, itemOf: itemOf, groupName: groupName
+    vendeurInfo: vendeurInfo, matiereDe: matiereDe, photosOf: photosOf, lienOf: lienOf, liensVendeur: liensVendeur, liensHTML: liensHTML, mailHref: mailHref, gmailHref: gmailHref, mailText: mailText, problems: problems, orderPayload: orderPayload, itemOf: itemOf, groupName: groupName
   };
   if (!window.ATELIER_PAGE) window.addEventListener("load", start);
 })();

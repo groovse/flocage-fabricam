@@ -263,7 +263,7 @@
     noms.forEach(function (x, i) {
       ["maillot-basket", "short-basket", "chaussettes-football"].forEach(function (pid) {
         var pr = A.byId[pid];
-        pieces.push({ id: "p" + (n++), produitId: pid, couleurId: pr.couleurs[0].id, taille: pr.tailles[Math.min(2, pr.tailles.length - 1)], prenom: x[0], numero: x[1], pack: "k" + (i + 1), packType: "pack-basket" });
+        pieces.push({ id: "p" + (n++), produitId: pid, couleurId: pr.couleurs[0].id, taille: pr.tailles[Math.min(2, pr.tailles.length - 1)], prenom: x[0], numero: x[1] });
       });
     });
     ["polo-essential"].forEach(function (pid) {
@@ -563,13 +563,8 @@
     ]);
     pv.groupes.forEach(function (g) {
       var rg = A.PRIX.regles, detail = "coût moyen " + fmtEUR(g.coutMoyen) + ", marge " + fmtEUR(g.margeMoyenne);
-      if (g.pack) {
-        var sans = g.produitIds.some(function (id) { return A.byId[id] && A.byId[id].margePack != null; });
-        detail += " (" + fmtEUR(rg.parPiecePack) + " par pièce" + (sans ? ", chaussettes sans marge" : "") + ")";
-      } else {
-        var f = g.margeReduite && rg.apporte ? rg.apporte.facteur : 1;   // marge réduite si le facteur d'apporté n'est pas 1
-        detail += g.motifs ? " (" + fmtEUR(rg.margePiece * f) + " par pièce" + (f !== 1 ? " : marge × " + String(f).replace(".", ",") + ", plus de " + rg.apporte.seuil + " vêtements apportés" : "") + ")" : " (aucun motif)";
-      }
+      var f = g.margeReduite && rg.apporte ? rg.apporte.facteur : 1;   // marge réduite si le facteur d'apporté n'est pas 1
+      detail += g.motifs ? " (" + fmtEUR(rg.margePiece * f) + " par pièce" + (f !== 1 ? " : marge × " + String(f).replace(".", ",") + ", plus de " + rg.apporte.seuil + " vêtements apportés" : "") + ")" : " (aucun motif)";
       detail += ", arrondi à " + fmtEUR(g.unitaire) + " l'unité";
       rows.push([esc(A.groupName(g)) + " × " + g.n, detail, fmtEUR(g.total)]);
     });
@@ -650,13 +645,6 @@
     var stage = vues.map(function (v) {
       return '<figure class="sl-fig">' + P.render({ prod: prod, hex: col.hex, vue: v, marquages: o.marquages, piece: p, ctx: A.CTX, bare: true }) + "<figcaption>" + (hasBack ? (v === "dos" ? "Dos" : "Face") : "Face") + "</figcaption></figure>";
     }).join("");
-    var pack = "";
-    if (p.pack) {
-      var mates = o.pieces.filter(function (x) { return x.pack === p.pack; }), rang = mates.indexOf(p) + 1;
-      var def = A.PACKS[p.packType];
-      pack = '<p class="sl-pack"><span class="pk">pack</span>' + esc(def ? def.nomCourt || def.nom : "Pack") + ", pièce " + rang + " sur " + mates.length +
-        (mates.length > 1 ? " (pièces " + mates.map(function (x) { return o.pieces.indexOf(x) + 1; }).join(", ") + ")" : "") + "</p>";
-    }
     var who = "";
     if (p.prenom || p.numero) who = '<p class="sl-who">' + (p.prenom ? "<span>" + esc(p.prenom.toLocaleUpperCase("fr-FR")) + "</span>" : "") + (p.numero ? '<span class="num">' + esc(p.numero) + "</span>" : "") + "</p>";
     var marqs = marquagesDe(p), pr = presseDe(p);
@@ -685,7 +673,7 @@
     return '<article class="slide">' +
       '<div class="sl-left"><div class="sl-stage">' + stage + "</div>" + carte + "</div>" +
       '<div class="sl-spec"><header><p class="sl-n">Pièce ' + (i + 1) + " sur " + n + "</p><h2>" + esc(prod.nom) + "</h2>" +
-      '<p class="sl-line">' + sw(col.hex) + "<b>" + esc(col.nom) + "</b> · taille <b>" + esc(p.taille) + "</b>" + (tech(p) === "sublimation" ? ' <span class="tag">sublimation</span>' : tech(p) === "gravure" ? ' <span class="tag">gravure / vinyle</span>' : tech(p) === "vinyle" ? ' <span class="tag">vinyle</span>' : "") + "</p>" + choixTechnique(p, prod) + pack + who + "</header>" +
+      '<p class="sl-line">' + sw(col.hex) + "<b>" + esc(col.nom) + "</b> · taille <b>" + esc(p.taille) + "</b>" + (tech(p) === "sublimation" ? ' <span class="tag">sublimation</span>' : tech(p) === "gravure" ? ' <span class="tag">gravure / vinyle</span>' : tech(p) === "vinyle" ? ' <span class="tag">vinyle</span>' : "") + "</p>" + choixTechnique(p, prod) + who + "</header>" +
       (marqs.length ? '<table class="sl-tab"><thead><tr><th>Emplacement</th><th>À poser</th><th>Planche</th></tr></thead><tbody>' + rows + "</tbody></table>" : '<p class="empty">Aucun marquage sur cette pièce : rien à presser.</p>') +
       '<div class="callout"><b>' + (pr.tech === "sublimation" ? "Presse, sublimation" : pr.tech === "gravure" ? "Gravure laser ou vinyle thermocollant" : pr.tech === "vinyle" ? "Presse, vinyle thermocollant (flex)" : "Presse, transfert DTF") + "</b><p>" + esc(pr.texte) + "</p></div>" +
       (prod.avertissement ? '<p class="warn-line">' + esc(prod.avertissement) + "</p>" : "") +

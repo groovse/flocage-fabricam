@@ -15,6 +15,15 @@ Deux articles Amazon au catalogue : un sweat à capuche polaire et un gilet pola
 - **Polaire : vinyle par défaut.** Les deux articles portent `techniqueDefaut: "vinyle"` et la fiche « polaire » du guide des méthodes (24 articles en vinyle par défaut, au lieu de 22). La fiche PDF `fiches/polaire.pdf` liste les deux articles.
 - **À vérifier.** Le rouge du gilet était en promotion à 16,38 € (prix habituel gardé : 17,82 €) ; le gris du gilet s'affichait à 23,07 € alors qu'une autre offre partait de 14,34 € ; « Violet » et « Violet clair » du sweat ont la même photo chez Amazon ; le sweat n'a qu'un avis (2 étoiles) ; les frais de port d'Amazon se confirment au panier ; l'aperçu sur photo n'est pas calibré pour ces deux articles (le dessin s'affiche).
 - Tests : 159 (102 moteur, 8 fichiers, 24 facturation, 25 méthodes).
+## 7.1.0 — 21/10/2026
+
+Les packs sont supprimés. **Version MINEUR : le fichier de commande reste compatible.**
+
+- **Plus de packs.** Les 6 packs (basket, fitness femme, jogging femme, football, entraîneur, Hummel) disparaissent du catalogue, du configurateur, de l'atelier et des règles de prix (`parPiecePack`, `margePack`). Tous les articles qui les composaient restent en vente à l'unité.
+- **Prix.** Une ligne par produit, 3 € de marge par pièce, arrondi à l'euro pair : rien d'autre ne change.
+- **Anciennes commandes.** Un fichier ou un panier enregistré avec des pièces de pack s'ouvre toujours ; ses pièces sont chiffrées une par une, au prix unitaire de chaque article.
+- La catégorie « Ensembles » reste pour le survêtement Joma et l'ensemble Hummel.
+- Tests : 147 (90 moteur, 8 fichiers, 24 facturation, 25 méthodes).
 
 ## 7.0.0 — 21/10/2026
 

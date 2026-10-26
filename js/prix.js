@@ -60,18 +60,13 @@ window.PRIX = {
   // Règle de prix de vente (version 7.0.0) : chaque produit a son propre prix unitaire, égal au coût moyen de ses pièces
   // (vêtement + part des planches + part de la livraison + vinyle) augmenté de la marge, arrondi à l'euro PAIR supérieur.
   //
-  // Une pièce vendue seule : `margePiece` (3 €) de marge, quel que soit son nombre de motifs. Une pièce sans motif ne porte aucune marge.
+  // Une pièce : `margePiece` (3 €) de marge, quel que soit son nombre de motifs. Une pièce sans motif ne porte aucune marge.
   //   Le prix est ensuite arrondi au multiple de `pas` supérieur (2 € : 20, 22, 24...) : la marge réelle est donc toujours d'au moins 3 €.
-  //
-  // Une pièce vendue dans un pack : la moitié de la marge, `parPiecePack` (1,50 €), quel que soit son nombre de motifs.
-  //   Les chaussettes ne portent aucune marge dans un pack : leur fiche produit (data.js) déclare `margePack: 0`.
-  //   Un produit peut déclarer sa propre marge de pack avec `margePack` ; sans cette ligne, c'est parPiecePack.
   //
   // Vêtements apportés par le client (« Ton vêtement ») : même marge que les autres pièces. La remise au-delà de 5 pièces apportées
   // (6.0.0) est supprimée : `facteur: 1`. Remets 0.5 pour la rétablir (marge de ces pièces divisée par 2 au-delà de `seuil` pièces).
   regles: {
     margePiece: 3.00,
-    parPiecePack: 1.50,
     apporte: { seuil: 5, facteur: 1 },
     pas: 2
   },

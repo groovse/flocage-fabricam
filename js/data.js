@@ -7,7 +7,7 @@
  * place de marché Decathlon, AliExpress ou Amazon, voir prix.js), sublimation: false (article qui ne se sublime pas),
  * technique: "gravure" (article gravé au laser ou marqué en vinyle thermocollant : ni planche DTF ni coût de planche, voir engine.js),
  * techniqueDefaut: "vinyle" (le DTF n'est pas idéal sur cette matière : le flex thermocollant, découpé à l'atelier, est la technique de base ; voir engine.js, pieceTechno),
- * margePack: 0 (pièce sans marge dans un pack, comme les chaussettes, voir prix.js), vitrine (emplacements du prix affiché) et zones.
+ * vitrine (emplacements du prix affiché) et zones.
  * Un article « apporte: true » est un vêtement que le client apporte (voir plus bas, « Ton vêtement ») : prixAchat 0, couleurs = COULEURS_APPORTE.
  * Chaque couleur porte : nomDec (son nom sur Decathlon), ref (référence Decathlon), lien (la page de cette couleur), photos (sa série de
  * photos, avec dec([...])), et si besoin prixAchat (quand cette couleur ne coûte pas le prix de l'article) et rupture (date AAAA-MM-JJ
@@ -71,23 +71,23 @@ window.DATA = {
     ceinture:    { label: "Face de la ceinture", formats: ["Mini", "A7"] }
   },
 
-  // Filtres du catalogue (tags « genre », « style » et « type » de chaque produit ou pack). « sport » (tennis, basket...)
-  // n'est qu'une étiquette d'affichage. Un vêtement mixte porte les deux genres. Type « ensemble » : packs de plusieurs pièces
-  // et articles de plusieurs pièces vendus en un seul achat (survêtement, t-shirt et short).
+  // Filtres du catalogue (tags « genre », « style » et « type » de chaque produit). « sport » (tennis, basket...)
+  // n'est qu'une étiquette d'affichage. Un vêtement mixte porte les deux genres. Type « ensemble » : articles de plusieurs pièces
+  // vendus en un seul achat (survêtement, t-shirt et short).
   filtres: {
     genre: { label: "Pour", valeurs: [{ id: "homme", label: "Homme" }, { id: "femme", label: "Femme" }] },
     style: { label: "Style", valeurs: [{ id: "sport", label: "Sport" }, { id: "casual", label: "Casual" }] },
     type: { label: "Type", valeurs: [{ id: "haut", label: "Hauts" }, { id: "bas", label: "Bas" }, { id: "ensemble", label: "Ensembles" }, { id: "accessoire", label: "Accessoires" }, { id: "apporte", label: "Ton vêtement" }] }
   },
 
-  // Catégories de la vitrine (menu « Produits » et barre de catégories). Un article ou un pack peut en porter plusieurs :
+  // Catégories de la vitrine (menu « Produits » et barre de catégories). Un article peut en porter plusieurs :
   // tags.categories liste leurs identifiants. L'ordre ci-dessous est celui de l'affichage.
   categories: [
     { id: "tshirts", label: "T-shirts, maillots" },
     { id: "polos", label: "Polos" },
     { id: "sweats", label: "Sweats et vestes" },
     { id: "bas", label: "Shorts, pantalons" },
-    { id: "ensembles", label: "Packs" },
+    { id: "ensembles", label: "Ensembles" },
     { id: "couvre-chef", label: "Casquettes, bonnets" },
     { id: "sacs", label: "Sacs" },
     { id: "equipement", label: "Équipement" },
@@ -436,7 +436,6 @@ window.DATA = {
       modele: "chaussette",
       demonstratif: "ces chaussettes",
       tags: { genre: ["homme", "femme"], style: "sport", sport: "Football", type: "accessoire", categories: ["equipement"] },
-      margePack: 0,   // dans un pack, les chaussettes ne portent aucune marge (voir prix.js)
       prixAchat: 2.99,
       matiere: "96 % polyester, 3 % élasthanne, 1 % polyamide",
       polyesterPct: 96,
@@ -2720,76 +2719,6 @@ window.DATA = {
       zones: {
         tour_de_cou: { vue: "face", cx: 28, top: 20, w: 18, h: 18, label: "Face du tour de cou" }
       }
-    }
-  ],
-
-  // Packs : plusieurs produits vendus ensemble comme un seul article (1 € de marge par pièce, chaussettes à 0 €, voir prix.js)
-  packs: [
-    {
-      id: "pack-basket",
-      nom: "Pack basket : maillot, short et chaussettes",
-      nomCourt: "Pack basket",
-      demonstratif: "ce pack",
-      tags: { genre: ["homme", "femme"], style: "sport", sport: "Basket", type: "ensemble", categories: ["ensembles"] },
-      produits: ["maillot-basket", "short-basket", "chaussettes-football"],
-      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
-      texteVitrine: "sur la poitrine du maillot et une cuisse du short",
-      noteVitrine: "Avec un visuel A6 sur le maillot et sur le short, et un prénom de 3 cm sur une chaussette."
-    },
-    {
-      id: "pack-fitness-femme",
-      nom: "Pack fitness femme : t-shirt, short et chaussettes",
-      nomCourt: "Pack fitness femme",
-      demonstratif: "ce pack",
-      tags: { genre: ["femme"], style: "sport", sport: "Fitness", type: "ensemble", categories: ["ensembles"] },
-      produits: ["tshirt-fitness-femme", "short-slim-fitness", "chaussettes-football"],
-      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
-      texteVitrine: "sur la poitrine du t-shirt et une cuisse du short",
-      noteVitrine: "Avec un visuel A6 sur le t-shirt et sur le short, et un prénom de 3 cm sur une chaussette."
-    },
-    {
-      id: "pack-jogging-femme",
-      nom: "Pack jogging femme : pantalon, t-shirt et chaussettes",
-      nomCourt: "Pack jogging femme",
-      demonstratif: "ce pack",
-      tags: { genre: ["femme"], style: "casual", type: "ensemble", categories: ["ensembles"] },
-      produits: ["jogging-femme", "tshirt-coton-femme", "chaussettes-football"],
-      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
-      texteVitrine: "sur la poitrine du t-shirt et une cuisse du pantalon",
-      noteVitrine: "Avec un visuel A6 sur le t-shirt et sur le pantalon, et un prénom de 3 cm sur une chaussette."
-    },
-    {
-      id: "pack-football",
-      nom: "Pack football : sweat, short et chaussettes",
-      nomCourt: "Pack football",
-      demonstratif: "ce pack",
-      tags: { genre: ["homme", "femme"], style: "sport", sport: "Football", type: "ensemble", categories: ["ensembles"] },
-      produits: ["sweat-football-t100", "short-football-essentiel", "chaussettes-football"],
-      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
-      texteVitrine: "sur la poitrine du sweat et une cuisse du short",
-      noteVitrine: "Avec un visuel A6 sur le sweat et sur le short, et un prénom de 3 cm sur une chaussette."
-    },
-    {
-      id: "pack-entraineur",
-      nom: "Pack entraîneur : veste, haut thermique, jogging et chaussettes",
-      nomCourt: "Pack entraîneur",
-      demonstratif: "ce pack",
-      tags: { genre: ["homme"], style: "sport", type: "ensemble", categories: ["ensembles"] },
-      produits: ["veste-micropolaire", "thermique-homme", "jogging-homme", "chaussettes-football"],
-      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
-      texteVitrine: "sur la poitrine de la veste et du haut thermique et une cuisse du pantalon",
-      noteVitrine: "Avec un visuel A6 sur la veste, sur le haut thermique et sur le pantalon, et un prénom de 3 cm sur une chaussette."
-    },
-    {
-      id: "pack-hummel",
-      nom: "Pack Hummel : t-shirt et short, veste micropolaire et chaussettes",
-      nomCourt: "Pack Hummel",
-      demonstratif: "ce pack",
-      tags: { genre: ["femme"], style: "casual", type: "ensemble", categories: ["ensembles"] },
-      produits: ["ensemble-hummel", "veste-micropolaire", "chaussettes-football"],
-      vitrine: ["poitrine", "cuisse_g", "chaussette_g"],
-      texteVitrine: "sur la poitrine du t-shirt et de la veste et une cuisse du short",
-      noteVitrine: "Avec un visuel A6 sur le t-shirt, sur la veste et sur le short, et un prénom de 3 cm sur une chaussette."
     }
   ]
 };
