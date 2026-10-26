@@ -915,7 +915,7 @@ test("7.0.0 : sans rotation ni décalage, rien ne change (anciens fichiers de co
 test("7.0.0 : la hauteur des lettres se règle en cm (0,5 à 28)", () => {
   assert.strictEqual(motifsTxt({ numero: { hauteur: 12 } }).find(x => x.kind === "numero").el.hauteur, 12);
   const grand = motifsTxt({ numero: { hauteur: 100 } }).find(x => x.kind === "numero");
-  assert.ok(grand.el.hauteur < 28 && grand.el.reduit, "hauteur bornée à 28 cm puis réduite pour tenir dans la zone : " + grand.el.hauteur);
+  assert.ok(grand.el.hauteur <= 28, "hauteur bornée à 28 cm : " + grand.el.hauteur);
   assert.strictEqual(motifsTxt({ prenom: { hauteur: 0.1 } }).find(x => x.kind === "prenom").el.hauteur, 0.5);
 });
 test("7.0.0 : un quart de tour échange la largeur et la hauteur de la case de planche", () => {
@@ -944,7 +944,7 @@ test("7.0.0 : la position ne change ni les planches ni le prix, et se retrouve s
   const pile = E.stackFor("poitrine", txtCfg({ numero: { dx: 2, dy: -1.5 } }).poitrine, pTxt, produits["polo-essential"], ctx);
   assert.deepStrictEqual(pile.items.map(i => [i.kind, i.ux, i.uy]), [["prenom", 0, 0], ["numero", 2, -1.5]]);
   assert.strictEqual(E.computeOrder({ pieces: [pTxt], marquages: txtCfg({ numero: { dx: 9999 } }), technique: "dtf" }, ctx).motifs.find(m => m.kind === "numero").el.tx, 100, "borné");
-  assert.ok(E.computeOrder({ pieces: [pTxt], marquages: txtCfg({ numero: { dx: 15 } }), technique: "dtf" }, ctx).warnings.some(w => /déborde de la zone/.test(w)), "décalé hors de la zone");
+  assert.ok(E.computeOrder({ pieces: [pTxt], marquages: txtCfg({ numero: { dx: 15 } }), technique: "dtf" }, ctx).warnings.some(w => /sort de la zone/.test(w)), "décalé hors de la zone");
 });
 test("7.0.0 : un texte tourné ou déplacé sort du bloc collé, avec un avertissement ; le prix ne change pas (marge fixe)", () => {
   const avecBloc = (extra) => E.computeOrder({ pieces: [pTxt], marquages: { poitrine: Object.assign({ actif: true, avecImage: true, format: "A6", orient: "portrait", bloc: true, prenom: Object.assign({ actif: true, police: "Bebas Neue", hauteur: 2.5, couleur: "#fff" }, extra && extra.prenom), numero: Object.assign({ actif: true, police: "Bebas Neue", hauteur: 4, couleur: "#fff" }, extra && extra.numero) }) }, technique: "dtf" }, ctx);
@@ -1011,9 +1011,8 @@ console.log("\nTexte libre des gourdes (version 7.3.0)");
 const gourdes = n => Array.from({ length: n }, (_, i) => ({ id: "g" + i, produitId: "gourde-alu-1l", couleurId: produits["gourde-alu-1l"].couleurs[0].id, taille: produits["gourde-alu-1l"].tailles[0], prenom: "Léa" + i, numero: String(i + 1) }));
 const texteG = extra => Object.assign({ actif: true, valeur: "Fabr'Icam\nToulouse 2026", police: "Bebas Neue", hauteur: 1.2, interligne: 1.5, couleur: "#ffffff", rot: 0, dx: 0, dy: 0 }, extra || {});
 const gourdeCfg = (texte, extra) => ({ gourde: Object.assign({ actif: true, avecImage: false, format: "Mini", orient: "portrait", prenom: { actif: false }, numero: { actif: false }, texte }, extra || {}) });
-test("7.3.0 : seul l'emplacement gourde accepte un texte libre", () => {
-  assert.strictEqual(DATA.emplacements.gourde.texteLibre, true);
-  Object.keys(DATA.emplacements).filter(k => k !== "gourde").forEach(k => assert.ok(!DATA.emplacements[k].texteLibre, k));
+test("7.3.0 : l'emplacement gourde accepte le texte libre (7.4.0 : tous les emplacements, sauf texteLibre: false)", () => {
+  Object.keys(DATA.emplacements).forEach(k => assert.notStrictEqual(DATA.emplacements[k].texteLibre, false, k));
 });
 test("7.3.0 : un texte libre sur deux lignes donne un seul élément « texte » à deux lignes, identique sur chaque gourde", () => {
   const r = E.buildMotifs({ pieces: gourdes(3), marquages: gourdeCfg(texteG()), technique: "dtf" }, ctx);
@@ -1050,7 +1049,7 @@ test("7.3.0 : aucune limite de zone (pas d'avertissement de débordement) ; seul
   const grand = E.buildMotifs({ pieces: gourdes(1), marquages: gourdeCfg(texteG({ valeur: "Un texte bien plus large que la zone de la gourde", hauteur: 3 })), technique: "dtf" }, ctx);
   const m = grand.motifs.filter(x => x.kind === "texte")[0];
   assert.ok(m.w > zone.w, "plus large que la zone : " + m.w);
-  assert.ok(grand.warnings.some(w => /texte libre/.test(w)) && !grand.warnings.some(w => /déborde|dépasse la zone/.test(w)));
+  assert.ok(grand.warnings.some(w => /sort de la zone/.test(w)) && !grand.warnings.some(w => /déborde|dépasse la zone/.test(w)));
   const enorme = E.elementsFor("gourde", gourdeCfg(texteG({ valeur: "x".repeat(200), hauteur: 3 })).gourde, gourdes(1)[0], produits["gourde-alu-1l"], ctx)[0];
   assert.ok(enorme.reduit && enorme.w0 <= Math.max(PRIX.plateau.w, PRIX.plateau.h) + 1e-6);
 });
@@ -1068,9 +1067,11 @@ test("7.3.0 : un texte libre vide, inactif, ou une commande d'avant la 7.3.0 (sa
     assert.strictEqual(r.motifs.length, 2);
   });
 });
-test("7.3.0 : sur un autre emplacement (poitrine), cfg.texte est ignoré", () => {
-  const r = E.buildMotifs({ pieces: pieces(1), marquages: { poitrine: Object.assign({}, A6poitrine.poitrine, { texte: texteG() }) }, technique: "dtf" }, ctx);
-  assert.strictEqual(r.motifs.filter(m => m.kind === "texte").length, 0);
+test("7.4.0 : le texte libre existe aussi sur la poitrine, et un emplacement peut le refuser (texteLibre: false)", () => {
+  const cfg = { poitrine: Object.assign({}, A6poitrine.poitrine, { texte: texteG() }) };
+  assert.strictEqual(E.buildMotifs({ pieces: pieces(1), marquages: cfg, technique: "dtf" }, ctx).motifs.filter(m => m.kind === "texte").length, 1);
+  const em = ctx.emplacements.poitrine; em.texteLibre = false;
+  try { assert.strictEqual(E.buildMotifs({ pieces: pieces(1), marquages: cfg, technique: "dtf" }, ctx).motifs.filter(m => m.kind === "texte").length, 0); } finally { delete em.texteLibre; }
 });
 test("7.3.0 : l'aperçu et les planches (SVG et PNG) dessinent chaque ligne du texte libre", () => {
   const fs = require("fs");
@@ -1082,6 +1083,37 @@ test("7.3.0 : une gourde apportée (même emplacement) accepte aussi le texte li
   if (!ap) return;
   const el = E.elementsFor("gourde", gourdeCfg(texteG()).gourde, { id: "a", produitId: ap.id, prenom: "", numero: "" }, ap, ctx);
   assert.strictEqual(el.filter(e => e.kind === "texte").length, 1);
+});
+
+console.log("\nPrénom sur plusieurs lignes et textes sans limite de zone (version 7.4.0)");
+const pre = extra => ({ actif: true, hauteur: 2, police: "Bebas Neue", couleur: "#fff", ...extra });
+const poloPre = (prenom, cfgPre) => E.elementsFor("poitrine", { actif: true, avecImage: false, maj: true, prenom: pre(cfgPre), numero: { actif: false } }, { id: "x", produitId: "polo-essential", prenom, numero: "" }, produits["polo-essential"], ctx);
+test("7.4.0 : « coupe » met chaque mot du prénom sur sa ligne, en majuscules (case Majuscules)", () => {
+  const el = poloPre("Jean Dupont", { coupe: true })[0];
+  assert.deepStrictEqual(el.lignes.map(l => l.text), ["JEAN", "DUPONT"]); assert.strictEqual(el.kind, "prenom"); assert.strictEqual(el.text, "JEAN DUPONT");
+  const un = poloPre("Jean Dupont", { coupe: false })[0];
+  assert.ok(!un.lignes && un.text === "JEAN DUPONT");
+});
+test("7.4.0 : un prénom d'un seul mot n'est pas coupé ; la case est plus haute pour deux lignes et l'interligne compte", () => {
+  assert.ok(!poloPre("Léa", { coupe: true })[0].lignes);
+  const a = poloPre("Jean Dupont", { coupe: true, interligne: 1.2 })[0], b = poloPre("Jean Dupont", { coupe: true, interligne: 2.5 })[0];
+  assert.ok(b.h > a.h && poloPre("Jean", {})[0].h < a.h);
+});
+test("7.4.0 : un prénom n'est plus réduit à la largeur de la zone, seulement au plateau de la presse", () => {
+  const z = produits["polo-essential"].zones.poitrine;
+  const el = poloPre("Prénom long", { hauteur: 2 })[0];
+  assert.ok(el.w > z.w && !el.reduit, el.w + " > " + z.w);
+  assert.ok(poloPre("x".repeat(300), { hauteur: 4 })[0].reduit);
+});
+test("7.4.0 : un prénom ou un texte qui sort de la zone donne un avertissement non bloquant, sans « déborde »", () => {
+  const r = E.buildMotifs({ pieces: [{ id: "x", produitId: "polo-essential", couleurId: "marine", taille: "M", prenom: "Un prénom beaucoup trop long pour la zone du polo", numero: "" }], marquages: { poitrine: { actif: true, avecImage: false, maj: true, prenom: pre({ hauteur: 4 }), numero: { actif: false } } }, technique: "dtf" }, ctx);
+  assert.ok(r.warnings.some(w => /sort de la zone/.test(w)) && !r.warnings.some(w => /déborde|dépasse la zone/.test(w)), r.warnings.join(" | "));
+});
+test("7.4.0 : le texte libre fonctionne sur le dos et sur un emplacement sans visuel (chaussette)", () => {
+  const dos = E.elementsFor("dos", { actif: true, avecImage: false, prenom: { actif: false }, numero: { actif: false }, texte: texteG() }, pieces(1)[0], produits["polo-essential"], ctx);
+  assert.strictEqual(dos.filter(e => e.kind === "texte").length, 1);
+  const ch = DATA.produits.filter(p => p.zones.chaussette_g)[0];
+  if (ch) assert.strictEqual(E.elementsFor("chaussette_g", { actif: true, avecImage: false, prenom: { actif: false }, numero: { actif: false }, texte: texteG() }, { id: "c", produitId: ch.id, prenom: "", numero: "" }, ch, ctx).filter(e => e.kind === "texte").length, 1);
 });
 
 console.log("\n" + ok + " tests passés");
