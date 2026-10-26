@@ -319,11 +319,40 @@
         tx: Math.max(-DECALAGE_MAX, Math.min(DECALAGE_MAX, nombre(o.dx, 0))), ty: Math.max(-DECALAGE_MAX, Math.min(DECALAGE_MAX, nombre(o.dy, 0))),
         fontCm: m.fontCm * s, asc: m.asc * s, reduit: s < 1 };
     }
+    // Texte libre (version 7.3.0, gourdes) : une phrase sur une ou plusieurs lignes, identique sur toutes les pièces de la commande,
+    // en plus du prénom et du numéro. Écrit tel que tapé (pas de passage en majuscules), sans limite de zone : seul le plateau de la presse compte.
+    // o.valeur : le texte (retours à la ligne = lignes), o.interligne : écart entre deux lignes en multiple de la hauteur des majuscules (1,5 par défaut).
+    // Le résultat porte `lignes` : [{ text, y }], y = position de la ligne de base depuis le haut de la case du texte à l'endroit.
+    function texteLibre(o) {
+      if (!o || !o.actif) return null;
+      var lignes = String(o.valeur || "").split(/\r?\n/).map(function (l) { return l.replace(/\s+$/, ""); });
+      while (lignes.length && !lignes[lignes.length - 1].trim()) lignes.pop();
+      while (lignes.length && !lignes[0].trim()) lignes.shift();
+      if (!lignes.length) return null;
+      var hauteur = Math.max(0.5, Math.min(Number(o.hauteur) || 1.5, 28));
+      var inter = Math.max(1, Math.min(nombre(o.interligne, 1.5), 4)), pitch = hauteur * inter;
+      var ms = lignes.map(function (l) { return l.trim() ? ctx.measure(l, o.police, hauteur) : null; });
+      var vus = ms.filter(Boolean), ref = vus[0];
+      var largeur = vus.reduce(function (m, x) { return Math.max(m, x.w); }, 0);
+      var asc = vus.reduce(function (m, x) { return Math.max(m, x.asc); }, 0);
+      var desc = vus.reduce(function (m, x) { return Math.max(m, x.h - x.asc); }, 0);
+      var haut = asc + (lignes.length - 1) * pitch + desc;
+      var maxW = Math.max(P.w, P.h), s = largeur > maxW ? maxW / largeur : 1;
+      var w0 = Math.max(largeur, 0.5) * s, h0 = haut * s, rot = angleTexte(o.rot), rad = rot * Math.PI / 180;
+      var bw = Math.abs(Math.cos(rad)) * w0 + Math.abs(Math.sin(rad)) * h0, bh = Math.abs(Math.sin(rad)) * w0 + Math.abs(Math.cos(rad)) * h0;
+      return { kind: "texte", text: lignes.filter(function (l) { return l.trim(); }).map(function (l) { return l.trim(); }).join(" / "),
+        lignes: lignes.map(function (l, i) { return { text: l.trim(), y: (asc + i * pitch) * s }; }).filter(function (l) { return l.text; }),
+        police: o.police, couleur: o.couleur, hauteur: hauteur * s,
+        w: rot ? Math.round(bw * 1000) / 1000 : w0, h: rot ? Math.round(bh * 1000) / 1000 : h0, w0: w0, h0: h0, rot: rot,
+        tx: Math.max(-DECALAGE_MAX, Math.min(DECALAGE_MAX, nombre(o.dx, 0))), ty: Math.max(-DECALAGE_MAX, Math.min(DECALAGE_MAX, nombre(o.dy, 0))),
+        fontCm: ref.fontCm * s, asc: asc * s, reduit: s < 1 };
+    }
     var emp = ctx.emplacements[empId];
     var img = (cfg.avecImage !== false && !(emp && emp.texteSeul)) ? image() : null;
     var pre = cfg.prenom && cfg.prenom.actif ? texte("prenom", piece.prenom, cfg.prenom) : null;
     var num = cfg.numero && cfg.numero.actif ? texte("numero", piece.numero, cfg.numero) : null;
-    var txt = [pre, num].filter(Boolean);
+    var lib = emp && emp.texteLibre ? texteLibre(cfg.texte) : null;
+    var txt = [pre, num, lib].filter(Boolean);
     if (cfg.textePos === "dessus") { out = txt.concat(img ? [img] : []); }
     else { out = (img ? [img] : []).concat(txt); }
     return out;
@@ -420,12 +449,14 @@
         var lay = stackFor(empId, cfg, piece, prod, ctx), els = lay.items;
         var zone = prod.zones[empId], emp = ctx.emplacements[empId];
         var qui = piece.prenom || ("pièce " + (idx + 1));
-        if (lay.H > zone.h + EPS) warn(emp.label + " : le contenu dépasse la zone prévue sur le vêtement (" + zone.h + " cm de haut).");
+        var libre = els.some(function (el) { return el.kind === "texte"; });
+        if (libre) warn(emp.label + " : texte libre, sans limite de zone. Fabr'Icam vérifie qu'il tient bien sur l'article avant de presser.");
+        else if (lay.H > zone.h + EPS) warn(emp.label + " : le contenu dépasse la zone prévue sur le vêtement (" + zone.h + " cm de haut).");
         else if (debordeZone(lay, zone)) warn(emp.label + " : le visuel déborde de la zone prévue sur le vêtement. Fabr'Icam vérifie la place sur le vêtement avant de presser.");
-        if (lay.texteLibre) warn(emp.label + " : un prénom ou un numéro est tourné ou déplacé, il n'est plus collé au visuel : il est pressé séparément.");
+        if (lay.texteLibre) warn(emp.label + " : un texte est tourné ou déplacé, il n'est plus collé au visuel : il est pressé séparément.");
         if (lay.tropGrand) warn(emp.label + " : le bloc (visuel, prénom et numéro collés) est trop grand pour le plateau de la presse (A4) : les éléments sont pressés séparément.");
         els.forEach(function (el) {
-          if (el.reduit) warn(emp.label + " : un prénom ou un numéro est trop large, il est réduit pour tenir.");
+          if (el.reduit) warn(emp.label + " : un texte est trop large, il est réduit pour tenir.");
           if (!fitsPlateau(el.w, el.h, ctx.prix.plateau)) warn(emp.label + " : un motif dépasse le plateau de la presse (A4).");
         });
         if (lay.bloc) {

@@ -5,6 +5,17 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 7.3.0 — 26/10/2026
+
+Texte libre sur les gourdes. **Version MINEUR : aucun prix existant ne change ; le fichier de commande reste compatible (une commande d'avant la 7.3.0 s'ouvre sans texte libre).**
+
+- **Texte libre.** Sur la face des gourdes (les 3 gourdes du catalogue et la gourde apportée), une case « Texte libre, identique sur toutes les gourdes » ouvre une zone de texte : une phrase, un slogan, sur une ou plusieurs lignes (un retour à la ligne = une ligne). Le texte est écrit tel qu'il est tapé, sans passage en majuscules.
+- **Réglages.** Police, hauteur des lettres, couleur, écart entre les lignes (`interligne`), orientation libre (-180° à 180°, quarts de tour), décalage horizontal et vertical, comme pour le prénom et le numéro. Un champ `texte` (`actif`, `valeur`, `police`, `hauteur`, `interligne`, `couleur`, `rot`, `dx`, `dy`) s'ajoute au marquage `gourde`.
+- **Identique sur toute la commande.** Chaque gourde reçoit son propre transfert du même texte. Il s'ajoute au prénom et au numéro de chaque gourde, qui gardent leur valeur.
+- **Aucune limite de zone.** Seul le plateau de la presse (A4) compte : un texte plus large est réduit pour y tenir. Le configurateur affiche « texte libre, sans limite de zone » et l'atelier vérifie la place sur la gourde avant de presser.
+- **Moteur.** Nouvel élément `texte` dans `elementsFor` (`lignes` : texte et ligne de base de chaque ligne), nouvel indicateur `texteLibre: true` sur l'emplacement `gourde` de `js/data.js`. L'aperçu, les planches (SVG et PNG), le mail, l'atelier, le récapitulatif des motifs et le repère `t` des planches prennent en charge le texte libre.
+- Tests : 163 (106 moteur, 8 fichiers, 24 facturation, 25 méthodes).
+
 ## 7.2.0 — 26/10/2026
 
 Deux articles Amazon au catalogue : un sweat à capuche et un gilet polaire. **Version MINEUR : aucun prix existant ne change, le format du fichier de commande ne change pas.**

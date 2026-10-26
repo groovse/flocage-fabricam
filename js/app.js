@@ -145,7 +145,7 @@
     var micro = empId === "porte_cles";   // barre de 2 cm de large : texte minuscule
     var txt = darkColor(prod) ? "#ffffff" : "#14213d";
     var fmt = f.length ? (big ? f[f.length - 1] : f[0]) : "A6";
-    return {
+    var base = {
       actif: false, avecImage: !emp.texteSeul, image: null,
       format: f.length ? (big ? f[f.length - 1] : f[0]) : "A6", orient: "portrait",
       largeur: E.largeurPourFormat(fmt, 0, 0, CTX), libre: false, rot: 0, dx: 0, dy: 0,      // taille libre, quart de tour et position du visuel (version 6.2.0)
@@ -154,6 +154,12 @@
       maj: true, textePos: "dessous",
       bloc: true      // prénom et numéro collés au visuel : un seul transfert, pressé d'un coup (voir moteur, stackFor)
     };
+    if (emp.texteLibre) base.texte = texteLibreDefaut(txt);
+    return base;
+  }
+  // Texte libre (version 7.3.0, gourdes) : une phrase sur plusieurs lignes, identique sur toute la commande
+  function texteLibreDefaut(couleur) {
+    return { actif: false, valeur: "", police: "Bebas Neue", hauteur: 1.2, interligne: 1.5, couleur: couleur, rot: 0, dx: 0, dy: 0 };
   }
 
   // Couleur cliquée sur la carte d'un article du catalogue (produit -> identifiant de couleur) : la commande démarre dans cette couleur.
@@ -202,7 +208,7 @@
   // Commande encore vierge : on peut la remplacer sans rien perdre
   function pristine() {
     return S.pieces.length <= 1 && S.pieces.every(function (p) { return !p.prenom && !p.numero; }) &&
-      EMP_ORDER.every(function (e) { var m = S.marquages[e]; return !m.image && (DATA.emplacements[e].texteSeul || (!m.prenom.actif && !m.numero.actif)); });
+      EMP_ORDER.every(function (e) { var m = S.marquages[e]; return !m.image && (DATA.emplacements[e].texteSeul || (!m.prenom.actif && !m.numero.actif && !(m.texte && m.texte.actif))); });
   }
 
   // Arrivée sur un produit depuis la vitrine : on repart de zéro si la commande est vierge, sinon on l'ajoute à la commande
@@ -765,12 +771,15 @@
   }
 
   function textBlock(m, kind, label) {
-    var o = m[kind];
+    var o = m[kind], libre = kind === "texte";
     return '<div class="txt' + (o.actif ? " on" : "") + '">' +
       '<label class="chk"><input type="checkbox" data-k="' + kind + '.actif"' + (o.actif ? " checked" : "") + '> ' + label + '</label>' +
+      (o.actif && libre ? '<label class="txt-libre">Ton texte <small>(une ligne par retour à la ligne, écrit tel que tu le tapes)</small>' +
+        '<textarea data-k="texte.valeur" rows="3" maxlength="300" placeholder="Ex. : Fabr\'Icam" aria-label="Texte libre">' + esc(o.valeur || "") + '</textarea></label>' : "") +
       (o.actif ? '<div class="txt-opts">' +
         '<label>Police<select data-k="' + kind + '.police">' + fontOptions(o.police) + '</select></label>' +
         '<label>Hauteur des lettres<span class="unit"><input type="number" data-k="' + kind + '.hauteur" min="0.5" max="28" step="0.5" value="' + o.hauteur + '"> cm</span></label>' +
+        (libre ? '<label>Écart entre les lignes <small>(1 = serré)</small><span class="unit"><input type="number" data-k="texte.interligne" min="1" max="4" step="0.1" value="' + fmtField(o.interligne || 1.5) + '"> ×</span></label>' : "") +
         '<label>Couleur<input type="color" data-k="' + kind + '.couleur" value="' + esc(o.couleur) + '"></label></div>' +
         '<div class="txt-pos" data-txt="' + kind + '">' +
         '<label>Orientation<span class="unit"><input type="number" data-k="' + kind + '.rot" min="-180" max="180" step="1" value="' + fmtField(o.rot || 0) + '"> °</span></label>' +
@@ -849,6 +858,7 @@
 
   function empCard(empId) {
     var m = S.marquages[empId], emp = DATA.emplacements[empId];
+    if (emp.texteLibre && !m.texte) m.texte = texteLibreDefaut(m.prenom.couleur);      // commande enregistrée avant la 7.3.0
     var prod = DATA.produits.filter(function (p) { return p.zones[empId]; })[0];
     var label = (prod.zones[empId].label) || emp.label;
     var body = "";
@@ -862,6 +872,7 @@
           '<p class="hint dpi" data-dpi>' + esc(dpiText(m)) + '</p>' : "") + '</div>';
       body = '<div class="emp-body">' + imgGroup +
         '<div class="grp">' + textBlock(m, "prenom", "Prénom de chaque pièce") + textBlock(m, "numero", "Numéro de chaque pièce") +
+        (emp.texteLibre ? textBlock(m, "texte", "Texte libre, identique sur toutes les gourdes") : "") +
         ((m.prenom.actif || m.numero.actif) ? '<div class="row2"><label class="chk"><input type="checkbox" data-k="maj"' + (m.maj ? " checked" : "") + '> Majuscules</label>' +
           ((m.avecImage && !emp.texteSeul) ? '<label>Texte placé<select data-k="textePos"><option value="dessous"' + (m.textePos === "dessous" ? " selected" : "") + '>Sous le visuel</option><option value="dessus"' + (m.textePos === "dessus" ? " selected" : "") + '>Au-dessus du visuel</option></select></label>' : "") + '</div>' : "") +
         blocOption(m, emp) +
@@ -876,7 +887,7 @@
 
   function renderMarquages() {
     $("#marquages").innerHTML = usedEmps().map(empCard).join("");
-    (usedEmps()).forEach(function (e) { var m = S.marquages[e]; ["prenom", "numero"].forEach(function (k) { if (m[k].actif) ensureFont(m[k].police); }); });
+    (usedEmps()).forEach(function (e) { var m = S.marquages[e]; ["prenom", "numero", "texte"].forEach(function (k) { if (m[k] && m[k].actif) ensureFont(m[k].police); }); });
   }
 
   function renderEmp(empId) {
@@ -1147,6 +1158,10 @@
       var d = [];
       if (m.avecImage) d.push("visuel " + E.descriptionVisuel(m, CTX) + (m.image ? " (" + m.image.nom + ")" : ""));
       ["prenom", "numero"].forEach(function (k) { if (m[k].actif) d.push((k === "prenom" ? "prénom" : "numéro") + " en " + m[k].police + ", " + fmtN(m[k].hauteur) + " cm, " + m[k].couleur + posTexte(m[k])); });
+      if (m.texte && m.texte.actif && String(m.texte.valeur || "").trim()) {      // texte libre (gourdes), identique sur toute la commande
+        var tl = m.texte;
+        d.push("texte libre « " + String(tl.valeur).trim().split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean).join(" / ") + " » en " + tl.police + ", " + fmtN(tl.hauteur) + " cm, " + tl.couleur + posTexte(tl));
+      }
       t.push("- " + DATA.emplacements[e].label + " : " + d.join(" + ") + (m.bloc && d.length > 1 ? " (collés en un seul bloc)" : ""));
     });
     if (r && r.prix) { t.push(""); prixLignes(r).forEach(function (l) { t.push(l); }); }
@@ -1265,6 +1280,11 @@
         if (l.length) out.push(nom + " : cette couleur se voit mal sur le vêtement " + l.join(" et ") + ". Choisis une couleur plus contrastée.");
         else if (sublBlanc) out.push(nom + " : en sublimation, le blanc n'est pas imprimé, le texte ne sera pas visible.");
       });
+      if (m.texte && m.texte.actif && String(m.texte.valeur || "").trim()) {      // texte libre : même contrôle, sur toutes les pièces
+        var ltl = P.lum(m.texte.couleur), nl = {};
+        S.pieces.forEach(function (p) { var c = colorOf(p); if (Math.abs(ltl - P.lum(c.hex)) < 0.22) nl[c.nom.toLowerCase()] = 1; });
+        if (Object.keys(nl).length) out.push("Texte libre (" + label + ") : cette couleur se voit mal sur le vêtement " + Object.keys(nl).join(" et ") + ". Choisis une couleur plus contrastée.");
+      }
     });
     return out;
   }
@@ -1340,7 +1360,7 @@
     for (var i = 0; i < ks.length - 1; i++) o = o[ks[i]];
     o[ks[ks.length - 1]] = val;
   }
-  var STRUCTURAL = { "actif": 1, "avecImage": 1, "prenom.actif": 1, "numero.actif": 1 };
+  var STRUCTURAL = { "actif": 1, "avecImage": 1, "prenom.actif": 1, "numero.actif": 1, "texte.actif": 1 };
 
   function onInput(e) {
     var t = e.target;
@@ -1365,10 +1385,14 @@
         majChampsVisuel(emp, t);
         scheduleRefresh(); return;
       }
-      if (/^(prenom|numero)\.(rot|dx|dy)$/.test(k)) {              // texte : orientation (degrés) et position (cm), libres
+      if (/^(prenom|numero|texte)\.(rot|dx|dy)$/.test(k)) {              // texte : orientation (degrés) et position (cm), libres
         v = parseFloat(String(t.value).replace(",", ".")); if (!isFinite(v)) return;
         v = k.slice(-3) === "rot" ? Math.max(-180, Math.min(180, Math.round(v * 10) / 10)) : Math.max(-60, Math.min(60, Math.round(v * 10) / 10));
         setPath(m, k, v); scheduleRefresh(); return;
+      }
+      if (k === "texte.interligne") {                              // écart entre les lignes du texte libre
+        v = parseFloat(String(t.value).replace(",", ".")); if (!isFinite(v)) return;
+        setPath(m, k, Math.max(1, Math.min(4, v))); scheduleRefresh(); return;
       }
       if (t.type === "checkbox") v = t.checked;
       else if (t.type === "number") { v = parseFloat(String(t.value).replace(",", ".")); if (!isFinite(v)) return; v = Math.max(0.5, Math.min(28, v)); }

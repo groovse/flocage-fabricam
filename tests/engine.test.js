@@ -1007,4 +1007,81 @@ test("7.2.0 : le prix reste pair avec 3 € de marge au moins ; le gilet polaire
   });
 });
 
+console.log("\nTexte libre des gourdes (version 7.3.0)");
+const gourdes = n => Array.from({ length: n }, (_, i) => ({ id: "g" + i, produitId: "gourde-alu-1l", couleurId: produits["gourde-alu-1l"].couleurs[0].id, taille: produits["gourde-alu-1l"].tailles[0], prenom: "Léa" + i, numero: String(i + 1) }));
+const texteG = extra => Object.assign({ actif: true, valeur: "Fabr'Icam\nToulouse 2026", police: "Bebas Neue", hauteur: 1.2, interligne: 1.5, couleur: "#ffffff", rot: 0, dx: 0, dy: 0 }, extra || {});
+const gourdeCfg = (texte, extra) => ({ gourde: Object.assign({ actif: true, avecImage: false, format: "Mini", orient: "portrait", prenom: { actif: false }, numero: { actif: false }, texte }, extra || {}) });
+test("7.3.0 : seul l'emplacement gourde accepte un texte libre", () => {
+  assert.strictEqual(DATA.emplacements.gourde.texteLibre, true);
+  Object.keys(DATA.emplacements).filter(k => k !== "gourde").forEach(k => assert.ok(!DATA.emplacements[k].texteLibre, k));
+});
+test("7.3.0 : un texte libre sur deux lignes donne un seul élément « texte » à deux lignes, identique sur chaque gourde", () => {
+  const r = E.buildMotifs({ pieces: gourdes(3), marquages: gourdeCfg(texteG()), technique: "dtf" }, ctx);
+  const t = r.motifs.filter(m => m.kind === "texte");
+  assert.strictEqual(t.length, 3);
+  t.forEach(m => { assert.strictEqual(m.el.lignes.length, 2); assert.deepStrictEqual(m.el.lignes.map(l => l.text), ["Fabr'Icam", "Toulouse 2026"]); });
+  assert.strictEqual(t[0].w, t[2].w); assert.strictEqual(t[0].h, t[2].h);
+});
+test("7.3.0 : le texte est écrit tel que tapé (pas de majuscules forcées) et les lignes vides du début et de la fin sont ignorées", () => {
+  const el = E.elementsFor("gourde", gourdeCfg(texteG({ valeur: "\n\nBonjour à tous\n\n" })).gourde, gourdes(1)[0], produits["gourde-alu-1l"], ctx)[0];
+  assert.strictEqual(el.lignes.length, 1); assert.strictEqual(el.text, "Bonjour à tous");
+});
+test("7.3.0 : la case du texte grandit avec le nombre de lignes et l'interligne ; les lignes de base sont espacées de hauteur × interligne", () => {
+  const f = (valeur, interligne) => E.elementsFor("gourde", gourdeCfg(texteG({ valeur, interligne })).gourde, gourdes(1)[0], produits["gourde-alu-1l"], ctx)[0];
+  const a = f("AB", 1.5), b = f("AB\nAB\nAB", 1.5), c = f("AB\nAB\nAB", 2.5);
+  assert.ok(b.h > a.h && c.h > b.h);
+  assert.ok(Math.abs((b.lignes[1].y - b.lignes[0].y) - 1.2 * 1.5) < 1e-9);
+  assert.ok(Math.abs((c.lignes[2].y - c.lignes[0].y) - 2 * 1.2 * 2.5) < 1e-9);
+});
+test("7.3.0 : le texte libre s'ajoute au prénom et au numéro de chaque gourde, qui gardent leur propre valeur", () => {
+  const cfg = gourdeCfg(texteG(), { prenom: { actif: true, hauteur: 1.2, police: "Bebas Neue", couleur: "#fff" }, numero: { actif: true, hauteur: 2, police: "Bebas Neue", couleur: "#fff" } });
+  const els = E.elementsFor("gourde", cfg.gourde, gourdes(2)[1], produits["gourde-alu-1l"], ctx);
+  assert.deepStrictEqual(els.map(e => e.kind), ["prenom", "numero", "texte"]);
+  assert.strictEqual(els[0].text, "LÉA1"); assert.strictEqual(els[1].text, "2");
+});
+test("7.3.0 : une orientation libre tourne la case du texte ; décalage et angle sont repris dans l'élément", () => {
+  const droit = E.elementsFor("gourde", gourdeCfg(texteG()).gourde, gourdes(1)[0], produits["gourde-alu-1l"], ctx)[0];
+  const tourne = E.elementsFor("gourde", gourdeCfg(texteG({ rot: 90, dx: 1, dy: -2 })).gourde, gourdes(1)[0], produits["gourde-alu-1l"], ctx)[0];
+  assert.ok(Math.abs(tourne.w - droit.h0) < 1e-3 && Math.abs(tourne.h - droit.w0) < 1e-3);
+  assert.strictEqual(tourne.rot, 90); assert.strictEqual(tourne.tx, 1); assert.strictEqual(tourne.ty, -2);
+});
+test("7.3.0 : aucune limite de zone (pas d'avertissement de débordement) ; seul le plateau compte, un texte trop large est réduit", () => {
+  const zone = produits["gourde-alu-1l"].zones.gourde;
+  const grand = E.buildMotifs({ pieces: gourdes(1), marquages: gourdeCfg(texteG({ valeur: "Un texte bien plus large que la zone de la gourde", hauteur: 3 })), technique: "dtf" }, ctx);
+  const m = grand.motifs.filter(x => x.kind === "texte")[0];
+  assert.ok(m.w > zone.w, "plus large que la zone : " + m.w);
+  assert.ok(grand.warnings.some(w => /texte libre/.test(w)) && !grand.warnings.some(w => /déborde|dépasse la zone/.test(w)));
+  const enorme = E.elementsFor("gourde", gourdeCfg(texteG({ valeur: "x".repeat(200), hauteur: 3 })).gourde, gourdes(1)[0], produits["gourde-alu-1l"], ctx)[0];
+  assert.ok(enorme.reduit && enorme.w0 <= Math.max(PRIX.plateau.w, PRIX.plateau.h) + 1e-6);
+});
+test("7.3.0 : le texte libre compte comme un motif de plus par gourde (planches), une seule marge de 3 € par pièce", () => {
+  const sans = E.computeOrder({ pieces: gourdes(4), marquages: gourdeCfg(texteG({ actif: false }), { prenom: { actif: true, hauteur: 1.2, police: "Bebas Neue", couleur: "#fff" } }), technique: "dtf" }, ctx);
+  const avec = E.computeOrder({ pieces: gourdes(4), marquages: gourdeCfg(texteG(), { prenom: { actif: true, hauteur: 1.2, police: "Bebas Neue", couleur: "#fff" } }), technique: "dtf" }, ctx);
+  assert.strictEqual(avec.motifs.length, sans.motifs.length + 4);
+  assert.ok(avec.prix.unitaire >= sans.prix.unitaire);
+  assert.strictEqual(avec.prix.groupes[0].margeMoyenne, 3);
+});
+test("7.3.0 : un texte libre vide, inactif, ou une commande d'avant la 7.3.0 (sans cfg.texte) ne change rien", () => {
+  [texteG({ valeur: "  \n " }), texteG({ actif: false }), undefined].forEach(t => {
+    const r = E.buildMotifs({ pieces: gourdes(2), marquages: gourdeCfg(t, { prenom: { actif: true, hauteur: 1.2, police: "Bebas Neue", couleur: "#fff" } }), technique: "dtf" }, ctx);
+    assert.strictEqual(r.motifs.filter(m => m.kind === "texte").length, 0);
+    assert.strictEqual(r.motifs.length, 2);
+  });
+});
+test("7.3.0 : sur un autre emplacement (poitrine), cfg.texte est ignoré", () => {
+  const r = E.buildMotifs({ pieces: pieces(1), marquages: { poitrine: Object.assign({}, A6poitrine.poitrine, { texte: texteG() }) }, technique: "dtf" }, ctx);
+  assert.strictEqual(r.motifs.filter(m => m.kind === "texte").length, 0);
+});
+test("7.3.0 : l'aperçu et les planches (SVG et PNG) dessinent chaque ligne du texte libre", () => {
+  const fs = require("fs");
+  const imp = fs.readFileSync(path.join(__dirname, "..", "js", "atelier-impression.js"), "utf8"), pv = fs.readFileSync(path.join(__dirname, "..", "js", "preview.js"), "utf8");
+  assert.ok(/el\.lignes/.test(imp) && /el\.lignes/.test(pv));
+});
+test("7.3.0 : une gourde apportée (même emplacement) accepte aussi le texte libre", () => {
+  const ap = DATA.produits.filter(p => p.apporte && p.zones.gourde)[0];
+  if (!ap) return;
+  const el = E.elementsFor("gourde", gourdeCfg(texteG()).gourde, { id: "a", produitId: ap.id, prenom: "", numero: "" }, ap, ctx);
+  assert.strictEqual(el.filter(e => e.kind === "texte").length, 1);
+});
+
 console.log("\n" + ok + " tests passés");

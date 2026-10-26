@@ -48,6 +48,7 @@ window.DATA = {
   },
 
   // texteSeul : emplacement réservé à un prénom ou un numéro (pas de visuel)
+  // texteLibre : emplacement qui accepte en plus un texte libre sur plusieurs lignes (version 7.3.0), identique sur toute la commande
   emplacements: {
     poitrine:    { label: "Poitrine", formats: ["A6", "A5"] },
     dos:         { label: "Dos", formats: ["A5", "A4"] },
@@ -63,7 +64,7 @@ window.DATA = {
     ouvre_bouteille: { label: "Face de l'ouvre-bouteille", formats: ["Mini"] },
     porte_cles:  { label: "Face du porte-clés", formats: ["Micro"] },
     sac:         { label: "Face du sac", formats: ["A6", "A5"] },
-    gourde:      { label: "Face de la gourde", formats: ["Mini", "A7"] },
+    gourde:      { label: "Face de la gourde", formats: ["Mini", "A7"], texteLibre: true },
     casquette:   { label: "Devant de la casquette", formats: ["Mini"] },
     bonnet:      { label: "Devant du bonnet", formats: ["Mini", "A7"] },
     tour_de_cou: { label: "Face du tour de cou", formats: ["Mini", "A7"] },
