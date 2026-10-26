@@ -352,8 +352,8 @@
         var col = At.colorOf(p), mine = r.motifs.filter(function (m) { return m.pieceId === p.id; }), emps = {}, codes = {};
         mine.forEach(function (m) { (emps[m.emp] = emps[m.emp] || []).push(m.kind === "bloc" ? "bloc " + m.el.items.map(function (i) { return At.KIND[i.kind]; }).join("+") : At.KIND[m.kind]); var sh = st.motifSheet[m.id]; if (sh) codes[sh.code] = 1; });
         var txt = A.EMP_ORDER.filter(function (e) { return emps[e]; }).map(function (e) { return At.ABBR[e] + " " + emps[e].join("+"); }).join(", ");
-        var tc = At.presseDe(p).tech, t = tc === "sublimation" ? ' <span class="tag">sublimation</span>' : tc === "gravure" ? ' <span class="tag">gravure / vinyle</span>' : tc === "vinyle" ? ' <span class="tag">vinyle</span>' : "", pk = p.pack ? ' <span class="tag">pack</span>' : "";
-        return [box, i + 1, esc(At.prodOf(p).nomCourt) + ", " + esc(col.nom.toLowerCase()) + pk + t, "<b>" + esc(p.taille) + "</b>", esc(p.prenom || ""), esc(p.numero || ""), esc(txt || "rien"), esc(Object.keys(codes).join(", ")), box];
+        var tc = At.presseDe(p).tech, t = tc === "sublimation" ? ' <span class="tag">sublimation</span>' : tc === "gravure" ? ' <span class="tag">gravure / vinyle</span>' : tc === "vinyle" ? ' <span class="tag">vinyle</span>' : "";
+        return [box, i + 1, esc(At.prodOf(p).nomCourt) + ", " + esc(col.nom.toLowerCase()) + t, "<b>" + esc(p.taille) + "</b>", esc(p.prenom || ""), esc(p.numero || ""), esc(txt || "rien"), esc(Object.keys(codes).join(", ")), box];
       }), "f-tbl f-pieces") + "</section>";
 
     // 5. presse
