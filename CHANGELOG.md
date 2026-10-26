@@ -5,6 +5,16 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 7.4.0 — 26/10/2026
+
+Texte libre sur tous les emplacements, prénom sur plusieurs lignes, textes sans limite de zone. **Version MINEUR : aucun prix existant ne change ; le fichier de commande reste compatible.**
+
+- **Texte libre partout.** Le texte libre multi-lignes de la 7.3.0 (gourdes) est disponible sur tous les emplacements : poitrine, dos, manches, chaussettes, accessoires... Un emplacement peut le refuser avec `texteLibre: false` dans `js/data.js`.
+- **Prénom sur plusieurs lignes.** Une case « Prénom sur plusieurs lignes » (`prenom.coupe`) met un mot par ligne : « Jean Dupont » s'imprime sur 2 lignes. Réglage de l'écart entre lignes (`prenom.interligne`). La case Majuscules continue de s'appliquer.
+- **Sans limite de zone.** Prénom, numéro et texte libre ne sont plus réduits à la largeur de la zone du vêtement : seul le plateau de la presse (A4) les borne. Un texte qui sort de la zone donne un avertissement non bloquant (« sort de la zone prévue »), l'atelier vérifie la place.
+- Moteur : `multiLignes` factorise le calcul des textes à plusieurs lignes (texte libre et prénom coupé).
+- Tests : 168 (111 moteur, 8 fichiers, 24 facturation, 25 méthodes).
+
 ## 7.3.0 — 26/10/2026
 
 Texte libre sur les gourdes. **Version MINEUR : aucun prix existant ne change ; le fichier de commande reste compatible (une commande d'avant la 7.3.0 s'ouvre sans texte libre).**
