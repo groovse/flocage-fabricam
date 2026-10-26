@@ -5,6 +5,18 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 7.2.0 — 21/10/2026
+
+Prix, marges et catalogue modifiables dans Excel. **Version MINEUR : nouvelle fonction, rien ne change tant qu'on ne modifie pas les fichiers.**
+
+- **5 fichiers CSV** dans le dossier `donnees` (articles, couleurs, prix, planches, vendeurs), lus par le site et par l'atelier au chargement (`js/reglages.js`). Ils reprennent exactement les valeurs actuelles.
+- **Ce qu'on peut changer** : prix d'achat d'un article ou d'une couleur, marge par pièce ou propre à un article, prix de vente fixe d'un article, arrondi, TVA, livraison, vinyle, prix des planches, frais des vendeurs, tailles, catégories, couleurs en rupture ; masquer un article ou une couleur ; ajouter un article d'après un modèle (`copie_de`).
+- **Atelier : onglet « Catalogue et prix »** : état de lecture de chaque fichier, lignes refusées et avertissements, prix actuels de chaque article, téléchargement des fichiers à jour (un par un ou en zip) et mode d'emploi.
+- **Moteur** : `marge` (marge propre à un article) et `prixFixe` (prix de vente imposé) sont pris en compte ; `masque` retire un article de la vitrine et de la liste « Ajouter » sans casser les anciennes commandes.
+- **Sécurité** : un fichier absent, illisible ou une ligne invalide n'empêche jamais le site de fonctionner (valeurs intégrées en repli).
+- `outils/generer-csv.js` régénère les CSV depuis `js/prix.js` et `js/data.js`.
+- Tests : 166 (90 moteur, 19 réglages, 8 fichiers, 24 facturation, 25 méthodes).
+
 ## 7.1.0 — 21/10/2026
 
 Les packs sont supprimés. **Version MINEUR : le fichier de commande reste compatible.**
