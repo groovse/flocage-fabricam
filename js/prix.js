@@ -48,12 +48,10 @@ window.PRIX = {
         note: "La livraison est offerte dès 10 € d'achat sur AliExpress, TVA comprise. Les droits de douane éventuels se calculent au paiement." },
       "shop4293023": { nom: "Shop4293023 Store", plateforme: "AliExpress", frais: 0, delai: "5 à 10 jours", lien: "https://fr.aliexpress.com/store/4293023",
         note: "La livraison est offerte dès 10 € d'achat sur AliExpress, TVA comprise. Les droits de douane éventuels se calculent au paiement." },
-      // Amazon (version 7.2.0). « amazon » : articles vendus ET expédiés par Amazon (gilet VELILLA), livraison offerte, 2 à 4 jours.
-      // Un vendeur tiers de la place de marché Amazon est un vendeur à part, avec ses propres frais de port : « xozwkh » (sweat à capuche
-      // polaire), 10,99 € relevé le 25/10/2026 (livraison à Paris, 75001), 2 à 3 semaines. Prix TTC affichés sur Amazon.
+      // Amazon (version 7.2.0) : articles vendus ET expédiés par Amazon (sweat à capuche Essentials, gilet VELILLA), 2 à 4 jours.
+      // Un vendeur tiers de la place de marché Amazon serait un vendeur à part, avec ses propres frais de port. Prix TTC affichés sur Amazon.
       "amazon": { nom: "Amazon", plateforme: "Amazon", frais: 0, delai: "2 à 4 jours", lien: "",
-        note: "Vendu et expédié par Amazon : la livraison est offerte dès 25 € d'achat sur les articles expédiés par Amazon, TVA comprise (la page affiche « livraison gratuite lors de votre première commande » : à confirmer au panier)." },
-      "xozwkh": { nom: "xozwkh", plateforme: "Amazon", frais: 10.99, delai: "2 à 3 semaines", lien: "" }
+        note: "Vendu et expédié par Amazon : la livraison est offerte dès 25 € d'achat sur les articles expédiés par Amazon, TVA comprise (la page affiche « livraison gratuite lors de votre première commande » : à confirmer au panier)." }
     }
   },
 
