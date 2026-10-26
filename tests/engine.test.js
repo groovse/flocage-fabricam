@@ -890,9 +890,9 @@ test("7.0.0 : la technique de la pièce passe avant la technique par défaut de 
   assert.strictEqual(t(piece2("p", "polo-essential", { technique: "dtf", couleurId: "blanc" }), "sublimation"), "dtf", "un DTF choisi sur la pièce l'emporte sur la sublimation");
   assert.strictEqual(t(piece2("o", "ouvre-bouteille-carte", { technique: "vinyle" })), "gravure", "la gravure d'un article en métal ne change pas");
 });
-test("7.0.0 : 22 articles (24 depuis la 7.1.0) où le DTF n'est pas idéal sont en vinyle par défaut (jamais un vêtement apporté ni une gravure)", () => {
+test("7.0.0 : 22 articles (23 depuis la 7.2.0) où le DTF n'est pas idéal sont en vinyle par défaut (jamais un vêtement apporté ni une gravure)", () => {
   const vin = DATA.produits.filter(p => p.techniqueDefaut === "vinyle");
-  assert.strictEqual(vin.length, 24);
+  assert.strictEqual(vin.length, 23);
   vin.forEach(p => assert.ok(!p.apporte && p.technique !== "gravure", p.id));
   vin.forEach(p => assert.strictEqual(E.pieceTechno({ technique: "dtf" }, piece2("x", p.id), ctx), "vinyle", p.id));
 });
@@ -962,47 +962,46 @@ test("7.0.0 : l'aperçu et les planches (SVG et PNG) dessinent le texte tourné"
   assert.ok(/rotate\(' \+ rotT/.test(pv), "aperçu");
 });
 
-console.log("\nAmazon : sweat à capuche polaire et gilet polaire (version 7.1.0)");
-test("7.1.0 : deux articles Amazon, chaque couleur avec son ASIN, sa page, sa photo et son option de couleur", () => {
-  const sw = produits["sweat-capuche-polaire"], gi = produits["gilet-polaire-velilla"];
-  assert.strictEqual(sw.couleurs.length, 17); assert.strictEqual(gi.couleurs.length, 6);
-  assert.deepStrictEqual(sw.tailles, ["S", "M", "L", "XL"]);
+console.log("\nAmazon : sweat à capuche Essentials et gilet polaire (version 7.2.0)");
+test("7.2.0 : deux articles Amazon, chaque couleur avec son ASIN, sa page, sa photo et son option de couleur", () => {
+  const sw = produits["sweat-capuche-essentials"], gi = produits["gilet-polaire-velilla"];
+  assert.strictEqual(sw.couleurs.length, 22); assert.strictEqual(gi.couleurs.length, 6);
+  assert.deepStrictEqual(sw.tailles, ["XS", "S", "M", "L", "XL", "2XL"]);
   assert.deepStrictEqual(gi.tailles, ["XS", "S", "M", "L", "XL", "2XL", "3XL"]);
   [sw, gi].forEach(p => {
     assert.deepStrictEqual(p.tags.categories, ["sweats"], p.id + " : rayon « Sweats et vestes »");
-    assert.strictEqual(p.techniqueDefaut, "vinyle", p.id + " : polaire, vinyle par défaut");
-    assert.strictEqual(p.polyesterPct, 100);
     p.couleurs.forEach(c => {
       assert.ok(/^B0[A-Z0-9]{8}$/.test(c.ref), p.id + " " + c.id + " : ASIN " + c.ref);
       assert.strictEqual(c.lien, "https://www.amazon.fr/dp/" + c.ref, p.id + " " + c.id + " : page de la couleur");
       assert.ok(c.nomDec && c.photos && c.photos.length === 1, p.id + " " + c.id + " : option Amazon et photo");
     });
     assert.strictEqual(new Set(p.couleurs.map(c => c.ref)).size, p.couleurs.length, p.id + " : un ASIN par couleur");
+    assert.strictEqual(p.lien, p.couleurs[0].lien);
   });
-  assert.strictEqual(sw.lien, sw.couleurs[0].lien); assert.strictEqual(gi.lien, gi.couleurs[0].lien);
+  assert.strictEqual(sw.polyesterPct, 44); assert.strictEqual(sw.techniqueDefaut, undefined, "coton et polyester : DTF");
+  assert.strictEqual(gi.polyesterPct, 100); assert.strictEqual(gi.techniqueDefaut, "vinyle", "polaire : vinyle par défaut");
 });
-test("7.1.0 : prix d'achat Amazon : 9,99 € pour toutes les couleurs du sweat, un prix par couleur pour le gilet", () => {
-  const sw = produits["sweat-capuche-polaire"], gi = produits["gilet-polaire-velilla"];
-  sw.couleurs.forEach(c => assert.strictEqual(E.prixAchatPiece(sw, c.id), 9.99, c.id));
-  const px = {}; gi.couleurs.forEach(c => { px[c.id] = E.prixAchatPiece(gi, c.id); });
-  assert.deepStrictEqual(px, { noir: 17.82, blanc: 17.64, rouge: 17.82, "bleu-marine": 15.89, "vert-chasse": 17.35, gris: 23.07 });
+test("7.2.0 : prix d'achat Amazon : un prix par couleur pour le sweat (16,00 à 16,70 €) et pour le gilet", () => {
+  const sw = produits["sweat-capuche-essentials"], gi = produits["gilet-polaire-velilla"];
+  const prix = p => { const px = {}; p.couleurs.forEach(c => { px[c.id] = E.prixAchatPiece(p, c.id); }); return px; };
+  const s = prix(sw), v = Object.values(s);
+  assert.strictEqual(s.rose, 16.60); assert.strictEqual(s["blanc-vif"], 16.70); assert.strictEqual(s["bleu-chine"], 16.00);
+  assert.strictEqual(Math.min.apply(null, v), 16.00); assert.strictEqual(Math.max.apply(null, v), 16.70);
+  assert.deepStrictEqual(prix(gi), { noir: 17.82, blanc: 17.64, rouge: 17.82, "bleu-marine": 15.89, "vert-chasse": 17.35, gris: 23.07 });
 });
-test("7.1.0 : « amazon » (livraison offerte) et « xozwkh » (10,99 €) sont deux vendeurs de la plateforme Amazon, port compté une seule fois par vendeur", () => {
+test("7.2.0 : les deux articles sont vendus et expédiés par Amazon : un seul vendeur, livraison offerte, aucun frais de port compté", () => {
   const V = PRIX.livraisonVendeur.vendeurs;
-  assert.strictEqual(produits["gilet-polaire-velilla"].vendeur, "amazon"); assert.strictEqual(produits["sweat-capuche-polaire"].vendeur, "xozwkh");
+  assert.strictEqual(produits["gilet-polaire-velilla"].vendeur, "amazon"); assert.strictEqual(produits["sweat-capuche-essentials"].vendeur, "amazon");
   assert.strictEqual(V.amazon.plateforme, "Amazon"); assert.strictEqual(V.amazon.frais, 0); assert.ok(/offerte dès 25 €/.test(V.amazon.note));
-  assert.strictEqual(V.xozwkh.plateforme, "Amazon"); assert.strictEqual(V.xozwkh.frais, 10.99);
-  const un = E.computeOrder({ pieces: [piece2("a", "sweat-capuche-polaire"), piece2("b", "sweat-capuche-polaire", { taille: "L" })], marquages: {}, technique: "dtf" }, ctx);
-  assert.strictEqual(un.vendeurs.length, 1); assert.strictEqual(un.couts.livraisonVendeurs, 10.99, "10,99 € une seule fois pour deux sweats");
-  const gil = E.computeOrder({ pieces: [piece2("a", "gilet-polaire-velilla")], marquages: {}, technique: "dtf" }, ctx);
-  assert.strictEqual(gil.couts.livraisonVendeurs, 0, "gilet expédié par Amazon : livraison offerte");
-  const deux = E.computeOrder({ pieces: [piece2("a", "sweat-capuche-polaire"), piece2("b", "gilet-polaire-velilla")], marquages: {}, technique: "dtf" }, ctx);
-  assert.deepStrictEqual(deux.vendeurs.map(v => v.plateforme), ["Amazon", "Amazon"]);
-  assert.strictEqual(deux.couts.livraisonVendeurs, 10.99);
+  assert.strictEqual(V.xozwkh, undefined, "le vendeur tiers à 10,99 € n'existe plus");
+  const deux = E.computeOrder({ pieces: [piece2("a", "sweat-capuche-essentials"), piece2("b", "gilet-polaire-velilla")], marquages: {}, technique: "dtf" }, ctx);
+  assert.deepStrictEqual(deux.vendeurs.map(v => v.id), ["amazon"]);
+  assert.strictEqual(deux.couts.livraisonVendeurs, 0);
 });
-test("7.1.0 : polaire : le motif part en vinyle par défaut (pas de planche), et le prix reste pair avec 3 € de marge au moins", () => {
-  ["sweat-capuche-polaire", "gilet-polaire-velilla"].forEach(id => {
-    assert.strictEqual(E.pieceTechno({ technique: "dtf" }, piece2("x", id), ctx), "vinyle", id);
+test("7.2.0 : le prix reste pair avec 3 € de marge au moins ; le gilet polaire part en vinyle par défaut, le sweat en DTF", () => {
+  assert.strictEqual(E.pieceTechno({ technique: "dtf" }, piece2("x", "gilet-polaire-velilla"), ctx), "vinyle");
+  assert.strictEqual(E.pieceTechno({ technique: "dtf" }, piece2("y", "sweat-capuche-essentials"), ctx), "dtf");
+  ["sweat-capuche-essentials", "gilet-polaire-velilla"].forEach(id => {
     const t = E.priceTable(Object.assign({}, produits[id], { vitrine: ["poitrine"] }), [1, 5, 10, 20, 50], ctx);
     t.forEach(l => { assert.strictEqual(l.unitaire % 2, 0, id + " : prix pair " + l.unitaire); assert.ok(l.unitaire >= produits[id].prixAchat + 3, id + " : marge " + l.unitaire); });
   });
