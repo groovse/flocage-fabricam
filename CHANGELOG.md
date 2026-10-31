@@ -5,6 +5,19 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 8.0.0 — 31/10/2026
+
+Planches communes à toutes les configurations du panier, et marge plafonnée à 20 %. **Version MAJEUR : les prix changent (plafond de marge et planches partagées) ; le fichier de commande reste compatible.**
+
+- **Planches communes.** Avant, chaque configuration du panier était calculée seule : ses motifs avaient leurs propres planches et leur propre livraison, même quand deux configurations auraient tenu sur la même planche. Maintenant le panier est calculé d'un seul bloc (`Engine.computeBasket`) : les motifs de toutes les configurations sont rangés ensemble (DTF avec DTF, sublimation avec sublimation), on commande moins de planches, et la facture du fournisseur baisse.
+- **Livraison et frais de port une seule fois.** La livraison des transferts (offerte au-dessus de 100 €) se calcule sur l'ensemble des planches du panier ; les frais de port d'un vendeur ne comptent qu'une fois pour tout le panier, même si ses articles sont dans plusieurs configurations. Ces coûts communs sont répartis sur les pièces au prorata de la surface de leurs motifs.
+- **Prix du client.** Le prix de chaque configuration tient compte du regroupement : il baisse quand on ajoute une configuration qui partage des planches. Le panier affiche l'économie par rapport à des configurations chiffrées séparément. Dans le configurateur, le prix de la configuration en cours tient compte du panier. Un seul prix par produit et par configuration, comme avant.
+- **Plafond de marge : 20 %.** Nouveau réglage `regles.margeMaxPct` (0,20) dans `js/prix.js` : la marge d'un produit ne dépasse pas 20 % de son coût moyen. Quand l'arrondi à l'euro pair la ferait dépasser, le prix devient le plafond arrondi vers le bas à 0,10 € (`regles.pasPlafond`), sans jamais passer sous le coût. Le plafond passe avant la marge minimale de 3 € ; les prix peuvent donc ne plus être pairs. Exemples : dix polos avec un visuel passent de 14 € à 11,70 € ; un polo seul reste à 22 €. `margeMaxPct: null` supprime le plafond.
+- **Atelier.** Les planches, le plan de coupe, la fiche de fabrication et les PNG à envoyer sont communs à toutes les configurations : chaque planche affiche les visuels de chaque configuration (images chargées pour toutes). Les repères des motifs commencent par le numéro de la configuration (`C2·3·Pv`). L'onglet Commande indique les planches à commander pour toute la demande, la part de la configuration affichée et un récapitulatif de la demande entière (coût, total à facturer, marge). Une ligne dont le prix est plafonné le dit.
+- **À savoir.** La fiche de paiement et la facture restent faites configuration par configuration, comme avant. Les motifs d'un panier de plusieurs configurations ont des identifiants préfixés (`C2|...`) et portent `lot` ; avec une seule configuration, rien ne change.
+- Moteur : `computeBasket(orders, ctx)` ; `computeOrder` en est le cas d'une seule configuration. `fixerPrix` applique le plafond.
+- Tests : 180 (123 moteur, 8 fichiers, 24 facturation, 25 méthodes). Les anciens tests de la règle d'arrondi tournent sans plafond ; une section dédiée teste le plafond et le panier.
+
 ## 7.4.0 — 26/10/2026
 
 Texte libre sur tous les emplacements, prénom sur plusieurs lignes, textes sans limite de zone. **Version MINEUR : aucun prix existant ne change ; le fichier de commande reste compatible.**

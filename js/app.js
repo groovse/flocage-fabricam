@@ -263,7 +263,36 @@
     if (d.contact) Object.keys(S.contact).forEach(function (k) { if (typeof d.contact[k] === "string") S.contact[k] = d.contact[k]; });
   }
   function indexLigne(id) { for (var i = 0; i < PANIER.lignes.length; i++) if (PANIER.lignes[i].id === id) return i; return -1; }
-  function resultatLigne(l) { try { return E.computeOrder(l.order, CTX); } catch (_) { return null; } }
+  // Calcul de TOUT le panier (version 8.0.0) : les motifs de toutes les configurations sont rangés ensemble sur les mêmes planches,
+  // la livraison et les frais de port d'un vendeur ne comptent qu'une fois. Le résultat est gardé tant que les configurations du panier
+  // sont les mêmes objets (une configuration modifiée est remplacée par un clone, une ajoutée ou retirée change la liste).
+  var CALC = { orders: null, res: null, separe: null };
+  function calculPanier() {
+    var orders = PANIER.lignes.map(function (l) { return l.order; });
+    if (CALC.orders && CALC.orders.length === orders.length && orders.every(function (o, i) { return o === CALC.orders[i]; })) return CALC.res;
+    var res = null, separe = null;
+    try {
+      res = E.computeBasket(orders, CTX);
+      if (orders.length > 1) {       // ce que coûteraient les configurations chiffrées chacune de son côté, pour montrer l'économie
+        separe = 0;
+        orders.forEach(function (o) { var r = E.computeOrder(o, CTX); if (r.prix) separe += r.prix.total; });
+        separe = E.round2(separe);
+      }
+    } catch (_) { res = null; separe = null; }
+    CALC = { orders: orders, res: res, separe: separe };
+    return res;
+  }
+  function resultatLigne(l) {
+    var i = -1;
+    for (var k = 0; k < PANIER.lignes.length; k++) if (PANIER.lignes[k].order === l.order) { i = k; break; }
+    if (i >= 0) { var b = calculPanier(); return b ? b.lots[i] || null : null; }
+    try { return E.computeOrder(l.order, CTX); } catch (_) { return null; }       // une configuration qui n'est pas (encore) au panier
+  }
+  // Ce que le regroupement fait gagner au client par rapport à des configurations chiffrées séparément (0 s'il n'y a rien à gagner)
+  function economiePanier() {
+    var b = calculPanier(); if (!b || CALC.separe == null) return 0;
+    return Math.max(0, E.round2(CALC.separe - b.prix.total));
+  }
   function totauxPanier() {
     var t = { total: 0, pieces: 0, lignes: PANIER.lignes.length };
     PANIER.lignes.forEach(function (l) { var r = resultatLigne(l); t.pieces += l.order.pieces.length; if (r && r.prix) t.total += r.prix.total; });
@@ -1051,7 +1080,10 @@
       '<p><a class="btn btn-quiet" href="#/produits">Ajouter un autre article</a></p></div>' +
       '<aside class="pn-side"><div class="total"><div class="t-main"><span class="t-big">' + fmtEUR(tot.total) + '</span><span class="t-unit">au total, TTC</span></div>' +
       '<p class="t-sub">' + tot.pieces + (tot.pieces > 1 ? " pièces" : " pièce") + ' en ' + tot.lignes + (tot.lignes > 1 ? " configurations" : " configuration") + '</p>' +
-      '<p class="t-note">Chaque configuration est chiffrée séparément. Tout part dans une seule demande : Fabr\'Icam confirme le devis et regroupe la commande avant toute fabrication.</p></div></aside></div>' +
+      (tot.lignes > 1
+        ? '<p class="t-note">Les transferts de toutes les configurations sont rangés ensemble sur les mêmes planches, et la livraison n\'est comptée qu\'une fois : le prix de chaque configuration en tient compte et change quand tu en ajoutes ou en retires une. ' +
+          (economiePanier() > 0 ? '<b>Le regroupement te fait économiser ' + fmtEUR(economiePanier()) + '.</b> ' : "") + 'Fabr\'Icam confirme le devis avant toute fabrication.</p>'
+        : '<p class="t-note">Tout part dans une seule demande : Fabr\'Icam confirme le devis avant toute fabrication.</p>') + '</div></aside></div>' +
       '<section class="step pn-envoi"><h2>Envoyer ma demande</h2><div id="devis"></div></section></div>';
     renderContact();
   }
@@ -1329,6 +1361,7 @@
         remiseApporteTxt(r) +
         '<p class="t-note">Prix à l\'unité, ' + inclusTxt() + fraisVendeurTxt(r) + '. Fabr\'Icam confirme le devis avant toute commande.</p>';
     }
+    if (r.prix && r.partage) html += '<p class="t-note">Les transferts de cette configuration sont rangés avec ceux de ton panier : ce prix tient compte du regroupement.</p>';
     if (r.warnings.length) html += '<ul class="warn">' + r.warnings.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>";
     box.innerHTML = html;
   }
@@ -1336,7 +1369,11 @@
   function refresh() {
     if (!$("[data-view=cfg]")) return;
     usedEmps().forEach(function (e) { var m = S.marquages[e]; if (m.actif) ["prenom", "numero"].forEach(function (k) { if (m[k].actif) ensureFont(m[k].police); }); });
-    var r = E.computeOrder(orderOf(), CTX);
+    // Avec d'autres configurations au panier, le prix tient compte des planches partagées avec elles (la configuration en cours de modification est remplacée)
+    var autres = PANIER.lignes.filter(function (l) { return PANIER.edit !== l.id; }).map(function (l) { return l.order; });
+    var r;
+    if (autres.length) { var b = E.computeBasket(autres.concat([orderOf()]), CTX); r = b.lots[b.lots.length - 1]; r.partage = autres.length; }
+    else r = E.computeOrder(orderOf(), CTX);
     S.result = r;
     r.warnings = r.warnings.concat(contrastNotes());
     var vus = {};

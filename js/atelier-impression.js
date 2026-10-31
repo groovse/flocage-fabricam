@@ -14,7 +14,7 @@
 
   /* ---------- plan d'une planche en SVG (aperçu à l'écran et fiche imprimée) ---------- */
   function sheetSVG(s) {
-    var sheet = s.sheet, W = sheet.format.w, H = sheet.format.h, order = st.order;
+    var sheet = s.sheet, W = sheet.format.w, H = sheet.format.h;
     var out = '<svg class="sheet" viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Plan de la planche ' + esc(s.code) + ", " + esc(sheet.format.nom) + '">';
     out += '<rect width="' + W + '" height="' + H + '" fill="#fff" stroke="#14213d" stroke-width=".25"/>';
     sheet.placed.forEach(function (p) {
@@ -26,7 +26,7 @@
       composants(mo).forEach(function (c) {
         var el = c.el;
         if (el.kind === "image") {
-          var img = order.marquages[mo.emp] && order.marquages[mo.emp].image;
+          var order = At.orderDe(mo), img = order.marquages[mo.emp] && order.marquages[mo.emp].image;      // le visuel de la configuration du motif
           if (img && img.dataUrl) {
             // le visuel tourné d'un quart de tour : sa case (w × h) est le rectangle qui l'englobe, on le tourne autour de son centre
             var w0 = el.w0 != null ? el.w0 : el.w, h0 = el.h0 != null ? el.h0 : el.h, cx = c.x + el.w / 2, cy = c.y + el.h / 2;
@@ -75,7 +75,7 @@
       composants(mo).forEach(function (c) {
         var el = c.el;
         if (el.kind === "image") {
-          var info = st.imgs[mo.emp];
+          var info = At.imgInfo(mo);
           if (info && info.img && info.nw && info.nh) {
             var w0 = el.w0 != null ? el.w0 : el.w, h0 = el.h0 != null ? el.h0 : el.h;
             var k = Math.min(w0 / info.nw, h0 / info.nh), dw = info.nw * k, dh = info.nh * k;
@@ -325,7 +325,7 @@
           return [box, "<b>" + esc(s.code) + "</b> sur " + s.total, esc(A.PRIX.planches[s.techno].nom + ", " + s.sheet.format.nom), s.sheet.placed.length, esc(A.PRIX.fournisseur.nom), box, box];
         }), "f-tbl") +
         '<div class="f-plans">' + st.sheets.map(function (s) { return "<figure>" + sheetSVG(s) + "<figcaption><b>" + esc(s.code) + "</b>, " + esc(s.sheet.format.nom) + "</figcaption></figure>"; }).join("") + "</div>" +
-        '<p class="f-key">Repères : numéro de la pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de jambe, SG et SD chaussettes, SA sac, GO gourde, CA casquette, BO bonnet, TC tour de cou, BA bandeau, CE ceinture, SE serviette, OB ouvre-bouteille, PC porte-clés, puis v visuel, p prénom, n numéro, t texte libre. Exemple : 3·Dp = prénom du dos de la pièce 3. Un bloc collé (visuel, prénom et numéro sur un seul transfert, à presser d\'un coup) porte plusieurs lettres : 3·Pvpn = visuel, prénom et numéro collés de la poitrine de la pièce 3.</p>';
+        '<p class="f-key">Repères : ' + (st.lots ? "numéro de la configuration (C2· : configuration 2) quand la planche est commune, puis " : "") + 'numéro de la pièce, puis P poitrine, D dos, MG manche gauche, MD manche droite, CG cuisse gauche, CD cuisse droite, BJ bas de jambe, SG et SD chaussettes, SA sac, GO gourde, CA casquette, BO bonnet, TC tour de cou, BA bandeau, CE ceinture, SE serviette, OB ouvre-bouteille, PC porte-clés, puis v visuel, p prénom, n numéro, t texte libre. Exemple : 3·Dp = prénom du dos de la pièce 3. Un bloc collé (visuel, prénom et numéro sur un seul transfert, à presser d\'un coup) porte plusieurs lettres : 3·Pvpn = visuel, prénom et numéro collés de la poitrine de la pièce 3.</p>';
     } else html += '<p class="empty">Aucune planche : aucun marquage actif.</p>';
     html += "</section>";
 
