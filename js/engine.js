@@ -507,13 +507,24 @@
   // Fixe le prix unitaire de chaque article (groupes : { n, cout, margeTotale } avec cout = coût total du groupe
   // et margeTotale = somme des marges de ses n articles).
   // Prix = coût moyen de l'article + marge moyenne, arrondi à l'euro pair supérieur (regles.pas = 2) : un prix moyen par produit.
+  // Plafond (version 8.0.0, regles.margeMaxPct) : la marge ne dépasse pas ce pourcentage du coût moyen. Si l'arrondi la ferait dépasser,
+  // le prix est le plafond arrondi à l'inférieur au pas regles.pasPlafond (0,10 €), jamais sous le coût. Il passe avant la marge minimale de 3 €.
   function fixerPrix(groupes, coutTotal, r) {
-    var total = 0;
+    var total = 0, pm = r.margeMaxPct;
     groupes.forEach(function (g) {
       g.coutMoyen = g.cout / g.n;
       g.margeMoyenne = g.margeTotale / g.n;
       g.brut = g.coutMoyen + g.margeMoyenne;
-      g.unitaire = round2(Math.ceil(g.brut / r.pas - 1e-9) * r.pas);
+      var u = Math.ceil(g.brut / r.pas - 1e-9) * r.pas;
+      g.plafonne = false;
+      if (pm != null && pm >= 0) {
+        var plafond = g.coutMoyen * (1 + pm), pasP = r.pasPlafond > 0 ? r.pasPlafond : 0.1;
+        if (u > plafond + 1e-9) {
+          u = Math.max(Math.floor(plafond / pasP + 1e-9) * pasP, Math.ceil(g.coutMoyen * 100 - 1e-6) / 100);
+          g.plafonne = true;
+        }
+      }
+      g.unitaire = round2(u);
       g.total = round2(g.unitaire * g.n);
       total += g.total;
     });
@@ -535,21 +546,38 @@
     return col && col.prixAchat != null ? col.prixAchat : prod.prixAchat;
   }
 
-  function computeOrder(order, ctx) {
-    var prix = ctx.prix, N = order.pieces.length;
-    var built = buildMotifs(order, ctx);
-    var motifs = built.motifs, warnings = built.warnings.slice();
-    var plans = {}, allLines = [], planchesHT = 0;
+  /* ------------------------------------------------------------------ */
+  /* Panier : plusieurs configurations calculées ensemble (version 8.0.0) */
+  /* ------------------------------------------------------------------ */
+  // Les motifs de toutes les configurations sont rangés ENSEMBLE sur les planches du fournisseur (une planche peut porter les motifs de
+  // plusieurs configurations : c'est ce qui fait baisser la facture). La livraison des transferts et les frais de port d'un vendeur
+  // ne sont comptés qu'une fois pour tout le panier. Le coût commun est ensuite réparti sur les pièces au prorata de la surface de leurs motifs,
+  // puis chaque configuration est chiffrée avec ses propres pièces (un prix par produit et par configuration).
+  // Avec plusieurs configurations, les motifs portent `lot` (0, 1, 2...) et un identifiant préfixé « C2| » pour rester uniques.
+  // Résultat : { lots: [résultat de chaque configuration, même forme que computeOrder], plans, lignesPlanches, couts, vendeurs, N, prix: { total, marge, pieces } }
+  // `plans`, `lignesPlanches` et `couts` du niveau supérieur sont ceux de TOUT le panier (planches à commander) ; dans chaque lot,
+  // `plans` et `lignesPlanches` sont les mêmes planches communes, et `couts` est la part de cette configuration.
+  function computeBasket(orders, ctx) {
+    var prix = ctx.prix, multi = orders.length > 1;
     var tvaCoef = prix.prixPlanchesHT ? 1 + prix.tva : 1;
-    var plancheParPiece = {};     // coût des planches (TTC) imputé à chaque pièce, au prorata de la surface de ses motifs
+    var lots = orders.map(function (order, k) {
+      var built = buildMotifs(order, ctx);
+      if (multi) built.motifs.forEach(function (m) { m.lot = k; m.id = "C" + (k + 1) + "|" + m.id; });
+      return { k: k, order: order, N: order.pieces.length, motifs: built.motifs, warnings: built.warnings.slice() };
+    });
+    var allMotifs = [];
+    lots.forEach(function (l) { allMotifs = allMotifs.concat(l.motifs); });
+    var plans = {}, allLines = [], planchesHT = 0, basketWarnings = [];
+    var plancheParPiece = {};     // coût des planches (TTC) imputé à chaque pièce (clé « configuration|pièce »), au prorata de la surface de ses motifs
+    function cle(k, pieceId) { return k + "|" + pieceId; }
 
     ["dtf", "sublimation"].forEach(function (techno) {
-      var rects = motifs.filter(function (m) { return m.techno === techno; })
+      var rects = allMotifs.filter(function (m) { return m.techno === techno; })
         .map(function (m) { return { id: m.id, w: m.w, h: m.h, motif: m }; });
       if (!rects.length) return;
       var formats = prix.planches[techno].formats;
       var sheets = planSheets(rects, formats, { gap: prix.placement.ecart, rot: prix.placement.rotation, remises: prix.remises[techno] });
-      if (!sheets) { warnings.push("Un motif est trop grand pour les planches " + prix.planches[techno].nom + "."); return; }
+      if (!sheets) { basketWarnings.push("Un motif est trop grand pour les planches " + prix.planches[techno].nom + "."); return; }
       var cost = costSheets(sheets, prix.remises[techno]);
       plans[techno] = { sheets: sheets, lines: cost.lines, totalHT: cost.totalHT };
       cost.lines.forEach(function (l) { allLines.push(Object.assign({ techno: techno }, l)); });
@@ -559,8 +587,8 @@
         var prixPlanche = unitById[sh.format.id] * tvaCoef, aire = 0;
         sh.placed.forEach(function (p) { aire += p.ref.w * p.ref.h; });
         sh.placed.forEach(function (p) {
-          var pid = p.ref.motif.pieceId;
-          plancheParPiece[pid] = (plancheParPiece[pid] || 0) + prixPlanche * (p.ref.w * p.ref.h) / aire;
+          var key = cle(p.ref.motif.lot || 0, p.ref.motif.pieceId);
+          plancheParPiece[key] = (plancheParPiece[key] || 0) + prixPlanche * (p.ref.w * p.ref.h) / aire;
         });
       });
     });
@@ -568,95 +596,132 @@
 
     // vinyle découpé à l'atelier : coût de la matière (surface du motif + chutes), imputé à la pièce
     var vp = prix.vinyle || { coutCm2: 0, chute: 1 }, vinyleParPiece = {}, vinyleTotal = 0;
-    motifs.forEach(function (m) {
+    allMotifs.forEach(function (m) {
       if (m.techno !== "vinyle") return;
-      var c = m.w * m.h * vp.coutCm2 * vp.chute;
-      vinyleParPiece[m.pieceId] = (vinyleParPiece[m.pieceId] || 0) + c; vinyleTotal += c;
+      var c = m.w * m.h * vp.coutCm2 * vp.chute, key = cle(m.lot || 0, m.pieceId);
+      vinyleParPiece[key] = (vinyleParPiece[key] || 0) + c; vinyleTotal += c;
     });
     vinyleTotal = round2(vinyleTotal);
 
     var planchesTTC = prix.prixPlanchesHT ? round2(planchesHT * (1 + prix.tva)) : planchesHT;
-    var achats = round2(order.pieces.reduce(function (s, p) {
-      var prod = ctx.produits[p.produitId]; return s + (prod ? prixAchatPiece(prod, p.couleurId) : 0);
-    }, 0));
+    var achats = 0;
+    lots.forEach(function (l) {
+      l.achats = round2(l.order.pieces.reduce(function (s, p) {
+        var prod = ctx.produits[p.produitId]; return s + (prod ? prixAchatPiece(prod, p.couleurId) : 0);
+      }, 0));
+      achats += l.achats;
+    });
+    achats = round2(achats);
+    // livraison des transferts : une seule fois pour tout le panier, offerte au-dessus du seuil
     var baseSeuil = prix.prixPlanchesHT ? planchesHT : planchesTTC;
     var livraison = planchesHT > 0 && baseSeuil < prix.livraison.seuilGratuit ? prix.livraison.colissimo : 0;
 
-    // Articles d'un vendeur en ligne (place de marché Decathlon ou AliExpress) : le vendeur livre et peut facturer des frais de port,
-    // une seule fois par vendeur et par commande (prix.livraisonVendeur). Ils sont répartis sur les pièces de ce vendeur.
-    var lv = prix.livraisonVendeur || {}, vendeurs = {};
-    order.pieces.forEach(function (p) {
-      var prod = ctx.produits[p.produitId];
-      if (!prod || !prod.vendeur) return;
-      var v = vendeurs[prod.vendeur];
-      if (!v) {
-        var def = (lv.vendeurs && lv.vendeurs[prod.vendeur]) || {};
-        v = vendeurs[prod.vendeur] = { id: prod.vendeur, nom: def.nom || prod.vendeur, frais: def.frais != null ? def.frais : (lv.defaut || 0), delai: def.delai || "", plateforme: def.plateforme || "Decathlon", note: def.note || "", pieces: 0 };
-      }
-      v.pieces++;
+    // Articles d'un vendeur en ligne (place de marché Decathlon, AliExpress ou Amazon) : le vendeur livre et peut facturer des frais de port,
+    // une seule fois par vendeur et par panier (prix.livraisonVendeur). Ils sont répartis sur toutes les pièces de ce vendeur.
+    var lv = prix.livraisonVendeur || {}, vendeurs = {}, ordreVendeurs = [];
+    lots.forEach(function (l) {
+      l.order.pieces.forEach(function (p) {
+        var prod = ctx.produits[p.produitId];
+        if (!prod || !prod.vendeur) return;
+        var v = vendeurs[prod.vendeur];
+        if (!v) {
+          var def = (lv.vendeurs && lv.vendeurs[prod.vendeur]) || {};
+          v = vendeurs[prod.vendeur] = { id: prod.vendeur, nom: def.nom || prod.vendeur, frais: def.frais != null ? def.frais : (lv.defaut || 0), delai: def.delai || "", plateforme: def.plateforme || "Decathlon", note: def.note || "", pieces: 0, parLot: {} };
+          ordreVendeurs.push(prod.vendeur);
+        }
+        v.pieces++; v.parLot[l.k] = (v.parLot[l.k] || 0) + 1;
+      });
     });
-    var listeVendeurs = Object.keys(vendeurs).map(function (k) { return vendeurs[k]; });
+    var listeVendeurs = ordreVendeurs.map(function (k) { return vendeurs[k]; });
     var livraisonVendeurs = round2(listeVendeurs.reduce(function (s, v) { return s + v.frais; }, 0));
     var cout = round2(achats + planchesTTC + livraison + livraisonVendeurs + vinyleTotal);
 
     // les planches et la livraison sont imputées aux pièces (la somme reste égale au coût réel)
     var sommeBrute = 0;
     Object.keys(plancheParPiece).forEach(function (k) { sommeBrute += plancheParPiece[k]; });
-    var k = sommeBrute > 0 ? planchesTTC / sommeBrute : 0;
-    var coutPieces = {};
-    order.pieces.forEach(function (p) {
-      var prod = ctx.produits[p.produitId]; if (!prod) return;
-      var pl = (plancheParPiece[p.id] || 0) * k;
-      var li = planchesTTC > 0 ? livraison * pl / planchesTTC : 0;
-      var lvp = prod.vendeur ? vendeurs[prod.vendeur].frais / vendeurs[prod.vendeur].pieces : 0;
-      var achat = prixAchatPiece(prod, p.couleurId);
-      var vi = vinyleParPiece[p.id] || 0;
-      coutPieces[p.id] = { achat: achat, planches: pl, livraison: li, livraisonVendeur: lvp, vinyle: vi, total: achat + pl + li + lvp + vi };
+    var kk = sommeBrute > 0 ? planchesTTC / sommeBrute : 0;
+    lots.forEach(function (l) {
+      var sums = { achat: 0, planches: 0, livraison: 0, livraisonVendeur: 0, vinyle: 0, total: 0 };
+      l.coutPieces = {};
+      l.order.pieces.forEach(function (p) {
+        var prod = ctx.produits[p.produitId]; if (!prod) return;
+        var key = cle(l.k, p.id);
+        var pl = (plancheParPiece[key] || 0) * kk;
+        var li = planchesTTC > 0 ? livraison * pl / planchesTTC : 0;
+        var lvp = prod.vendeur ? vendeurs[prod.vendeur].frais / vendeurs[prod.vendeur].pieces : 0;
+        var achat = prixAchatPiece(prod, p.couleurId);
+        var vi = vinyleParPiece[key] || 0;
+        l.coutPieces[p.id] = { achat: achat, planches: pl, livraison: li, livraisonVendeur: lvp, vinyle: vi, total: achat + pl + li + lvp + vi };
+        sums.achat += achat; sums.planches += pl; sums.livraison += li; sums.livraisonVendeur += lvp; sums.vinyle += vi; sums.total += achat + pl + li + lvp + vi;
+      });
+      l.sums = sums;
     });
 
-    // Un groupe par produit : une marge de 3 € par pièce avec au moins un motif (version 7.1.0 : plus de packs).
-    var nbMotifs = {};
-    motifs.forEach(function (m) { nbMotifs[m.pieceId] = (nbMotifs[m.pieceId] || 0) + 1; });
-    // vêtements apportés : plus de regles.apporte.seuil pièces apportées dans la commande = marge réduite sur toutes ces pièces (facteur 1 : pas de remise)
-    var nApportees = order.pieces.filter(function (p) { var pr = ctx.produits[p.produitId]; return pr && pr.apporte && coutPieces[p.id]; }).length;
+    // vêtements apportés : plus de regles.apporte.seuil pièces apportées dans le panier = marge réduite sur toutes ces pièces (facteur 1 : pas de remise)
+    var nApportees = 0;
+    lots.forEach(function (l) {
+      nApportees += l.order.pieces.filter(function (p) { var pr = ctx.produits[p.produitId]; return pr && pr.apporte && l.coutPieces[p.id]; }).length;
+    });
     var reglesApp = reglesApporte(prix.regles, nApportees), apporteReduite = reglesApp !== prix.regles;
-    var groupes = [], gi = {};
-    function groupe(cle, base) {
-      var g = gi[cle]; if (!g) { g = gi[cle] = Object.assign({ n: 0, cout: 0, margeTotale: 0, motifs: 0 }, base); groupes.push(g); } return g;
-    }
-    order.pieces.forEach(function (p) {
-      if (!coutPieces[p.id]) return;
-      var g2 = groupe("produit:" + p.produitId, { produitId: p.produitId });
-      g2.n++; g2.cout += coutPieces[p.id].total;
-      var pr2 = ctx.produits[p.produitId];
-      g2.motifs += nbMotifs[p.id] || 0; g2.margeTotale += margePiece(nbMotifs[p.id] || 0, pr2.apporte ? reglesApp : prix.regles);
-      if (pr2.apporte && apporteReduite) g2.margeReduite = true;
-    });
 
-    var vente = null;
-    if (groupes.length) {
-      var fx = fixerPrix(groupes, cout, prix.regles);
-      var seul = groupes.length === 1;
-      vente = {
-        brut: round2(cout / N),
-        unitaire: seul ? groupes[0].unitaire : null,   // un seul prix par pièce seulement s'il n'y a qu'un produit
-        groupes: groupes.map(function (g) {
-          return { produitId: g.produitId, n: g.n,
-            coutMoyen: round2(g.coutMoyen), margeMoyenne: round2(g.margeMoyenne), motifs: g.motifs, margeReduite: !!g.margeReduite, unitaire: g.unitaire, total: g.total };
-        }),
-        apporte: { n: nApportees, seuil: prix.regles.apporte ? prix.regles.apporte.seuil : null, reduite: apporteReduite },
-        total: fx.total, marge: fx.marge
+    var results = lots.map(function (l) {
+      var nbMotifs = {};
+      l.motifs.forEach(function (m) { nbMotifs[m.pieceId] = (nbMotifs[m.pieceId] || 0) + 1; });
+      // Un groupe par produit : une marge de 3 € par pièce avec au moins un motif (version 7.1.0 : plus de packs).
+      var groupes = [], gi = {};
+      function groupe(cleG, base) {
+        var g = gi[cleG]; if (!g) { g = gi[cleG] = Object.assign({ n: 0, cout: 0, margeTotale: 0, motifs: 0 }, base); groupes.push(g); } return g;
+      }
+      l.order.pieces.forEach(function (p) {
+        if (!l.coutPieces[p.id]) return;
+        var g2 = groupe("produit:" + p.produitId, { produitId: p.produitId });
+        g2.n++; g2.cout += l.coutPieces[p.id].total;
+        var pr2 = ctx.produits[p.produitId];
+        g2.motifs += nbMotifs[p.id] || 0; g2.margeTotale += margePiece(nbMotifs[p.id] || 0, pr2.apporte ? reglesApp : prix.regles);
+        if (pr2.apporte && apporteReduite) g2.margeReduite = true;
+      });
+      // coût de cette configuration : le panier entier s'il n'y en a qu'une, sinon sa part
+      var s = l.sums, lcouts;
+      if (!multi) lcouts = { achats: achats, planchesHT: planchesHT, planchesTTC: planchesTTC, livraison: livraison, livraisonVendeurs: livraisonVendeurs, vinyle: vinyleTotal, total: cout };
+      else {
+        var plT = round2(s.planches);
+        lcouts = { achats: l.achats, planchesHT: prix.prixPlanchesHT ? round2(plT / (1 + prix.tva)) : plT, planchesTTC: plT, livraison: round2(s.livraison),
+          livraisonVendeurs: round2(s.livraisonVendeur), vinyle: round2(s.vinyle), total: round2(s.total) };
+      }
+      var vente = null;
+      if (groupes.length) {
+        var fx = fixerPrix(groupes, lcouts.total, prix.regles);
+        var seul = groupes.length === 1;
+        vente = {
+          brut: round2(lcouts.total / l.N),
+          unitaire: seul ? groupes[0].unitaire : null,   // un seul prix par pièce seulement s'il n'y a qu'un produit
+          groupes: groupes.map(function (g) {
+            return { produitId: g.produitId, n: g.n,
+              coutMoyen: round2(g.coutMoyen), margeMoyenne: round2(g.margeMoyenne), motifs: g.motifs, margeReduite: !!g.margeReduite, plafonne: !!g.plafonne, unitaire: g.unitaire, total: g.total };
+          }),
+          apporte: { n: nApportees, seuil: prix.regles.apporte ? prix.regles.apporte.seuil : null, reduite: apporteReduite },
+          total: fx.total, marge: fx.marge
+        };
+      }
+      var lvend = listeVendeurs.filter(function (v) { return v.parLot[l.k]; }).map(function (v) { return Object.assign({}, v, { pieces: v.parLot[l.k] }); });
+      lvend.forEach(function (v) { delete v.parLot; });
+      return {
+        N: l.N, motifs: l.motifs, warnings: l.warnings.concat(basketWarnings), plans: plans, lignesPlanches: allLines,
+        couts: lcouts, vendeurs: lvend, coutPieces: l.coutPieces, prix: vente
       };
-    }
-
+    });
+    var totalPrix = 0, totalMarge = 0, piecesTot = 0;
+    results.forEach(function (r) { piecesTot += r.N; if (r.prix) { totalPrix += r.prix.total; totalMarge += r.prix.marge; } });
+    var gvend = listeVendeurs.map(function (v) { var c = Object.assign({}, v); delete c.parLot; return c; });
     return {
-      N: N, motifs: motifs, warnings: warnings, plans: plans, lignesPlanches: allLines,
+      lots: results, plans: plans, lignesPlanches: allLines, warnings: basketWarnings, vendeurs: gvend, N: piecesTot,
       couts: { achats: achats, planchesHT: planchesHT, planchesTTC: planchesTTC, livraison: livraison, livraisonVendeurs: livraisonVendeurs, vinyle: vinyleTotal, total: cout },
-      vendeurs: listeVendeurs,
-      coutPieces: coutPieces,
-      prix: vente
+      prix: { total: round2(totalPrix), marge: round2(totalMarge), pieces: piecesTot }
     };
   }
+
+  // Une seule configuration : le panier d'une configuration
+  function computeOrder(order, ctx) { return computeBasket([order], ctx).lots[0]; }
 
   // Prix affichés sur la vitrine, pour un produit : un visuel A6 (ou Mini sur un accessoire) aux emplacements
   // de référence (item.vitrine).
@@ -689,7 +754,7 @@
   return {
     round2: round2, packSheet: packSheet, planSheets: planSheets, costSheets: costSheets,
     elementsFor: elementsFor, layoutStack: layoutStack, stackFor: stackFor, motifImage: motifImage, buildMotifs: buildMotifs,
-    pieceTechno: pieceTechno, polyesterPiece: polyesterPiece, prixAchatPiece: prixAchatPiece, margePiece: margePiece, reglesApporte: reglesApporte, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, priceTable: priceTable,
+    pieceTechno: pieceTechno, polyesterPiece: polyesterPiece, prixAchatPiece: prixAchatPiece, margePiece: margePiece, reglesApporte: reglesApporte, calcPrix: calcPrix, fixerPrix: fixerPrix, computeOrder: computeOrder, computeBasket: computeBasket, priceTable: priceTable,
     approxMeasure: approxMeasure, fitsPlateau: fitsPlateau, STACK_GAP: STACK_GAP, BLOC_GAP: BLOC_GAP,
     angleTexte: angleTexte, imageGeom: imageGeom, descriptionVisuel: descriptionVisuel, largeurMax: largeurMax, largeurPourFormat: largeurPourFormat, quartDeTour: quartDeTour, LARGEUR_MIN: LARGEUR_MIN
   };

@@ -8,6 +8,10 @@ require(path.join("..", "js", "preview.js"));
 const E = require(path.join("..", "js", "engine.js"));
 
 const PRIX = window.PRIX, DATA = window.DATA;
+// Plafond de marge (8.0.0) : les tests de la règle d'arrondi (prix pair, marge de 3 €) tournent SANS plafond ; la section « Plafond de marge
+// et panier » (en bas) l'active. La configuration livrée est vérifiée à part.
+const PLAFOND_LIVRE = PRIX.regles.margeMaxPct;
+PRIX.regles.margeMaxPct = null;
 const produits = {}; DATA.produits.forEach(p => produits[p.id] = p);
 const ctx = { prix: PRIX, produits, emplacements: DATA.emplacements, measure: E.approxMeasure };
 let ok = 0;
@@ -1115,5 +1119,121 @@ test("7.4.0 : le texte libre fonctionne sur le dos et sur un emplacement sans vi
   const ch = DATA.produits.filter(p => p.zones.chaussette_g)[0];
   if (ch) assert.strictEqual(E.elementsFor("chaussette_g", { actif: true, avecImage: false, prenom: { actif: false }, numero: { actif: false }, texte: texteG() }, { id: "c", produitId: ch.id, prenom: "", numero: "" }, ch, ctx).filter(e => e.kind === "texte").length, 1);
 });
+
+
+console.log("\nPlafond de marge et panier (version 8.0.0)");
+const unPolo = (id, n, couleur) => ({ pieces: pieces(n, couleur).map((p, i) => Object.assign(p, { id: id + i })), marquages: A6poitrine, technique: "dtf" });
+function avecPlafond(fn) { const avant = PRIX.regles.margeMaxPct; PRIX.regles.margeMaxPct = PLAFOND_LIVRE; try { fn(); } finally { PRIX.regles.margeMaxPct = avant; } }
+test("8.0.0 : la configuration livrée plafonne la marge à 20 % du coût, par pas de 0,10 €", () => {
+  assert.strictEqual(PLAFOND_LIVRE, 0.2); assert.strictEqual(PRIX.regles.pasPlafond, 0.1);
+});
+test("8.0.0 : fixerPrix, le plafond remplace l'arrondi pair quand celui-ci ferait trop gagner, sans passer sous le coût", () => {
+  const r = { margePiece: 3, pas: 2, margeMaxPct: 0.2, pasPlafond: 0.1 };
+  const un = (cout, n, marge) => E.fixerPrix([{ n, cout, margeTotale: marge }], cout, r);
+  const g = (cout, n, marge) => { const x = { n, cout, margeTotale: marge }; E.fixerPrix([x], cout, r); return x; };
+  assert.strictEqual(g(10, 1, 3).unitaire, 12);          // 13 -> 14 dépasse 12 (20 %) : plafonné à 12
+  assert.strictEqual(g(10, 1, 3).plafonne, true);
+  assert.strictEqual(g(18.39, 1, 3).unitaire, 22);       // 21,39 -> 22 ≤ 22,07 : l'arrondi pair reste
+  assert.strictEqual(g(18.39, 1, 3).plafonne, false);
+  assert.strictEqual(g(9.83, 1, 3).unitaire, 11.7);      // plafond 11,796 -> 11,70 €
+  assert.ok(g(10, 3, 9).unitaire >= 10 / 3 - 0.005);     // jamais sous le coût moyen (10 € pour 3 pièces)
+  assert.strictEqual(un(10, 1, 3).marge, 2);             // marge réelle : 12 - 10
+  const sans = E.fixerPrix([{ n: 1, cout: 10, margeTotale: 3 }], 10, Object.assign({}, r, { margeMaxPct: null }));
+  assert.strictEqual(sans.total, 14);                    // sans plafond, l'ancienne règle
+});
+test("8.0.0 : avec le plafond, la marge d'un produit ne dépasse jamais 20 % de son coût moyen (catalogue, 1 à 30 pièces)", () => avecPlafond(() => {
+  DATA.produits.filter(p => !p.apporte && Object.keys(p.zones).length).forEach(prod => {
+    const emp = Object.keys(prod.zones).filter(e => !(DATA.emplacements[e] && DATA.emplacements[e].texteSeul))[0];
+    if (!emp) return;
+    [1, 4, 30].forEach(n => {
+      const o = { pieces: Array.from({ length: n }, (_, i) => ({ id: "q" + i, produitId: prod.id, couleurId: prod.couleurs[0].id, taille: prod.tailles[0], prenom: "", numero: "" })),
+        marquages: { [emp]: { actif: true, avecImage: true, format: "A6", orient: "portrait" } }, technique: "dtf" };
+      const r = E.computeOrder(o, ctx), gr = r.prix.groupes[0];
+      assert.ok(gr.unitaire >= gr.coutMoyen - 0.005, prod.id + " x" + n + " : prix " + gr.unitaire + " sous le coût " + gr.coutMoyen);
+      assert.ok(gr.unitaire - gr.coutMoyen <= gr.coutMoyen * 0.2 + 0.105, prod.id + " x" + n + " : marge " + (gr.unitaire - gr.coutMoyen) + " pour un coût de " + gr.coutMoyen);
+    });
+  });
+}));
+test("8.0.0 : 10 polos avec un visuel, plafond actif : 11,70 € au lieu de 14 €", () => avecPlafond(() => {
+  const r = E.computeOrder({ pieces: pieces(10), marquages: A6poitrine, technique: "dtf" }, ctx);
+  assert.strictEqual(r.prix.unitaire, 11.7); assert.strictEqual(r.prix.groupes[0].plafonne, true);
+  assert.ok(r.prix.marge <= r.couts.total * 0.2 + 1.1, "marge " + r.prix.marge);
+}));
+
+test("panier : deux configurations partagent la même planche, la livraison n'est comptée qu'une fois", () => {
+  const a = unPolo("a", 1), b = unPolo("b", 1);
+  const seul = E.computeOrder(a, ctx), sep = seul.couts.total * 2;
+  const k = E.computeBasket([a, b], ctx);
+  assert.strictEqual(k.lots.length, 2);
+  assert.strictEqual(k.plans.dtf.sheets.length, 1, "une seule planche pour les deux configurations");
+  assert.strictEqual(k.plans.dtf.sheets[0].placed.length, 2);
+  assert.deepStrictEqual(k.plans.dtf.sheets[0].placed.map(p => p.ref.motif.lot).sort(), [0, 1], "un motif de chaque configuration");
+  assert.strictEqual(k.couts.planchesTTC, 5.5); assert.strictEqual(k.couts.livraison, 4.9);
+  assert.strictEqual(k.couts.total, E.round2(2 * 7.99 + 5.5 + 4.9));
+  assert.ok(k.couts.total < sep - 8, "le panier coûte moins que deux commandes séparées : " + k.couts.total + " < " + sep);
+  assert.ok(Math.abs(k.lots[0].couts.total + k.lots[1].couts.total - k.couts.total) <= 0.02, "les parts des configurations refont le total");
+  assert.strictEqual(k.lots[0].plans, k.plans); assert.strictEqual(k.lots[1].lignesPlanches, k.lignesPlanches);
+});
+test("panier : le prix de chaque configuration baisse quand les planches sont partagées", () => {
+  const a = unPolo("a", 1), b = unPolo("b", 1);
+  const seul = E.computeOrder(a, ctx), k = E.computeBasket([a, b], ctx);
+  k.lots.forEach(l => assert.ok(l.prix.total < seul.prix.total, l.prix.total + " < " + seul.prix.total));
+  assert.strictEqual(k.prix.total, E.round2(k.lots[0].prix.total + k.lots[1].prix.total));
+  assert.strictEqual(k.prix.pieces, 2);
+});
+test("panier : les motifs d'un panier à plusieurs configurations ont un identifiant unique et portent leur configuration ; une seule, rien ne change", () => {
+  const a = unPolo("a", 1), dup = JSON.parse(JSON.stringify(a));       // une configuration dupliquée garde les mêmes identifiants de pièces
+  const k = E.computeBasket([a, dup], ctx);
+  const ids = k.lots[0].motifs.concat(k.lots[1].motifs).map(m => m.id);
+  assert.strictEqual(new Set(ids).size, ids.length, ids.join(" "));
+  assert.deepStrictEqual([k.lots[0].motifs[0].lot, k.lots[1].motifs[0].lot], [0, 1]);
+  assert.strictEqual(k.lots[1].motifs[0].pieceId, "a0", "l'identifiant de la pièce ne change pas");
+  const un = E.computeBasket([a], ctx).lots[0];
+  assert.strictEqual(un.motifs[0].lot, undefined); assert.strictEqual(un.motifs[0].id, "a0:poitrine:image");
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(E.computeOrder(a, ctx).couts)), JSON.parse(JSON.stringify(un.couts)));
+});
+test("panier : le DTF et la sublimation ne se mélangent pas sur une planche", () => {
+  const a = unPolo("a", 1);
+  const subli = Object.assign(unPolo("b", 1, "blanc"), { technique: "sublimation" });
+  const techs = subli.pieces.map(p => E.pieceTechno(subli, p, ctx));
+  const k = E.computeBasket([a, subli], ctx);
+  k.plans.dtf.sheets.forEach(s => s.placed.forEach(p => assert.strictEqual(p.ref.motif.techno, "dtf")));
+  if (techs[0] === "sublimation") {
+    assert.ok(k.plans.sublimation, "une planche de sublimation à part");
+    k.plans.sublimation.sheets.forEach(s => s.placed.forEach(p => assert.strictEqual(p.ref.motif.techno, "sublimation")));
+  }
+});
+test("panier : les frais de port d'un vendeur ne sont comptés qu'une fois, même avec plusieurs configurations", () => {
+  const prod = DATA.produits.filter(p => p.vendeur && !p.apporte && Object.keys(p.zones).some(e => !(DATA.emplacements[e] && DATA.emplacements[e].texteSeul)) &&
+    ((PRIX.livraisonVendeur.vendeurs[p.vendeur] || {}).frais || PRIX.livraisonVendeur.defaut) > 0)[0];
+  assert.ok(prod, "un article d'un vendeur à frais de port existe");
+  const emp = Object.keys(prod.zones).filter(e => !(DATA.emplacements[e] && DATA.emplacements[e].texteSeul))[0];
+  const mk = id => ({ pieces: [{ id: id, produitId: prod.id, couleurId: prod.couleurs[0].id, taille: prod.tailles[0], prenom: "", numero: "" }], marquages: { [emp]: { actif: true, avecImage: true, format: "A6", orient: "portrait" } }, technique: "dtf" });
+  const frais = (PRIX.livraisonVendeur.vendeurs[prod.vendeur] || {}).frais != null ? PRIX.livraisonVendeur.vendeurs[prod.vendeur].frais : PRIX.livraisonVendeur.defaut;
+  const k = E.computeBasket([mk("a"), mk("b")], ctx);
+  assert.strictEqual(k.couts.livraisonVendeurs, E.round2(frais), "une seule fois pour le panier");
+  assert.strictEqual(k.vendeurs.length, 1); assert.strictEqual(k.vendeurs[0].pieces, 2);
+  const parts = k.lots.map(l => l.couts.livraisonVendeurs);
+  assert.ok(Math.abs(parts[0] + parts[1] - frais) <= 0.02, "chaque configuration en porte la moitié : " + parts.join(" + "));
+  k.lots.forEach(l => { assert.strictEqual(l.vendeurs.length, 1); assert.strictEqual(l.vendeurs[0].pieces, 1); assert.strictEqual(l.vendeurs[0].frais, frais); });
+});
+test("panier : chaque motif de chaque configuration se retrouve sur une planche (ce que lit l'atelier), avec sa configuration", () => {
+  const a = unPolo("a", 5), b = Object.assign(unPolo("b", 4, "blanc"), { marquages: { dos: { actif: true, avecImage: true, format: "A5", orient: "portrait" } } });
+  const k = E.computeBasket([a, b], ctx);
+  const surPlanche = {};
+  Object.keys(k.plans).forEach(t => k.plans[t].sheets.forEach(sh => sh.placed.forEach(p => { surPlanche[p.ref.motif.id] = p.ref.motif.lot; })));
+  k.lots.forEach((l, i) => l.motifs.forEach(m => { if (m.techno !== "dtf" && m.techno !== "sublimation") return; assert.strictEqual(surPlanche[m.id], i, m.id); }));
+  assert.strictEqual(Object.keys(surPlanche).length, k.lots[0].motifs.length + k.lots[1].motifs.length);
+  assert.ok(k.plans.dtf.sheets.length < E.computeOrder(a, ctx).plans.dtf.sheets.length + E.computeOrder(b, ctx).plans.dtf.sheets.length || k.couts.planchesTTC <= E.computeOrder(a, ctx).couts.planchesTTC + E.computeOrder(b, ctx).couts.planchesTTC);
+});
+test("panier : un panier vide ou une configuration sans pièce ne plante pas", () => {
+  assert.strictEqual(E.computeBasket([], ctx).lots.length, 0);
+  const k = E.computeBasket([{ pieces: [], marquages: A6poitrine, technique: "dtf" }, unPolo("a", 1)], ctx);
+  assert.strictEqual(k.lots[0].prix, null); assert.ok(k.lots[1].prix.total > 0);
+});
+test("panier : avec le plafond actif, chaque configuration respecte les 20 % sur son coût", () => avecPlafond(() => {
+  const k = E.computeBasket([unPolo("a", 3), unPolo("b", 7, "blanc")], ctx);
+  k.lots.forEach(l => l.prix.groupes.forEach(g => assert.ok(g.unitaire >= g.coutMoyen - 0.005 && g.unitaire - g.coutMoyen <= g.coutMoyen * 0.2 + 0.105, JSON.stringify(g))));
+}));
 
 console.log("\n" + ok + " tests passés");

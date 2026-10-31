@@ -123,9 +123,30 @@
   }
 
   // Charge les visuels de la commande (dimensions, transparence) pour dessiner les planches et vérifier leur qualité
-  function loadImgs(order) {
+  // Configurations de la demande : la liste des commandes (la configuration affichée est st.order, qui peut avoir été retouchée)
+  function lotOrders() {
+    if (!st.order) return [];
+    if (!st.lots) return [st.order];
+    return st.lots.map(function (o, k) { return k === st.lot ? st.order : o.order; });
+  }
+  // Commande d'un motif (de la configuration affichée ou d'une autre, quand une planche est partagée entre configurations)
+  function orderDe(mo) {
+    if (mo.lot == null || !st.lots) return st.order;
+    return mo.lot === st.lot ? st.order : st.lots[mo.lot].order;
+  }
+  // Image chargée du visuel d'un motif
+  function imgInfo(mo) {
+    var m = mo.lot != null && st.lotImgs && st.lotImgs[mo.lot];
+    return (m ? m : st.imgs)[mo.emp];
+  }
+  // Charge les visuels de toutes les configurations : les planches sont communes, elles portent des visuels de chacune
+  function loadImgs() {
+    var orders = lotOrders();
+    st.lotImgs = orders.map(function () { return {}; });
+    return Promise.all(orders.map(function (o, k) { return loadImgsDe(o, st.lotImgs[k]); })).then(function () { st.imgs = st.lotImgs[st.lots ? st.lot : 0] || {}; });
+  }
+  function loadImgsDe(order, imgs) {
     var jobs = [];
-    st.imgs = {};
     Object.keys(order.marquages).forEach(function (e) {
       var m = order.marquages[e];
       if (!m || !m.actif || m.avecImage === false || !m.image || !m.image.dataUrl) return;
@@ -144,9 +165,9 @@
               info.opaque = min >= 250;
             } catch (err) { /* lecture des pixels impossible : on ne dit rien */ }
           }
-          st.imgs[e] = info; ok();
+          imgs[e] = info; ok();
         };
-        img.onerror = function () { st.imgs[e] = { img: null, error: true, type: type }; ok(); };
+        img.onerror = function () { imgs[e] = { img: null, error: true, type: type }; ok(); };
         img.src = url;
       }));
     });
@@ -156,9 +177,12 @@
   /* ---------- calculs déduits de la commande ---------- */
   function recompute() {
     var o = st.order;
-    st.sheets = []; st.motifSheet = {};
+    st.sheets = []; st.motifSheet = {}; st.basket = null;
     if (!o) { st.res = null; st.alertes = []; return; }
-    var r = st.res = E.computeOrder(o, A.CTX);
+    // Les motifs de toutes les configurations sont rangés ensemble sur les mêmes planches (version 8.0.0) ;
+    // st.res est le résultat de la configuration affichée (ses coûts sont sa part), les planches sont celles de toute la demande.
+    st.basket = E.computeBasket(lotOrders(), A.CTX);
+    var r = st.res = st.basket.lots[st.lots ? st.lot : 0];
     ["dtf", "sublimation"].forEach(function (techno) {
       var plan = r.plans[techno]; if (!plan) return;
       var sorted = plan.sheets.slice().sort(function (a, b) { return b.format.w * b.format.h - a.format.w * a.format.h; });
@@ -206,7 +230,7 @@
   }
 
   function prepare() {
-    return loadFonts(st.order).then(function () { return loadImgs(st.order); }).then(recompute);
+    return loadFonts(st.order).then(function () { return loadImgs(); }).then(recompute);
   }
 
   var saveWarned = false;
@@ -220,6 +244,7 @@
   function setLoaded(obj, fichier, silent) {
     st.lots = obj.lots || null; st.lot = obj.lot || 0;
     st.order = obj.order; st.contact = obj.contact || {}; st.prixAffiche = obj.prixAffiche || null; st.creeLe = obj.creeLe || null; st.fichier = fichier || "";
+    if (st.lots && st.lots[st.lot]) st.lots[st.lot].order = st.order;      // une même commande pour la configuration affichée et la liste (visuels remplacés compris)
     return prepare().then(function () {
       save();
       if (silent) return;
@@ -229,7 +254,7 @@
 
   function closeOrder() {
     st.lots = null; st.lot = 0;
-    st.order = null; st.contact = {}; st.prixAffiche = null; st.creeLe = null; st.fichier = ""; st.imgs = {};
+    st.order = null; st.contact = {}; st.prixAffiche = null; st.creeLe = null; st.fichier = ""; st.imgs = {}; st.lotImgs = [];
     recompute(); save(); route();
   }
 
@@ -340,13 +365,14 @@
   }
   // Un bloc collé : « Bloc collé, 10 × 23,1 cm : visuel A6 + prénom LÉO + numéro 7 », éléments centrés, de haut en bas
   function motifTexte(m) {
-    var cfg = st.order.marquages[m.emp] || {};
+    var cfg = orderDe(m).marquages[m.emp] || {};
     if (m.kind !== "bloc") return elementTexte(m.el, cfg);
     return "<b>Bloc collé</b>, " + fmtN(m.w) + " × " + fmtN(m.h) + " cm, à presser d'un coup" +
       '<ul class="bloc-liste">' + m.el.items.map(function (it) { return "<li>" + elementTexte(it, cfg) + "</li>"; }).join("") + "</ul>";
   }
   // Repère d'un motif : numéro de la pièce, emplacement, puis une lettre par élément (un bloc en porte plusieurs : 3·Pvpn)
-  function codeMotif(m) { return (m.pieceIdx + 1) + "·" + ABBR[m.emp] + (m.kind === "bloc" ? m.el.items.map(function (i) { return KIND[i.kind]; }).join("") : KIND[m.kind]); }
+  // Avec plusieurs configurations (planches communes), le repère commence par le numéro de la configuration : C2·3·Pv
+  function codeMotif(m) { return (m.lot != null ? "C" + (m.lot + 1) + "·" : "") + (m.pieceIdx + 1) + "·" + ABBR[m.emp] + (m.kind === "bloc" ? m.el.items.map(function (i) { return KIND[i.kind]; }).join("") : KIND[m.kind]); }
 
   /* =================================================================== */
   /* PORTE                                                               */
@@ -532,12 +558,14 @@
 
   function planchesHtml() {
     var r = st.res, F0 = A.PRIX.fournisseur, suf = A.PRIX.prixPlanchesHT ? "HT" : "TTC", lines = r.lignesPlanches;
+    var gc = st.basket ? st.basket.couts : r.couts;      // planches et livraison de TOUTE la demande (elles sont communes aux configurations)
     var html = '<div class="h-row"><h2>À commander chez ' + esc(F0.nom) + '</h2><a class="btn btn-primary" href="#/planches">Préparer les fichiers à envoyer</a></div>';
+    if (st.lots) html += '<p class="hint"><b>Planches communes :</b> les motifs des ' + st.lots.length + ' configurations sont rangés ensemble sur les mêmes planches, pour payer moins. Cette commande est valable pour toute la demande, pas seulement pour la configuration ' + (st.lot + 1) + '. Les repères des motifs commencent par le numéro de la configuration (C2·3·Pv : configuration 2, pièce 3).</p>';
     if (lines.length) {
       html += table(["Technique", "Format", { t: "Quantité", num: true }, { t: "Prix " + suf + " l'unité", num: true }, { t: "Remise", num: true }, { t: "Total " + suf, num: true }],
         lines.map(function (l) { return [esc(A.PRIX.planches[l.techno].nom), esc(l.nom), '<b class="qty">' + l.qty + "</b>", fmtEUR(l.prixUnitaire), l.remise ? Math.round(l.remise * 100) + " %" : "aucune", fmtEUR(l.totalHT)]; }));
-      html += '<p class="hint">' + (A.PRIX.prixPlanchesHT ? "Total HT " + fmtEUR(r.couts.planchesHT) + ", soit " + fmtEUR(r.couts.planchesTTC) + " TTC. " : "Total " + fmtEUR(r.couts.planchesTTC) + " TTC. ") +
-        (r.couts.livraison ? "Livraison estimée à " + fmtEUR(r.couts.livraison) + " (le prix réel s'affiche au panier)." : "Livraison offerte.") + " " + esc(F0.delai) + "</p>" +
+      html += '<p class="hint">' + (A.PRIX.prixPlanchesHT ? "Total HT " + fmtEUR(gc.planchesHT) + ", soit " + fmtEUR(gc.planchesTTC) + " TTC. " : "Total " + fmtEUR(gc.planchesTTC) + " TTC. ") +
+        (gc.livraison ? "Livraison estimée à " + fmtEUR(gc.livraison) + " (le prix réel s'affiche au panier)." : "Livraison offerte.") + " " + esc(F0.delai) + "</p>" +
         '<p class="hint">' + esc(F0.nom) + " demande : " + esc(F0.fichier) + (F0.url ? " " + lien(F0.url, "Ouvrir le site") + "." : "") + "</p>";
     } else html += '<p class="empty">Aucune planche à commander (aucun marquage actif).</p>';
     return html;
@@ -565,12 +593,23 @@
       var rg = A.PRIX.regles, detail = "coût moyen " + fmtEUR(g.coutMoyen) + ", marge " + fmtEUR(g.margeMoyenne);
       var f = g.margeReduite && rg.apporte ? rg.apporte.facteur : 1;   // marge réduite si le facteur d'apporté n'est pas 1
       detail += g.motifs ? " (" + fmtEUR(rg.margePiece * f) + " par pièce" + (f !== 1 ? " : marge × " + String(f).replace(".", ",") + ", plus de " + rg.apporte.seuil + " vêtements apportés" : "") + ")" : " (aucun motif)";
-      detail += ", arrondi à " + fmtEUR(g.unitaire) + " l'unité";
+      detail += g.plafonne ? ", prix plafonné à " + fmtEUR(g.unitaire) + " l'unité (marge limitée à " + Math.round((rg.margeMaxPct || 0) * 100) + " % du coût)" : ", arrondi à " + fmtEUR(g.unitaire) + " l'unité";
       rows.push([esc(A.groupName(g)) + " × " + g.n, detail, fmtEUR(g.total)]);
     });
     rows.push(["<b>Total à facturer</b>", pv.unitaire != null ? r.N + " × " + fmtEUR(pv.unitaire) : "", "<b>" + fmtEUR(pv.total) + "</b>"]);
     rows.push(["<b>Marge</b>", pv.total > 0 ? fmtPct(pv.marge / r.couts.total) + " du coût de revient" : "", "<b>" + fmtEUR(pv.marge) + "</b>"]);
-    var html = table(["Ligne", "Détail", { t: "Montant", num: true }], rows, "calc");
+    var html = "";
+    if (st.lots) html += '<p class="hint">Configuration ' + (st.lot + 1) + ' sur ' + st.lots.length + ' : les planches, la livraison et les frais de port des vendeurs sont partagés par toute la demande, chaque configuration en porte sa part (au prorata de la surface de ses motifs et de ses pièces).</p>';
+    html += table(["Ligne", "Détail", { t: "Montant", num: true }], rows, "calc");
+    if (st.lots && st.basket) {
+      var bk = st.basket;
+      html += '<h3>Toute la demande (' + st.lots.length + ' configurations, ' + plur(bk.N, "pièce", "pièces") + ')</h3>' + table(["Ligne", "Détail", { t: "Montant", num: true }], [
+        ["Planches " + fn + (plHT ? ", hors taxes" : ", TTC") + " (communes)", plur(st.sheets.length, "planche", "planches"), fmtEUR(plHT ? bk.couts.planchesHT : bk.couts.planchesTTC)],
+        ["Livraison " + fn + " (une seule fois)", bk.couts.livraison ? "estimation" : "offerte", fmtEUR(bk.couts.livraison)],
+        ["<b>Coût de revient</b>", "", "<b>" + fmtEUR(bk.couts.total) + "</b>"],
+        ["<b>Total à facturer</b>", "somme des " + st.lots.length + " configurations", "<b>" + fmtEUR(bk.prix.total) + "</b>"],
+        ["<b>Marge</b>", bk.prix.total > 0 ? fmtPct(bk.prix.marge / bk.couts.total) + " du coût de revient" : "", "<b>" + fmtEUR(bk.prix.marge) + "</b>"]], "calc");
+    }
     if (st.prixAffiche && Math.abs(st.prixAffiche.total - pv.total) > 0.005) {
       html += '<p class="warn-line">Le client a vu un total de ' + fmtEUR(st.prixAffiche.total) + ". Avec les tarifs actuels, le calcul donne " + fmtEUR(pv.total) + ". Les tarifs ont changé entre-temps.</p>";
     } else if (st.prixAffiche) {
@@ -793,7 +832,7 @@
   /* =================================================================== */
   var At = window.Atelier = {
     A: A, st: st, views: views, ABBR: ABBR, KIND: KIND, KIND_NOM: KIND_NOM, esc: esc, fmtEUR: fmtEUR, fmtN: fmtN, plur: plur, table: table, empty: empty, lien: lien, sw: sw,
-    achats: achats, pressNotes: pressNotes, presseDe: presseDe, marquagesDe: marquagesDe, motifTexte: motifTexte, codeMotif: codeMotif, dpiVisuel: dpiVisuel,
+    achats: achats, pressNotes: pressNotes, presseDe: presseDe, marquagesDe: marquagesDe, motifTexte: motifTexte, codeMotif: codeMotif, dpiVisuel: dpiVisuel, orderDe: orderDe, imgInfo: imgInfo, lotOrders: lotOrders,
     colorOf: colorOf, prodOf: prodOf, lienDe: lienDe, fmtDate: fmtDate, route: route, prepare: prepare, save: save, photoSrc: photoSrc, onKey: null, alertes: alertes
   };
 

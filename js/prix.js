@@ -63,10 +63,17 @@ window.PRIX = {
   //
   // Vêtements apportés par le client (« Ton vêtement ») : même marge que les autres pièces. La remise au-delà de 5 pièces apportées
   // (6.0.0) est supprimée : `facteur: 1`. Remets 0.5 pour la rétablir (marge de ces pièces divisée par 2 au-delà de `seuil` pièces).
+  //
+  // Plafond de marge (version 8.0.0) : `margeMaxPct` = marge maximale en pourcentage du coût moyen de l'article (0.20 = 20 %).
+  //   Quand l'arrondi à l'euro pair ferait dépasser ce plafond, le prix devient le plafond arrondi vers le bas à `pasPlafond` (0,10 €),
+  //   sans jamais passer sous le coût. Le plafond passe avant la marge minimale de 3 € (un article bon marché peut donc rapporter moins de 3 €).
+  //   Mets `margeMaxPct: null` pour supprimer le plafond.
   regles: {
     margePiece: 3.00,
     apporte: { seuil: 5, facteur: 1 },
-    pas: 2
+    pas: 2,
+    margeMaxPct: 0.20,
+    pasPlafond: 0.10
   },
 
   // Vinyle thermocollant (flex) découpé à l'atelier : ni planche DTF ni livraison de transferts, seulement la matière.
