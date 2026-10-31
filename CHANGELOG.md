@@ -5,6 +5,15 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 8.1.0 — 31/10/2026
+
+Fiches de paiement et factures pour toute la demande. **Version MINEUR : aucun prix ne change ; le fichier de commande reste compatible.**
+
+- **Toutes les configurations dans un seul document.** Avant, l'onglet « Paiement et facture » ne lisait que la configuration affichée : un panier avec un pull et un polo dans deux configurations ne donnait que les lignes de l'une. Maintenant les lignes de toutes les configurations sont réunies, au prix calculé pour l'ensemble du panier (planches communes, 8.0.0), une ligne par produit et par configuration (« Polo Essential, configuration 2 »).
+- **Choisir les parties.** Un bloc « Parties de la demande » liste chaque configuration (articles, prix) avec une case : toutes cochées par défaut, on décoche celles qui ne vont pas dans le document (par exemple une fiche par partie). Changer la sélection refait les lignes d'après la commande ; le total des parties cochées s'affiche.
+- « Retirer la marge » et « Reprendre les prix vus par le client » portent sur les configurations cochées (prix vus comparés configuration par configuration). Passer d'une configuration à l'autre en haut de l'atelier ne refait plus les lignes ni la sélection.
+- Tests : 189 (123 moteur, 8 fichiers, 24 facturation, 25 méthodes, 9 paiement : `tests/paiement.test.js`).
+
 ## 8.0.0 — 31/10/2026
 
 Planches communes à toutes les configurations du panier, et marge plafonnée à 20 %. **Version MAJEUR : les prix changent (plafond de marge et planches partagées) ; le fichier de commande reste compatible.**
