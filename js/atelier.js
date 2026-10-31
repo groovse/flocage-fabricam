@@ -106,7 +106,8 @@
     var bad = j.pieces.filter(function (p) { return !A.byId[p.produitId]; })[0];
     if (bad) throw new Error("Un modèle de la commande n'est plus dans le catalogue : " + bad.produitId + ".");
     if (!j.pieces.length) throw new Error("Cette commande ne contient aucune pièce.");
-    return { order: { pieces: j.pieces, marquages: j.marquages, technique: j.technique || "dtf" }, contact: j.contact || {}, prixAffiche: j.prixAffiche || null, creeLe: j.creeLe || null };
+    return { order: { pieces: j.pieces, marquages: j.marquages, technique: j.technique || "dtf" }, contact: j.contact || {}, prixAffiche: j.prixAffiche || null, creeLe: j.creeLe || null,
+      nom: typeof j.nom === "string" ? j.nom.replace(/\s+/g, " ").trim().slice(0, 40) : "" };      // nom donné à la configuration par le client (8.2.0)
   }
 
   function fontsFor(order) {
@@ -129,6 +130,8 @@
     if (!st.lots) return [st.order];
     return st.lots.map(function (o, k) { return k === st.lot ? st.order : o.order; });
   }
+  // Nom d'une configuration de la demande : « Configuration 2 (Maillots équipe A) » ; sans nom, « Configuration 2 »
+  function libelleLot(k) { var nom = st.lots && st.lots[k] && st.lots[k].nom; return "Configuration " + (k + 1) + (nom ? " (" + nom + ")" : ""); }
   // Commande d'un motif (de la configuration affichée ou d'une autre, quand une planche est partagée entre configurations)
   function orderDe(mo) {
     if (mo.lot == null || !st.lots) return st.order;
@@ -237,7 +240,7 @@
   function save() {
     if (!st.order) { lset(CLE_CMD, null); return; }
     var ok = lset(CLE_CMD, JSON.stringify({ order: st.order, contact: st.contact, prixAffiche: st.prixAffiche, creeLe: st.creeLe, fichier: st.fichier,
-      lots: st.lots ? st.lots.map(function (o) { return { order: o.order, contact: o.contact, prixAffiche: o.prixAffiche, creeLe: o.creeLe }; }) : null, lot: st.lot }));
+      lots: st.lots ? st.lots.map(function (o) { return { order: o.order, contact: o.contact, prixAffiche: o.prixAffiche, creeLe: o.creeLe, nom: o.nom || "" }; }) : null, lot: st.lot }));
     if (!ok && !saveWarned) { saveWarned = true; A.toast("La commande est trop lourde pour être gardée dans ce navigateur : recharge le fichier si tu rafraîchis la page."); }
   }
 
@@ -458,7 +461,7 @@
       (c.date ? '<p class="a-date">Pour le <b>' + esc(fmtDate(c.date)) + "</b> " + joursRestants(c.date) + "</p>" : "") +
       (c.message ? "<blockquote>" + esc(c.message) + "</blockquote>" : "") + "</div>" +
       (st.lots ? '<div class="a-lots" role="group" aria-label="Configurations de la demande"><span>Configuration</span>' + st.lots.map(function (o, k) {
-        return '<button type="button" class="chip" data-lot="' + k + '" aria-pressed="' + (k === st.lot) + '">' + (k + 1) + " · " + plur(o.order.pieces.length, "pièce", "pièces") + "</button>"; }).join("") + "</div>" : "") +
+        return '<button type="button" class="chip" data-lot="' + k + '" aria-pressed="' + (k === st.lot) + '">' + (k + 1) + " · " + (o.nom ? esc(o.nom) + ", " : "") + plur(o.order.pieces.length, "pièce", "pièces") + "</button>"; }).join("") + "</div>" : "") +
       '<div class="a-actions"><label class="filebtn">Charger une autre commande<input id="a-file" type="file" accept=".json,application/json"></label>' +
       '<button type="button" class="btn btn-quiet" id="a-close">Fermer la commande</button></div></section>';
 
@@ -599,7 +602,7 @@
     rows.push(["<b>Total à facturer</b>", pv.unitaire != null ? r.N + " × " + fmtEUR(pv.unitaire) : "", "<b>" + fmtEUR(pv.total) + "</b>"]);
     rows.push(["<b>Marge</b>", pv.total > 0 ? fmtPct(pv.marge / r.couts.total) + " du coût de revient" : "", "<b>" + fmtEUR(pv.marge) + "</b>"]);
     var html = "";
-    if (st.lots) html += '<p class="hint">Configuration ' + (st.lot + 1) + ' sur ' + st.lots.length + ' : les planches, la livraison et les frais de port des vendeurs sont partagés par toute la demande, chaque configuration en porte sa part (au prorata de la surface de ses motifs et de ses pièces).</p>';
+    if (st.lots) html += '<p class="hint">' + esc(libelleLot(st.lot)) + ' sur ' + st.lots.length + ' : les planches, la livraison et les frais de port des vendeurs sont partagés par toute la demande, chaque configuration en porte sa part (au prorata de la surface de ses motifs et de ses pièces).</p>';
     html += table(["Ligne", "Détail", { t: "Montant", num: true }], rows, "calc");
     if (st.lots && st.basket) {
       var bk = st.basket;
@@ -832,7 +835,7 @@
   /* =================================================================== */
   var At = window.Atelier = {
     A: A, st: st, views: views, ABBR: ABBR, KIND: KIND, KIND_NOM: KIND_NOM, esc: esc, fmtEUR: fmtEUR, fmtN: fmtN, plur: plur, table: table, empty: empty, lien: lien, sw: sw,
-    achats: achats, pressNotes: pressNotes, presseDe: presseDe, marquagesDe: marquagesDe, motifTexte: motifTexte, codeMotif: codeMotif, dpiVisuel: dpiVisuel, orderDe: orderDe, imgInfo: imgInfo, lotOrders: lotOrders,
+    achats: achats, pressNotes: pressNotes, presseDe: presseDe, marquagesDe: marquagesDe, motifTexte: motifTexte, codeMotif: codeMotif, dpiVisuel: dpiVisuel, orderDe: orderDe, imgInfo: imgInfo, lotOrders: lotOrders, libelleLot: libelleLot,
     colorOf: colorOf, prodOf: prodOf, lienDe: lienDe, fmtDate: fmtDate, route: route, prepare: prepare, save: save, photoSrc: photoSrc, onKey: null, alertes: alertes
   };
 

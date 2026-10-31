@@ -26,8 +26,8 @@ function commande(produitId, n, prefixe) {
   const prod = produits[produitId], emp = Object.keys(prod.zones).filter(e => !(DATA.emplacements[e] && DATA.emplacements[e].texteSeul))[0];
   return { pieces: Array.from({ length: n }, (_, i) => ({ id: prefixe + i, produitId, couleurId: prod.couleurs[0].id, taille: prod.tailles[0], prenom: "", numero: "" })), marquages: A6(emp), technique: "dtf" };
 }
-function charger(orders, prixAffiches) {
-  st.lots = orders.length > 1 ? orders.map((o, i) => ({ order: o, prixAffiche: prixAffiches ? prixAffiches[i] : null })) : null;
+function charger(orders, prixAffiches, noms) {
+  st.lots = orders.length > 1 ? orders.map((o, i) => ({ order: o, prixAffiche: prixAffiches ? prixAffiches[i] : null, nom: noms ? noms[i] : "" })) : null;
   st.lot = 0; st.order = orders[0]; st.prixAffiche = prixAffiches ? prixAffiches[0] : null;
   st.basket = E.computeBasket(orders, ctx); st.res = st.basket.lots[0];
   P.D.order = undefined; P.D.sansMarge = false; P.D.parties = {};
@@ -98,4 +98,15 @@ test("le PDF d'une fiche réunissant les deux configurations se fabrique, avec l
   assert.ok(Math.abs(Fa.total(d.lignes) - st.basket.prix.total) < 0.005);
 });
 
+console.log("Noms des configurations (8.2.0)");
+test("une configuration nommée donne son nom à sa ligne ; sans nom, « configuration N »", () => {
+  charger([polo, pull], null, ["Maillots équipe A", ""]);
+  assert.ok(/, Maillots équipe A$/.test(P.D.lignes[0].designation), P.D.lignes[0].designation);
+  assert.ok(/, configuration 2$/.test(P.D.lignes[1].designation), P.D.lignes[1].designation);
+});
+test("le nom ne change ni les prix ni les quantités", () => {
+  charger([polo, pull]); const avant = P.D.lignes.map(l => [l.qty, l.unit]);
+  charger([polo, pull], null, ["A", "B"]);
+  assert.deepStrictEqual(P.D.lignes.map(l => [l.qty, l.unit]), avant);
+});
 console.log("\n" + ok + " tests réussis.");

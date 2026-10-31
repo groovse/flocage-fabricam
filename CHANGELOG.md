@@ -5,6 +5,15 @@ Les versions suivent le principe `MAJEUR.MINEUR.CORRECTIF` :
 - **MINEUR** : nouveau produit ou nouvelle fonction.
 - **CORRECTIF** : correction, mise à jour d'un prix, retouche d'affichage.
 
+## 8.2.0 — 31/10/2026
+
+Noms des configurations. **Version MINEUR : aucun prix ne change ; le fichier de commande reste compatible (le champ `nom` est facultatif).**
+
+- **Nommer une configuration.** Chaque configuration du panier a un champ « Nom de la configuration (facultatif) » (40 caractères au plus, enregistré à la frappe). Sans nom, elle reste « Configuration N ». Dupliquer une configuration nommée ajoute « (copie) ».
+- Le nom apparaît dans le panier, les messages d'erreur, le mail de demande (« === Configuration 2 sur 3 : Maillots équipe A === ») et le fichier de commande, puis dans l'atelier : pastilles de configurations, indication « Configuration 2 (nom) », bloc « Parties de la demande » et lignes des fiches de paiement et factures (« Polo Essential, Maillots équipe A »).
+- Les repères des motifs sur les planches gardent le numéro (`C2·3·Pv`).
+- Tests : 191 (123 moteur, 8 fichiers, 24 facturation, 25 méthodes, 11 paiement).
+
 ## 8.1.0 — 31/10/2026
 
 Fiches de paiement et factures pour toute la demande. **Version MINEUR : aucun prix ne change ; le fichier de commande reste compatible.**
