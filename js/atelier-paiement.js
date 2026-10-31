@@ -26,44 +26,66 @@
     lignes: [], dateIso: Fa.aujourdhui(), payeLe: "", refFiche: "",
     num: { fiche: "", facture: "" },     // numéro saisi à la main ; vide = numéro proposé
     sansMarge: false,                    // production pour Fabr'Icam : lignes au prix coûtant, sans marge
+    parties: {},                         // configurations de la demande à mettre dans le document : numéro -> false si décochée (vide = toutes)
     erreurs: []
   };
 
   function ligneVide() { return { designation: "", qty: 1, unit: "" }; }
 
+  /* ---------- les configurations de la demande (version 8.1.0) ----------
+   * Une demande peut avoir plusieurs configurations (panier). Le document les reprend toutes par défaut, au prix calculé pour
+   * l'ensemble du panier (planches communes) ; on peut décocher celles qu'on ne veut pas dedans (une fiche par partie, par exemple). */
+  function plusieurs() { return !!(st.lots && st.lots.length > 1); }
+  // Prix de chaque configuration : [{ k, pv }] (pv = null si la configuration n'a aucune pièce)
+  function parties() {
+    if (st.basket) return st.basket.lots.map(function (r, k) { return { k: k, pv: r.prix }; });
+    return st.res ? [{ k: 0, pv: st.res.prix }] : [];
+  }
+  // Les configurations cochées et chiffrables
+  function choisies() { return parties().filter(function (x) { return x.pv && (!plusieurs() || D.parties[x.k] !== false); }); }
+  function paDe(k) { return st.lots ? (st.lots[k] && st.lots[k].prixAffiche) : st.prixAffiche; }
+
   function lignesDepuisCommande() {
-    var pv = st.res && st.res.prix;
-    if (!pv) return [ligneVide()];
-    return pv.groupes.map(function (g) {
-      return { designation: A.groupName(g), qty: g.n, unit: D.sansMarge ? g.coutMoyen : g.unitaire, cle: "produit:" + g.produitId };
+    var out = [];
+    choisies().forEach(function (x) {
+      x.pv.groupes.forEach(function (g) {
+        out.push({ designation: A.groupName(g) + (plusieurs() ? ", configuration " + (x.k + 1) : ""), qty: g.n, unit: D.sansMarge ? g.coutMoyen : g.unitaire, cle: x.k + "|produit:" + g.produitId });
+      });
     });
+    return out.length ? out : [ligneVide()];
   }
 
   function coutTotalLignes() {
-    var pv = st.res && st.res.prix;
-    return pv ? pv.groupes.reduce(function (t, g) { return t + g.coutMoyen * g.n; }, 0) : 0;
+    return choisies().reduce(function (t, x) { return t + x.pv.groupes.reduce(function (u, g) { return u + g.coutMoyen * g.n; }, 0); }, 0);
   }
+  function totalChoisi() { return choisies().reduce(function (t, x) { return t + x.pv.total; }, 0); }
 
-  // Quand une autre commande est chargée (ou fermée), le client et les lignes suivent
+  // Quand une autre commande est chargée (ou fermée), le client et les lignes suivent ; passer d'une configuration à l'autre ne change rien
   function synchroniser() {
-    if (D.order === st.order) return;
-    D.order = st.order;
+    var cle = st.lots || st.order;
+    if (D.order === cle) return;
+    D.order = cle;
     var c = st.contact || {};
     D.client = { asso: c.asso || "", contact: c.nom || "", email: c.email || "" };
+    D.parties = {};
     D.lignes = st.order ? lignesDepuisCommande() : [ligneVide()];
     D.refFiche = ""; D.payeLe = ""; D.erreurs = [];
   }
 
-  // Le client a vu des prix à l'écran : si les tarifs ont bougé depuis, on peut revenir à ceux-là
-  function prixVusDifferents() {
-    var pa = st.prixAffiche, pv = st.res && st.res.prix;
-    return !!(pa && pv && pa.parProduit && Math.abs(pa.total - pv.total) > 0.005);
+  // Le client a vu des prix à l'écran : si les tarifs ont bougé depuis, on peut revenir à ceux-là (configurations cochées seulement)
+  function vus() {
+    return choisies().map(function (x) { return { k: x.k, pv: x.pv, pa: paDe(x.k) }; }).filter(function (x) { return x.pa && x.pa.parProduit; });
   }
+  function prixVusDifferents() { return vus().some(function (x) { return Math.abs(x.pa.total - x.pv.total) > 0.005; }); }
+  function totalVus() { return vus().reduce(function (t, x) { return t + x.pa.total; }, 0); }
+  function totalActuelDesVus() { return vus().reduce(function (t, x) { return t + x.pv.total; }, 0); }
   function appliquerPrixVus() {
-    var pa = st.prixAffiche, n = 0;
+    var n = 0, parK = {};
+    vus().forEach(function (x) { parK[x.k] = x.pa; });
     D.lignes.forEach(function (l) {
       if (!l.cle) return;
-      var m = pa.parProduit.filter(function (x) { return "produit:" + x.produitId === l.cle; })[0];
+      var k = String(l.cle).split("|")[0], pa = parK[k]; if (!pa) return;
+      var m = pa.parProduit.filter(function (x) { return k + "|produit:" + x.produitId === l.cle; })[0];
       if (m && m.unitaire != null) { l.unit = m.unitaire; n++; }
     });
     return n;
@@ -142,16 +164,24 @@
       champ("pay-contact", "Contact", D.client.contact, { attrs: ' autocomplete="off"' }) +
       champ("pay-mail", "E-mail", D.client.email, { type: "email", attrs: ' autocomplete="off"' }) + "</div></div>";
 
+    if (plusieurs()) {
+      html += '<div class="a-block"><h2>Parties de la demande</h2><p class="hint">La demande a ' + st.lots.length + ' configurations. Coche celles qui vont dans ce document : toutes les cochées sont réunies sur une seule fiche ou facture, au prix calculé pour l\'ensemble du panier. Changer la sélection refait les lignes d\'après la commande.</p><ul class="pay-parts">' +
+        parties().map(function (x) {
+          var r = st.basket.lots[x.k], noms = x.pv ? x.pv.groupes.map(function (g) { return g.n + " × " + A.groupName(g); }).join(", ") : "aucune pièce";
+          return '<li><label><input type="checkbox" class="pay-part" data-k="' + x.k + '"' + (x.pv && D.parties[x.k] !== false ? " checked" : "") + (x.pv ? "" : " disabled") + '> <b>Configuration ' + (x.k + 1) + "</b> : " + esc(noms) +
+            (x.pv ? " <span class=\"muted\">(" + esc(A.fmtEUR(x.pv.total)) + " TTC)</span>" : "") + "</label></li>";
+        }).join("") + '</ul><p class="hint">Total des parties cochées : <b>' + esc(A.fmtEUR(totalChoisi())) + "</b>.</p></div>";
+    }
     if (st.order) html += '<div class="a-block"><label class="pay-marge"><input type="checkbox" id="pay-sansmarge"' + (D.sansMarge ? " checked" : "") + '> <b>Retirer la marge</b> (production pour Fabr\'Icam : les prix sont au coût réel)</label>' +
-      '<p class="hint">' + (D.sansMarge ? "Les lignes sont au prix coûtant" + (st.res && st.res.prix ? " : " + esc(A.fmtEUR(coutTotalLignes())) + " au lieu de " + esc(A.fmtEUR(st.res.prix.total)) + " avec la marge" : "") + "." : "Les lignes incluent la marge de Fabr'Icam.") + "</p></div>";
+      '<p class="hint">' + (D.sansMarge ? "Les lignes sont au prix coûtant" + (choisies().length ? " : " + esc(A.fmtEUR(coutTotalLignes())) + " au lieu de " + esc(A.fmtEUR(totalChoisi())) + " avec la marge" : "") + "." : "Les lignes incluent la marge de Fabr'Icam.") + "</p></div>";
     html += '<div class="a-block"><div class="h-row"><h2>Lignes</h2><div class="a-actions">' +
       (st.order ? '<button type="button" class="btn btn-quiet" id="pay-refill">Remplir depuis la commande</button>' : "") +
-      (prixVusDifferents() ? '<button type="button" class="btn btn-quiet" id="pay-vus" title="Le client a vu ' + esc(A.fmtEUR(st.prixAffiche.total)) + ' au moment de commander">Reprendre les prix vus par le client</button>' : "") +
+      (prixVusDifferents() ? '<button type="button" class="btn btn-quiet" id="pay-vus" title="Le client a vu ' + esc(A.fmtEUR(totalVus())) + ' au moment de commander">Reprendre les prix vus par le client</button>' : "") +
       '<button type="button" class="btn btn-quiet" id="pay-add">Ajouter une ligne</button></div></div>' +
       '<div class="tablewrap"><table class="tbl pay-tbl"><thead><tr><th>Désignation</th><th class="num">Quantité</th><th class="num">Prix unitaire (€)</th><th class="num">Total</th><th><span class="sr">Supprimer</span></th></tr></thead><tbody>' +
       D.lignes.map(ligneHtml).join("") + '</tbody></table></div>' +
       '<p class="pay-total">Total <b id="pay-total"></b></p>' +
-      (prixVusDifferents() ? '<p class="warn-line">Le client a vu un total de ' + esc(A.fmtEUR(st.prixAffiche.total)) + ", et les tarifs actuels donnent " + esc(A.fmtEUR(st.res.prix.total)) + ". Les lignes ci-dessus suivent les tarifs actuels.</p>" : "") +
+      (prixVusDifferents() ? '<p class="warn-line">Le client a vu un total de ' + esc(A.fmtEUR(totalVus())) + ", et les tarifs actuels donnent " + esc(A.fmtEUR(totalActuelDesVus())) + ". Les lignes ci-dessus suivent les tarifs actuels.</p>" : "") +
       "</div>";
 
     html += '<div class="a-block pay-end"><div id="pay-err" role="alert"></div>' +
@@ -203,6 +233,12 @@
     });
     $("#pay-add").addEventListener("click", function () { D.lignes.push(ligneVide()); At.views.paiement(); var s = $$(".pl-des"); if (s.length) s[s.length - 1].focus(); });
     var sm = $("#pay-sansmarge"); if (sm) sm.addEventListener("change", function () { D.sansMarge = sm.checked; D.lignes = lignesDepuisCommande(); D.erreurs = []; At.views.paiement(); A.toast(D.sansMarge ? "Marge retirée : prix coûtant." : "Marge remise."); });
+    $$(".pay-part").forEach(function (el) {
+      el.addEventListener("change", function () {
+        D.parties[Number(el.dataset.k)] = el.checked; D.lignes = lignesDepuisCommande(); D.erreurs = []; At.views.paiement();
+        A.toast(choisies().length ? "Lignes refaites pour " + choisies().length + " configuration" + (choisies().length > 1 ? "s" : "") + "." : "Aucune configuration cochée.");
+      });
+    });
     var rf = $("#pay-refill"); if (rf) rf.addEventListener("click", function () { D.lignes = lignesDepuisCommande(); D.erreurs = []; At.views.paiement(); A.toast("Lignes remplies d'après la commande."); });
     var pv = $("#pay-vus"); if (pv) pv.addEventListener("click", function () { var n = appliquerPrixVus(); At.views.paiement(); A.toast(n ? "Prix vus par le client repris." : "Aucun prix à reprendre."); });
 
@@ -225,4 +261,7 @@
       setTimeout(function () { URL.revokeObjectURL(url); }, 120000);
     });
   }
+
+  // Pour les tests : les lignes déduites de la demande et l'état du formulaire
+  At.paiement = { lignesDepuisCommande: lignesDepuisCommande, synchroniser: synchroniser, choisies: choisies, totalChoisi: totalChoisi, appliquerPrixVus: appliquerPrixVus, prixVusDifferents: prixVusDifferents, D: D };
 })();
