@@ -114,7 +114,7 @@
     var p = nouvellePage(), y;
 
     /* en-tête : logo à gauche, titre et numéro à droite */
-    var lw = 132, lh = im ? lw * im.h / im.w : 0;
+    var lw = 72, lh = im ? lw * im.h / im.w : 0;
     if (im) p.image("logo", M, 32, lw, lh);
     else p.text(cfg.nom, M, 62, { size: 24, bold: true, color: ORANGE });
     p.text(T.titre.toUpperCase(), W - M, 54, { size: 21, bold: true, color: ENCRE, align: "right" });

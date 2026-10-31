@@ -389,10 +389,10 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
 .pieces .col-prenom input { width: 100%; min-width: 6.5rem; }
 
 /* ---------- logo Fabr'Icam ---------- */
-.brand-logo { height: 3.1rem; width: auto; display: block; }
+.brand-logo { height: 3.6rem; width: auto; display: block; }
 .brand #brand-name { font-size: 1.5rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .foot-brand { display: flex; align-items: center; gap: .8rem; }
-.foot-brand img { height: 2.4rem; width: auto; display: block; }
+.foot-brand img { height: 3rem; width: auto; display: block; }
 @media (max-width: 720px) {
   body:not(.at) .site-header { gap: .5rem; }
   .nav-link { padding: .5rem .65rem; font-size: .95rem; }
@@ -400,5 +400,5 @@ label.chk input, label.radio input { margin-top: .28rem; width: 1.05rem; height:
   .menu { position: static; }
   .menu-panel { top: calc(100% + .25rem); left: .5rem; right: .5rem; width: auto; max-height: calc(100vh - var(--header-h) - 5rem); overflow-y: auto; }
 }
-@media (max-width: 560px) { .brand-logo { height: 2.5rem; } .brand #brand-name { font-size: 1.25rem; } }
+@media (max-width: 560px) { .brand-logo { height: 2.9rem; } .brand #brand-name { font-size: 1.25rem; } }
 @media (max-width: 480px) { .brand #brand-name { display: none; } .top-note { padding-block: .5rem; font-size: .85rem; } }

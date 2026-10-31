@@ -241,7 +241,7 @@
 }
 
 /* ---------- logo Fabr'Icam ---------- */
-.at-header .brand-logo { background: #fff; border-radius: 4px; padding: .2rem .6rem; height: 3rem; }
+.at-header .brand-logo { background: #fff; border-radius: 4px; padding: .2rem .5rem; height: 3.5rem; }
 .at-header .brand #brand-name { color: #fff; }
 .gate-logo { width: 11rem; max-width: 70%; height: auto; display: block; }
 .f-logo { display: block; width: 8.5rem; height: auto; margin: 0 0 .5rem; }
