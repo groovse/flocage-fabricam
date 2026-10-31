@@ -354,7 +354,7 @@
   function showGate() {
     $("#at-nav").hidden = true; $("#at-tools").hidden = true;
     $("#app").innerHTML =
-      '<section class="gate"><form id="gate-form" class="gate-card" autocomplete="off"><img class="gate-logo" src="img/logo-fabricam.png" alt="Fabr\'Icam" width="782" height="414"><h1>Atelier</h1>' +
+      '<section class="gate"><form id="gate-form" class="gate-card" autocomplete="off"><img class="gate-logo" src="img/logo-fabricam.png" alt="Fabr\'Icam" width="900" height="880"><h1>Atelier</h1>' +
       "<p>Cet espace est réservé à l'équipe Fabr'Icam : fiche de fabrication, planches prêtes à envoyer, fiches de paiement, factures et base d'achats.</p>" +
       '<label>Mot de passe<input id="gate-pw" type="password" inputmode="numeric" autocomplete="off" required></label>' +
       '<p class="gate-err" id="gate-err" role="alert" hidden>Mot de passe incorrect. Réessaie.</p>' +

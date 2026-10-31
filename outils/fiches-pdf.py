@@ -135,8 +135,8 @@ class Doc:
         logo = os.path.join(RACINE, "img", "logo-fabricam.png")
         hl = 15 * mm
         if os.path.exists(logo):
-            c.drawImage(logo, M, H - M - hl, width=hl * 782 / 414, height=hl, mask="auto")
-        x = M + hl * 782 / 414 + 6 * mm
+            c.drawImage(logo, M, H - M - hl, width=hl * 900 / 880, height=hl, mask="auto")
+        x = M + hl * 900 / 880 + 6 * mm
         texte(c, etiquette.upper(), x, H - M + 0.5 * mm, W - x - M, F["Titre"], 9.5, HEAT_STRONG)
         taille = 26
         while pdfmetrics.stringWidth(titre, F["Titre"], taille) > W - x - M - 70 * mm and taille > 14:
