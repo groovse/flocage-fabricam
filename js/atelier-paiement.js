@@ -43,13 +43,15 @@
   }
   // Les configurations cochées et chiffrables
   function choisies() { return parties().filter(function (x) { return x.pv && (!plusieurs() || D.parties[x.k] !== false); }); }
+  // Nom donné à une configuration par le client (8.2.0), vide s'il n'en a pas mis
+  function nomDe(k) { return (st.lots && st.lots[k] && st.lots[k].nom) || ""; }
   function paDe(k) { return st.lots ? (st.lots[k] && st.lots[k].prixAffiche) : st.prixAffiche; }
 
   function lignesDepuisCommande() {
     var out = [];
     choisies().forEach(function (x) {
       x.pv.groupes.forEach(function (g) {
-        out.push({ designation: A.groupName(g) + (plusieurs() ? ", configuration " + (x.k + 1) : ""), qty: g.n, unit: D.sansMarge ? g.coutMoyen : g.unitaire, cle: x.k + "|produit:" + g.produitId });
+        out.push({ designation: A.groupName(g) + (plusieurs() ? ", " + (nomDe(x.k) || "configuration " + (x.k + 1)) : ""), qty: g.n, unit: D.sansMarge ? g.coutMoyen : g.unitaire, cle: x.k + "|produit:" + g.produitId });
       });
     });
     return out.length ? out : [ligneVide()];
@@ -168,7 +170,7 @@
       html += '<div class="a-block"><h2>Parties de la demande</h2><p class="hint">La demande a ' + st.lots.length + ' configurations. Coche celles qui vont dans ce document : toutes les cochées sont réunies sur une seule fiche ou facture, au prix calculé pour l\'ensemble du panier. Changer la sélection refait les lignes d\'après la commande.</p><ul class="pay-parts">' +
         parties().map(function (x) {
           var r = st.basket.lots[x.k], noms = x.pv ? x.pv.groupes.map(function (g) { return g.n + " × " + A.groupName(g); }).join(", ") : "aucune pièce";
-          return '<li><label><input type="checkbox" class="pay-part" data-k="' + x.k + '"' + (x.pv && D.parties[x.k] !== false ? " checked" : "") + (x.pv ? "" : " disabled") + '> <b>Configuration ' + (x.k + 1) + "</b> : " + esc(noms) +
+          return '<li><label><input type="checkbox" class="pay-part" data-k="' + x.k + '"' + (x.pv && D.parties[x.k] !== false ? " checked" : "") + (x.pv ? "" : " disabled") + '> <b>' + esc(nomDe(x.k) ? nomDe(x.k) + " (configuration " + (x.k + 1) + ")" : "Configuration " + (x.k + 1)) + "</b> : " + esc(noms) +
             (x.pv ? " <span class=\"muted\">(" + esc(A.fmtEUR(x.pv.total)) + " TTC)</span>" : "") + "</label></li>";
         }).join("") + '</ul><p class="hint">Total des parties cochées : <b>' + esc(A.fmtEUR(totalChoisi())) + "</b>.</p></div>";
     }

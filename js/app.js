@@ -258,10 +258,14 @@
     var d = null;
     try { var v = window.localStorage.getItem(CLE_PANIER); d = v ? JSON.parse(v) : null; } catch (_) { d = null; }
     if (!d || !Array.isArray(d.lignes)) return;
-    PANIER.lignes = d.lignes.filter(ligneValide).map(function (l) { return { id: l.id, order: cloneOrder(l.order) }; });
+    PANIER.lignes = d.lignes.filter(ligneValide).map(function (l) { return { id: l.id, order: cloneOrder(l.order), nom: nettoieNom(l.nom) }; });
     PANIER.next = PANIER.lignes.reduce(function (m, l) { return Math.max(m, l.id + 1); }, d.next || 1);
     if (d.contact) Object.keys(S.contact).forEach(function (k) { if (typeof d.contact[k] === "string") S.contact[k] = d.contact[k]; });
   }
+  // Nom donné à une configuration pour la retrouver (version 8.2.0) : facultatif, 40 caractères au plus ; sans nom, « Configuration 2 »
+  var LONGUEUR_NOM = 40;
+  function nettoieNom(v) { return typeof v === "string" ? v.replace(/\s+/g, " ").trim().slice(0, LONGUEUR_NOM) : ""; }
+  function libelleConfig(i) { var l = PANIER.lignes[i], nom = l ? nettoieNom(l.nom) : ""; return nom || "Configuration " + (i + 1); }
   function indexLigne(id) { for (var i = 0; i < PANIER.lignes.length; i++) if (PANIER.lignes[i].id === id) return i; return -1; }
   // Calcul de TOUT le panier (version 8.0.0) : les motifs de toutes les configurations sont rangés ensemble sur les mêmes planches,
   // la livraison et les frais de port d'un vendeur ne comptent qu'une fois. Le résultat est gardé tant que les configurations du panier
@@ -1057,7 +1061,8 @@
     var r = resultatLigne(l), res = resumeLigne(l), emps = usedEmps(l.order).filter(function (e) { return l.order.marquages[e].actif; });
     var edit = PANIER.edit === l.id;
     return '<li class="pn-ligne' + (edit ? " editing" : "") + '" data-lid="' + l.id + '">' +
-      '<div class="pn-main"><h3>Configuration ' + (i + 1) + (edit ? ' <span class="pn-tag">en cours de modification</span>' : "") + '</h3>' +
+      '<div class="pn-main"><h3><span class="pn-titre">' + esc(libelleConfig(i)) + '</span>' + (edit ? ' <span class="pn-tag">en cours de modification</span>' : "") + '</h3>' +
+      '<label class="pn-nom-l">Nom de la configuration (facultatif)<input type="text" class="pn-nom" data-lid="' + l.id + '" maxlength="' + LONGUEUR_NOM + '" value="' + esc(l.nom || "") + '" placeholder="Ex. : Maillots équipe A" autocomplete="off"></label>' +
       '<ul class="pn-res">' + res.map(function (x) { return "<li>" + (x.hex ? '<span class="sw" style="background:' + x.hex + '"></span>' : "") + x.n + " × " + esc(x.nom) + "</li>"; }).join("") + '</ul>' +
       '<p class="pn-sub">' + emps.map(function (e) { return esc(DATA.emplacements[e].label); }).join(", ") + (l.order.technique === "sublimation" ? " · sublimation" : " · DTF") + '</p></div>' +
       '<div class="pn-prix"><b>' + (r && r.prix ? fmtEUR(r.prix.total) : "–") + '</b><span>' + l.order.pieces.length + (l.order.pieces.length > 1 ? " pièces" : " pièce") + ', TTC</span></div>' +
@@ -1112,7 +1117,7 @@
     if (!c.nom.trim()) out.push("Indique ton nom.");
     if (!/^\S+@\S+\.\S+$/.test(c.email.trim())) out.push("Indique une adresse e-mail valide.");
     PANIER.lignes.forEach(function (l, i) {
-      problemesConfig(l.order).forEach(function (t) { out.push(n > 1 ? "Configuration " + (i + 1) + " : " + t.charAt(0).toLowerCase() + t.slice(1) : t); });
+      problemesConfig(l.order).forEach(function (t) { out.push(n > 1 ? libelleConfig(i) + " : " + t.charAt(0).toLowerCase() + t.slice(1) : t); });
     });
     return triProblemes(out);
   }
@@ -1124,15 +1129,15 @@
   }
 
   function lignePayload(l) {
-    var o = l.order, r = resultatLigne(l);
-    return {
+    var o = l.order, r = resultatLigne(l), nom = nettoieNom(l.nom);
+    return Object.assign(nom ? { nom: nom } : {}, {
       version: 2, technique: o.technique, pieces: o.pieces,
       marquages: JSON.parse(JSON.stringify(o.marquages, sansUrl)),
       prixAffiche: r && r.prix ? {
         unitaire: r.prix.unitaire, total: r.prix.total, pieces: r.N,
         parProduit: r.prix.groupes.map(function (g) { return { produitId: g.produitId, n: g.n, unitaire: g.unitaire }; })
       } : null
-    };
+    });
   }
   // Une seule configuration : le même fichier qu'avant (version 2). Plusieurs : version 3, une entrée par configuration.
   function orderPayload() {
@@ -1208,7 +1213,7 @@
     if (c.date) t.push("Date souhaitée : " + new Date(c.date + "T12:00:00").toLocaleDateString("fr-FR"));
     t.push("");
     lignes.forEach(function (l, i) {
-      if (n > 1) t.push("=== Configuration " + (i + 1) + " sur " + n + " ===");
+      if (n > 1) t.push("=== Configuration " + (i + 1) + " sur " + n + (nettoieNom(l.nom) ? " : " + nettoieNom(l.nom) : "") + " ===");
       configTexte(l.order, resultatLigne(l), compact).forEach(function (x) { t.push(x); });
       t.push("");
     });
@@ -1445,6 +1450,14 @@
     if (t.id === "pv-piece") { S.previewId = t.value; scheduleRefresh(); return; }
     if (t.id === "addmodel") { S.addModel = t.value; return; }
     if (t.name === "tech") { S.technique = t.value; scheduleRefresh(); return; }
+    if (t.classList && t.classList.contains("pn-nom")) {      // nom d'une configuration du panier : enregistré à la frappe, sans refaire la page (on garde le curseur)
+      var ni = indexLigne(parseInt(t.dataset.lid, 10));
+      if (ni >= 0) {
+        PANIER.lignes[ni].nom = String(t.value).slice(0, LONGUEUR_NOM); panierSauve();
+        var tit = t.closest(".pn-ligne") && t.closest(".pn-ligne").querySelector(".pn-titre"); if (tit) tit.textContent = libelleConfig(ni);
+      }
+      return;
+    }
     if (t.dataset.c) { S.contact[t.dataset.c] = t.value; panierSauve(); }
   }
 
@@ -1472,7 +1485,8 @@
       if (PANIER.edit === id) { PANIER.edit = null; razConfig(); }
       panierSauve(); majBadgePanier(); viewPanier(); toast("Configuration retirée du panier.");
     } else if (act === "pndup") {
-      PANIER.lignes.splice(i + 1, 0, { id: PANIER.next++, order: cloneOrder(PANIER.lignes[i].order) });
+      var nomCopie = nettoieNom(PANIER.lignes[i].nom);
+      PANIER.lignes.splice(i + 1, 0, { id: PANIER.next++, order: cloneOrder(PANIER.lignes[i].order), nom: nomCopie ? nettoieNom(nomCopie.slice(0, LONGUEUR_NOM - 9) + " (copie)") : "" });
       panierSauve(); majBadgePanier(); viewPanier(); toast("Configuration dupliquée.");
     } else {
       if (configEnCours() && !pristine() && PANIER.edit == null) { toast("Une configuration est déjà en cours : ajoute-la au panier avant d'en modifier une autre."); return; }
